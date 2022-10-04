@@ -1,0 +1,10 @@
+# OS
+## MacOS
+.DS_Store
+
+# Environment
+## npm
+node_modules
+
+# Build
+dist
