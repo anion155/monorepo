@@ -1,0 +1,5 @@
+**/__tests__/
+.eslintrc.js
+jest.config.js
+rollup.config.js
+tsconfig*.json
