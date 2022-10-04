@@ -6,6 +6,7 @@
     "name": "Anton Mikhailov",
     "email": "anion155@gmail.com"
   },
+  "repository": "github:anion155/selectable-context",
   "license": "MIT",
   "private": false,
   "exports": {
