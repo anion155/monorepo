@@ -17,6 +17,11 @@ const config = {
   parserOptions: {
     project: "./tsconfig.json",
   },
+  settings: {
+    "import/resolver": {
+      typescript: true,
+    },
+  },
   plugins: [
     "import",
     "react-hooks",
