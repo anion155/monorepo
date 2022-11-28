@@ -4,11 +4,9 @@ import type { FC } from "react";
 import { createContext } from "react";
 
 test("React.Context components group, Context.Consumer component render count", () => {
-  /* eslint-disable react/jsx-no-constructed-context-values -- this is not render function */
   const context = { type: "test-context-value", value: 1, meta: "blah" };
   const metaChange = { ...context, meta: `${context.meta}-alt` };
   const valueChange = { ...context, value: context.value + 1 };
-  /* eslint-enable react/jsx-no-constructed-context-values */
 
   const Context = createContext<{ value: number; meta: string }>(
     undefined as never

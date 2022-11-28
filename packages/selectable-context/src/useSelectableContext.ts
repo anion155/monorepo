@@ -1,37 +1,30 @@
-import { useSyncExternalStoreWithSelector } from "use-sync-external-store/shim/with-selector";
+import { useCallback } from "react";
+import { useSyncExternalStore } from "use-sync-external-store/shim";
 
 import { useSelectableContextController } from "./internal";
 import type { SelectableContext } from "./types";
 
-export type IsEqualBinary<T, R> = (
-  a: T | NonNullable<R>,
-  b: T | NonNullable<R>
-) => boolean;
+const identitySelector = (value: unknown) => value;
 
 export function useSelectableContext<T>(Context: SelectableContext<T>): T;
 export function useSelectableContext<T, R>(
   Context: SelectableContext<T>,
-  selector: (value: T) => R,
-  isEqual?: IsEqualBinary<T, R>
+  selector: (value: T) => R
 ): R;
 export function useSelectableContext<T, R>(
   Context: SelectableContext<T>,
-  selector?: (value: T) => R,
-  isEqual?: IsEqualBinary<T, R>
+  selector?: (value: T) => R
 ): T | R;
 export function useSelectableContext<T, R>(
   Context: SelectableContext<T>,
-  selector?: (value: T) => R,
-  isEqual?: IsEqualBinary<T, R>
+  selector: (value: T) => R = identitySelector as never
 ): T | R {
   const controller = useSelectableContextController(Context);
-  const result = useSyncExternalStoreWithSelector(
-    controller.subscribe,
-    () => controller.value,
-    null,
-    (state) => selector?.(state) ?? state,
-    isEqual
-  );
+  const get = useCallback(() => {
+    return selector(controller.value);
+  }, [controller, selector]);
+
+  const result = useSyncExternalStore(controller.subscribe, get);
 
   return result;
 }
