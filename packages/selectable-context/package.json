@@ -11,11 +11,11 @@
   "private": false,
   "exports": {
     ".": {
-      "types": "./src/index.tsx",
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js"
     },
     "./internal": {
-      "types": "./src/internal.ts",
+      "types": "./dist/internal.d.ts",
       "require": "./dist/internal.js"
     }
   },

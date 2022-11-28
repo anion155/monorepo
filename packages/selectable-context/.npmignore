@@ -1,6 +1,6 @@
-**/__tests__/
+src
 .editorconfig
 .eslintrc.js
 jest.config.js
 rollup.config.js
-tsconfig.json
+tsconfig*.json
