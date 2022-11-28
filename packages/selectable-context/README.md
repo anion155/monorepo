@@ -134,7 +134,7 @@ type IsEqualBinary<T, R> = (
 ) => boolean;
 ```
 
-## Private API
+## Internal API
 
 Internally SelectableContext uses `React.Context` and passes Observable-like object with set of listeners and subscription method:
 
