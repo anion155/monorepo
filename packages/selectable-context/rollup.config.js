@@ -13,7 +13,7 @@ const plugins = [
       __DEV__: "(process.env.NODE_ENV !== 'production')",
     },
   }),
-  typescript(),
+  typescript({ tsconfig: "./tsconfig.build.json" }),
   nodeResolve(),
   commonjs(),
 ];
