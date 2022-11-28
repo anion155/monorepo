@@ -19,6 +19,8 @@
       "require": "./dist/internal.js"
     }
   },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "rimraf dist && rollup -c",
     "prepack": "npm run build"
