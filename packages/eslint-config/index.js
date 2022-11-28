@@ -9,6 +9,7 @@ const config = {
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
     "plugin:import/recommended",
+    "plugin:import/typescript",
     "plugin:react/jsx-runtime",
     "plugin:react-hooks/recommended",
     "plugin:eslint-comments/recommended",
@@ -99,6 +100,14 @@ const config = {
       {
         ignoreTypeValueShadow: true,
         ignoreFunctionTypeParameterNameValueShadow: true,
+      },
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      {
+        varsIgnorePattern: "[iI]gnored",
+        argsIgnorePattern: "^_",
+        caughtErrorsIgnorePattern: "^ignore",
       },
     ],
   },
