@@ -37,6 +37,7 @@ useRenderEffect(() => {
 // ref.current === value
 ```
 
+<!-- markdownlint-disable-next-line -->
 > ### Note
 >
 > It is not guaranteed that cleanup function would be run during render. Specifically last cleanup before unmount is running as `useEffect` cleanup function.
@@ -103,6 +104,23 @@ useEffect(() => {
   console.log('Runs one time only');
 }, [cb]);
 <button onClick={cb} />
+```
+
+### useFabric
+
+```ts
+function useFabric<T>(fabric: () => T, deps: DependencyList): T;
+```
+
+Creates value every time `deps` are changed.
+
+<!-- markdownlint-disable-next-line -->
+> ### Note
+>
+> This is fully controlled version of `useMemo`, that will not follow `useMemo` cache policies. See ![`useMemo caveats`](https://react.dev/reference/react/useMemo#caveats)
+
+```ts
+const controller = useFabric(() => new ControllerClass(value), [value]);
 ```
 
 ## API utils
