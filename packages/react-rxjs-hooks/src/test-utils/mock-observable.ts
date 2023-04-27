@@ -2,19 +2,22 @@ import { jest } from "@jest/globals";
 import type { Observable, Subscription } from "rxjs";
 
 export function mockObservable<T>(source: Observable<T>) {
-  const subscribe: jest.Mock<Observable<T>["subscribe"]> = jest.fn();
-  const unsubscribe: jest.Mock<Subscription["unsubscribe"]> = jest.fn();
+  const subscribeSpy: jest.Mock<Observable<T>["subscribe"]> = jest.fn();
+  const unsubscribeSpy: jest.Mock<Subscription["unsubscribe"]> = jest.fn();
 
-  subscribe.mockImplementation(source.subscribe);
-  // eslint-disable-next-line no-param-reassign -- intentional
-  source.subscribe = (...subArgs: never[]) => {
-    const subscription = subscribe.apply(source, subArgs);
-    unsubscribe.mockImplementation(subscription.unsubscribe);
-    subscription.unsubscribe = (...unsubArgs: never[]) => {
+  const { subscribe } = source;
+  /* eslint-disable no-param-reassign, @typescript-eslint/no-explicit-any -- intentional */
+  source.subscribe = subscribeSpy as any;
+  subscribeSpy.mockImplementation((...subArgs) => {
+    const subscription = subscribe.apply(source, subArgs as any);
+    const { unsubscribe } = subscription;
+    subscription.unsubscribe = unsubscribeSpy;
+    unsubscribeSpy.mockImplementation((...unsubArgs) => {
       return unsubscribe.apply(subscription, unsubArgs);
-    };
+    });
     return subscription;
-  };
+  });
+  /* eslint-enable no-param-reassign, @typescript-eslint/no-explicit-any */
 
-  return { subscribe, unsubscribe };
+  return { subscribe: subscribeSpy, unsubscribe: unsubscribeSpy };
 }
