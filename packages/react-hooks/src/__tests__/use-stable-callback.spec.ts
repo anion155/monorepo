@@ -1,12 +1,12 @@
 import { jest, expect, test, describe } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
 
-import { useConstCallback } from "../use-const-callback";
+import { useStableCallback } from "../use-stable-callback";
 
-describe("useConstCallback", () => {
+describe("useStableCallback", () => {
   test("render", () => {
     const cb = jest.fn();
-    const hook = renderHook(() => useConstCallback(cb));
+    const hook = renderHook(() => useStableCallback(cb));
 
     expect(hook.result.current).toStrictEqual(expect.any(Function));
     hook.result.current(1, 2);
@@ -17,7 +17,7 @@ describe("useConstCallback", () => {
   test("re-render", () => {
     const firstCb = jest.fn();
     const nextCb = jest.fn();
-    const hook = renderHook(({ cb }) => useConstCallback(cb), {
+    const hook = renderHook(({ cb }) => useStableCallback(cb), {
       initialProps: { cb: firstCb },
     });
     const firstResult = hook.result.current;

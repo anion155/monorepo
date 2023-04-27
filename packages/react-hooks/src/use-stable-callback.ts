@@ -1,8 +1,8 @@
 import { useCallback, useRef } from "react";
 
-import { assert } from "./utils";
+import { assert } from "./utils/index";
 
-export function useConstCallback<As extends unknown[], R>(
+export function useStableCallback<As extends unknown[], R>(
   cb: (...args: As) => R
 ): (...args: As) => R {
   const store = useRef(cb);
@@ -15,3 +15,6 @@ export function useConstCallback<As extends unknown[], R>(
 
   return constCb;
 }
+
+/** @deprecated Use {@link useStableCallback} */
+export const useConstCallback = useStableCallback;
