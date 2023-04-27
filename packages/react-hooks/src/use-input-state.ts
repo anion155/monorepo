@@ -2,8 +2,7 @@ import { useState } from "react";
 
 import type { SetStateDispatcher } from "./use-set-state-dispatcher";
 import { useSetStateDispatcher } from "./use-set-state-dispatcher";
-import { useStableCallback } from "./use-stable-callback";
-import { assert } from "./utils/assert";
+import { assert } from "./utils";
 
 // eslint-disable-next-line @typescript-eslint/ban-types -- empty object used to ban any null or undefined types from being used
 export type InputProps<T extends {}> =

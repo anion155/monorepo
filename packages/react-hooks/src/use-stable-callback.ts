@@ -1,6 +1,6 @@
 import { useCallback, useRef } from "react";
 
-import { assert } from "./utils/index";
+import { assert } from "./utils";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- can't use `unknown` here
 export function useStableCallback<F extends (...args: any[]) => any>(

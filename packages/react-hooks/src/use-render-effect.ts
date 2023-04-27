@@ -1,7 +1,7 @@
 import type { DependencyList, EffectCallback } from "react";
 import { useEffect } from "react";
 
-import { useRenderDispatcher } from "./utils/use-render-dispatcher";
+import { useRenderDispatcher } from "./utils";
 
 export function useRenderEffect(
   effect: EffectCallback,
