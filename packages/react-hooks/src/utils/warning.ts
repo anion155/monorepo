@@ -1,3 +1,5 @@
+import "@monorepo/config/globals";
+
 export function warning(condition: unknown, message?: string) {
   if (condition) return;
   if (!__DEV__) return;
