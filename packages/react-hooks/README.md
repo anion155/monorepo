@@ -87,17 +87,17 @@ const [value, handleChange] = useEventState('', (event) => event.target.value);
 </>
 ```
 
-### useConstCallback
+### useStableCallback
 
 ```ts
-function useConstCallback<As extends unknown[], R>(cb: (...args: As) => R): (...args: As) => R;
+function useStableCallback<As extends unknown[], R>(cb: (...args: As) => R): (...args: As) => R;
 ```
 
 Creates stable callback instance, result function never changes until unmounted.
 
 ```ts
 const [counter, setCounter] = useState(1);
-const cb = useConstCallback(() => {
+const cb = useStableCallback(() => {
   setCounter(counter + 1);
 });
 useEffect(() => {
