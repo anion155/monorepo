@@ -1,8 +1,6 @@
-const production = process.env.NODE_ENV === "production";
-
 export function warning(condition: unknown, message?: string) {
   if (condition) return;
-  if (production) return;
+  if (!__DEV__) return;
 
   // eslint-disable-next-line no-console -- used in dev env only
   console?.warn?.(message);
