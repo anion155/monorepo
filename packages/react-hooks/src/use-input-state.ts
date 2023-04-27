@@ -33,13 +33,13 @@ export function useInputState<T extends {}>(
       "value instead `useInputState({ value: { boxed: value as T | undefined } })`"
   );
   const setValue = useSetStateDispatcher(
-    useStableCallback(() => value),
-    useStableCallback((next) => {
+    () => value,
+    (next) => {
       if (propValue === undefined) {
         state[1](next);
       }
       onValueChange?.(next);
-    })
+    }
   );
 
   return [value, setValue];

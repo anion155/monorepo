@@ -89,7 +89,9 @@ const [value, handleChange] = useEventState('', (event) => event.target.value);
 ### useStableCallback
 
 ```ts
-function useStableCallback<As extends unknown[], R>(cb: (...args: As) => R): (...args: As) => R;
+function useStableCallback<F>(
+  cb: (...args: Parameters<F>) => ReturnType<F>
+): (...args: Parameters<F>) => ReturnType<F>;
 ```
 
 Creates stable callback instance, result function never changes until unmounted.
