@@ -208,3 +208,17 @@ Compares two dependencies arrays, return true if they are equal.
 compareProps(["same", 1], ["same", 2]) === 2;
 ```
 
+### useRenderDispatcher
+
+```ts
+function useRenderDispatcher<S>(
+  deps: DependencyList,
+  onChange: (state: S | undefined, prevDeps: DependencyList | undefined) => S
+): S;
+```
+
+Creates cross render state based on deps.
+
+```ts
+const useMemo = (creator, deps) => useRenderDispatcher(deps, creator);
+```
