@@ -154,6 +154,29 @@ const [value, setValue] = useState(5);
 <CustomInput value={value} onValueChange={(e) => setValue(e.value)} />
 ```
 
+### useLensedState
+
+```ts
+function useLensedState<T, U>(
+  sourceState: readonly [T, SetStateDispatcher<T>],
+  getter: (state: T) => U,
+  setter: (value: U, state: T) => T
+): [U, SetStateDispatcher<U>];
+```
+
+Creates state tuple binded to source state.
+
+```ts
+const formState = useState({ name: '', password: '' });
+<Context.Provider value={formState}> />
+const [name, setName] = useLensedState(
+  useContext(Context),
+  form => form.name,
+  (name, form) => ({ ...form, name })
+);
+setName(current => 'mr.' + current);
+```
+
 ## API utils
 
 There is submodule with utility functions
