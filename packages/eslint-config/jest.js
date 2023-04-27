@@ -5,12 +5,12 @@
 const jestConfig = (extension) => {
   return {
     ...extension,
-    files: ["**/__tests__/*.spec.*", ...(extension.files ?? [])],
-    plugins: ["jest", ...(extension.plugins ?? [])],
+    files: ["**/__tests__/*.spec.*", ...(extension?.files ?? [])],
+    plugins: ["jest", ...(extension?.plugins ?? [])],
     extends: [
       "plugin:jest/recommended",
       "plugin:jest/style",
-      ...(extension.extends ?? []),
+      ...(extension?.extends ?? []),
     ],
     rules: {
       "jest/expect-expect": [
@@ -23,7 +23,7 @@ const jestConfig = (extension) => {
       "jest/prefer-strict-equal": "error",
       "jest/require-to-throw-message": "warn",
       "@typescript-eslint/no-explicit-any": "off",
-      ...extension.rules,
+      ...extension?.rules,
     },
   };
 };

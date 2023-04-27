@@ -1,3 +1,9 @@
 {
-  "extends": ["./index"]
+  "extends": ["./index"],
+  "env": {
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  }
 }

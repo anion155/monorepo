@@ -12,11 +12,13 @@
   "main": "./index.js",
   "files": [
     "index.js",
-    "jest.js"
+    "jest.js",
+    "typescript.js"
   ],
   "exports": {
     ".": "./index.js",
-    "./jest": "./jest.js"
+    "./jest": "./jest.js",
+    "./typescript": "./typescript.js"
   },
   "devDependencies": {
     "@types/eslint": "^8.4.6",

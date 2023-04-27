@@ -4,32 +4,14 @@ const config = {
     "eslint:recommended",
     "airbnb",
     "airbnb/hooks",
-    "airbnb-typescript",
     "prettier",
-    "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
     "plugin:import/recommended",
-    "plugin:import/typescript",
     "plugin:react/jsx-runtime",
     "plugin:react-hooks/recommended",
     "plugin:eslint-comments/recommended",
   ],
-  parser: "@typescript-eslint/parser",
-  parserOptions: {
-    project: "./tsconfig.json",
-  },
-  settings: {
-    "import/resolver": {
-      typescript: true,
-    },
-  },
-  plugins: [
-    "import",
-    "react-hooks",
-    "@typescript-eslint",
-    "prettier",
-    "eslint-comments",
-  ],
+  plugins: ["import", "react-hooks", "prettier", "eslint-comments"],
   rules: {
     "eslint-comments/require-description": [
       "warn",
@@ -91,25 +73,6 @@ const config = {
       },
     ],
     "react/require-default-props": "off",
-    "@typescript-eslint/consistent-type-imports": [
-      "warn",
-      { prefer: "type-imports" },
-    ],
-    "@typescript-eslint/no-shadow": [
-      "error",
-      {
-        ignoreTypeValueShadow: true,
-        ignoreFunctionTypeParameterNameValueShadow: true,
-      },
-    ],
-    "@typescript-eslint/no-unused-vars": [
-      "warn",
-      {
-        varsIgnorePattern: "[iI]gnored",
-        argsIgnorePattern: "^_",
-        caughtErrorsIgnorePattern: "^ignore",
-      },
-    ],
   },
 };
 
