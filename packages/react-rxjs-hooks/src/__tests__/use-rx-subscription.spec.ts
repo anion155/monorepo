@@ -1,118 +1,62 @@
 import { jest, expect, test, describe } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
-import type { Observer } from "rxjs";
-import { of, throwError } from "rxjs";
+import { Subscription, of } from "rxjs";
 
 import { mockObservable } from "../test-utils/mock-observable";
 import { useRxSubscription } from "../use-rx-subscription";
 
 describe("useRxSubscription", () => {
-  const value = Symbol("test-value") as symbol;
+  function renderRxSubscriptionHook(
+    ...[fabric, deps]: Parameters<typeof useRxSubscription>
+  ) {
+    return renderHook((props) => useRxSubscription(props.fabric, props.deps), {
+      initialProps: { fabric, deps },
+    });
+  }
 
-  const source = of(value);
-  const { subscribe, unsubscribe } = mockObservable(source);
-  const sourceFabric = jest.fn(() => source);
+  test("render, with subscription fabric", () => {
+    const subscription = new Subscription();
+    const fabric = jest.fn(() => subscription);
+    const hook = renderRxSubscriptionHook(fabric, []);
 
-  const observer: Observer<symbol> = {
-    next: jest.fn(),
-    error: jest.fn(),
-    complete: jest.fn(),
-  };
-  const observerFabric = jest.fn(() => observer);
+    expect(hook.result.current).toBeUndefined();
+    expect(fabric).toHaveBeenCalledTimes(1);
+  });
 
-  test("render", () => {
-    const hook = renderHook(() => useRxSubscription(sourceFabric, []));
+  test("render, with observable fabric", () => {
+    const source = of(5);
+    const { subscribe } = mockObservable(source);
+    const hook = renderRxSubscriptionHook(() => source, []);
 
-    expect(sourceFabric).toHaveBeenCalledWith();
-    expect(subscribe).toHaveBeenCalledWith(undefined);
+    expect(hook.result.current).toBeUndefined();
+    expect(subscribe).toHaveBeenCalledTimes(1);
+    expect(subscribe).toHaveBeenCalledWith();
+  });
+
+  test("render, with observable input fabric", () => {
+    const hook = renderRxSubscriptionHook(() => [5], []);
+
     expect(hook.result.current).toBeUndefined();
   });
 
+  test("re-render, with new deps", () => {
+    const unsubscribe1 = jest.fn();
+    const unsubscribe2 = jest.fn();
+    const createFabric = (unsubscribe: () => void) => () =>
+      Object.assign(new Subscription(), { unsubscribe });
+    const hook = renderRxSubscriptionHook(createFabric(unsubscribe1), [1]);
+    hook.rerender({ fabric: createFabric(unsubscribe2), deps: [2] });
+
+    expect(unsubscribe1).toHaveBeenCalledTimes(1);
+    expect(unsubscribe2).not.toHaveBeenCalled();
+  });
+
   test("unmount", () => {
-    const hook = renderHook(() => useRxSubscription(sourceFabric, []));
+    const subscription = new Subscription();
+    const unsubscribe = jest.spyOn(subscription, "unsubscribe");
+    const hook = renderRxSubscriptionHook(() => subscription, []);
     hook.unmount();
 
-    expect(unsubscribe).toHaveBeenCalledWith();
-  });
-
-  test("re-render, with new sourceFabric, same deps", () => {
-    const nextSourceFabric = jest.fn(() => of(value));
-    const hook = renderHook(({ sourceF }) => useRxSubscription(sourceF, []), {
-      initialProps: { sourceF: sourceFabric },
-    });
-    hook.rerender({ sourceF: nextSourceFabric });
-
-    expect(sourceFabric).toHaveBeenCalledWith();
-    expect(nextSourceFabric).not.toHaveBeenCalled();
-    expect(unsubscribe).not.toHaveBeenCalled();
-  });
-
-  test("re-render, with new sourceFabric, and deps", () => {
-    const nextSourceFabric = jest.fn(() => of(value));
-    const hook = renderHook(
-      ({ sourceF, deps }) => useRxSubscription(sourceF, deps),
-      {
-        initialProps: { sourceF: sourceFabric, deps: [1] },
-      }
-    );
-    sourceFabric.mockClear();
-    hook.rerender({ sourceF: nextSourceFabric, deps: [2] });
-
-    expect(sourceFabric).not.toHaveBeenCalled();
-    expect(nextSourceFabric).toHaveBeenCalledWith();
-    expect(unsubscribe).toHaveBeenCalledWith();
-  });
-
-  test("render, with observerFabric", () => {
-    renderHook(() => useRxSubscription(sourceFabric, [], observerFabric, []));
-
-    expect(observerFabric).toHaveBeenCalledWith();
-    expect(observer.next).toHaveBeenCalledWith(value);
-    expect(observer.error).not.toHaveBeenCalled();
-    expect(observer.complete).toHaveBeenCalledWith();
-  });
-
-  test("render, with observerFabric, error source", () => {
-    const error = Symbol("test-error");
-    renderHook(() =>
-      useRxSubscription(() => throwError(() => error), [], observerFabric, [])
-    );
-
-    expect(observerFabric).toHaveBeenCalledWith();
-    expect(observer.next).not.toHaveBeenCalled();
-    expect(observer.error).toHaveBeenCalledWith(error);
-    expect(observer.complete).not.toHaveBeenCalled();
-  });
-
-  test("re-render, with new observerFabric, same deps", () => {
-    const nextObserverFabric = jest.fn(() => observer);
-    const hook = renderHook(
-      ({ observerF }) => useRxSubscription(sourceFabric, [], observerF, []),
-      {
-        initialProps: { observerF: observerFabric },
-      }
-    );
-    hook.rerender({ observerF: nextObserverFabric });
-
-    expect(observerFabric).toHaveBeenCalledWith();
-    expect(nextObserverFabric).not.toHaveBeenCalled();
-    expect(unsubscribe).not.toHaveBeenCalled();
-  });
-
-  test("re-render, with new observerFabric, and deps", () => {
-    const nextObserverFabric = jest.fn(() => observer);
-    const hook = renderHook(
-      ({ observerF, deps }) =>
-        useRxSubscription(sourceFabric, [], observerF, deps),
-      {
-        initialProps: { observerF: observerFabric, deps: [1] },
-      }
-    );
-    observerFabric.mockClear();
-    hook.rerender({ observerF: nextObserverFabric, deps: [2] });
-
-    expect(observerFabric).not.toHaveBeenCalled();
-    expect(nextObserverFabric).toHaveBeenCalledWith();
-    expect(unsubscribe).toHaveBeenCalledWith();
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 });
