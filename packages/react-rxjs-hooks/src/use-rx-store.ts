@@ -26,5 +26,8 @@ export function useRxStoreValue<T>(store: ReactRxStore<T>): T {
 export function useRxStoreDispatcher<T>(
   store: ReactRxStore<T>
 ): SetStateDispatcher<T> {
-  return useSetStateDispatcher(store.getValue, store.next, [store]);
+  return useSetStateDispatcher(
+    () => store.getValue(),
+    (value) => store.next(value)
+  );
 }

@@ -15,11 +15,7 @@ export function isReactRxStore<T>(
   const obj = subject as unknown;
   return (
     hasOwnProperty(obj, "reactSubscription") &&
-    obj.reactSubscription instanceof Function &&
-    hasOwnProperty(obj, "getValue") &&
-    obj.getValue instanceof Function &&
-    hasOwnProperty(obj, "next") &&
-    obj.next instanceof Function
+    obj.reactSubscription instanceof Function
   );
 }
 
@@ -32,20 +28,24 @@ export function isImmediateCompleted<T>(source: Observable<T>): boolean {
 
 export type ReactRxStoreInput<T> =
   | T
-  | { (): T }
   | BehaviorSubject<T>
-  | { (): BehaviorSubject<T> };
+  | { (): T | BehaviorSubject<T> };
+
+function createStoreSubject<T>(input: ReactRxStoreInput<T>) {
+  const value = input instanceof Function ? input() : input;
+  if (!(value instanceof BehaviorSubject)) {
+    return new BehaviorSubject(value);
+  }
+  if (isImmediateCompleted(value)) {
+    return new BehaviorSubject(value.getValue());
+  }
+  return value;
+}
 
 export function createReactRxStore<T>(
   input: ReactRxStoreInput<T>
 ): ReactRxStore<T> {
-  const value = input instanceof Function ? input() : input;
-
-  let subject =
-    value instanceof BehaviorSubject ? value : new BehaviorSubject<T>(value);
-  if (isImmediateCompleted(subject)) {
-    subject = new BehaviorSubject(subject.getValue());
-  }
+  const subject = createStoreSubject(input);
   if (isReactRxStore(subject)) return subject;
 
   const store: ReactRxStore<T> = Object.create(subject);
@@ -53,7 +53,5 @@ export function createReactRxStore<T>(
     const subscription = store.subscribe(onStoreChange);
     return () => subscription.unsubscribe();
   };
-  store.getValue = store.getValue.bind(store);
-  store.next = store.next.bind(store);
   return store;
 }

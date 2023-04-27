@@ -38,25 +38,29 @@ describe("isReactRxStore, without store", () => {
     expect(isReactRxStore(store)).toBe(false);
   });
 
-  test("with invalid getValue", () => {
+  // eslint-disable-next-line jest/no-disabled-tests -- no need in binding `getValue`
+  test.skip("with invalid getValue", () => {
     const store = createStore();
     store.getValue = 1;
     expect(isReactRxStore(store)).toBe(false);
   });
 
-  test("with prototype getValue", () => {
+  // eslint-disable-next-line jest/no-disabled-tests -- no need in binding `getValue`
+  test.skip("with prototype getValue", () => {
     const store = createStore();
     delete store.getValue;
     expect(isReactRxStore(store)).toBe(false);
   });
 
-  test("with invalid next", () => {
+  // eslint-disable-next-line jest/no-disabled-tests -- no need in binding `next`
+  test.skip("with invalid next", () => {
     const store = createStore();
     store.next = 1;
     expect(isReactRxStore(store)).toBe(false);
   });
 
-  test("with prototype next", () => {
+  // eslint-disable-next-line jest/no-disabled-tests -- no need in binding `next`
+  test.skip("with prototype next", () => {
     const store = createStore();
     delete store.next;
     expect(isReactRxStore(store)).toBe(false);
