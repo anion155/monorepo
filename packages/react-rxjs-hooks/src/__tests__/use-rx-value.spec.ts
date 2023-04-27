@@ -3,7 +3,7 @@ import { describe, expect, test } from "@jest/globals";
 import { renderHook, waitFor } from "@testing-library/react";
 import { delay, of } from "rxjs";
 
-import { mockObservable } from "../test-utils/mock-observable";
+import { mockObservable } from "../../test-utils/mock-observable";
 import { useRxValue } from "../use-rx-value";
 
 describe("useRxValue", () => {

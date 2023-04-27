@@ -2,8 +2,8 @@ import { expect, test, describe } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
 import { BehaviorSubject } from "rxjs";
 
-import { mockBehaviorSubject } from "../test-utils/mock-behavior-subject";
-import { mockObservable } from "../test-utils/mock-observable";
+import { mockBehaviorSubject } from "../../test-utils/mock-behavior-subject";
+import { mockObservable } from "../../test-utils/mock-observable";
 import {
   useRxStore,
   useRxStoreDispatcher,
