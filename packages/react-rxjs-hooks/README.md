@@ -11,16 +11,10 @@ import {} from '@anion155/react-rxjs-hooks';
 ### useRxSubscription
 
 ```ts
-function useRxSubscription<T>(
-  sourceFabric: () => ObservableInput<T>,
-  sourceDeps: DependencyList
-): void;
-function useRxSubscription<T>(
-  sourceFabric: () => ObservableInput<T>,
-  sourceDeps: DependencyList,
-  observerFabric: () => PartialObserver<T>,
-  observerDeps: DependencyList
-): void;
+function useRxSubscription(
+  fabric: () => Subscription | ObservableInput<unknown>,
+  deps: DependencyList
+): void
 ```
 
 Create and manage subscription to source observable.
@@ -115,6 +109,22 @@ const store: BehaviorSubject<string>;
 
 const [value, setValue] = useRxState(store);
 setValue(value => `previous was: ${value}`);
+```
+
+### useRxStoreObservableFiller
+
+```ts
+function useRxStoreObservableFiller<T>(
+  sourceFabric: () => ObservableInput<T>,
+  deps: DependencyList,
+  storeInitial?: ReactRxStoreInput<T | undefined>
+): ReactRxStore<T | undefined>;
+```
+
+Store observable values in rx store.
+
+```ts
+const store = useRxStoreObservableFiller(() => of(5), []);
 ```
 
 ### useRxValue
@@ -238,7 +248,7 @@ interface ReactRxStore<T> extends BehaviorSubject<T> {
 }
 ```
 
-Store subject with alternative subscription method and binded to instance methods `getValue` and `next`.
+Store subject with alternative subscription method `reactSubscription`.
 
 ### createReactRxStore
 
@@ -251,7 +261,7 @@ type ReactRxStoreInput<T> =
 function createReactRxStore<T>(input: ReactRxStoreInput<T>): ReactRxStore<T>;
 ```
 
-Creates `BehaviorSubject` from value (unless not completed instance was provided), use it as prototype (unless it is `ReactRxStore` already), add `reactSubscription` implementation, and bind methods `getValue` and `next` to instance.
+Creates `BehaviorSubject` from value (unless not completed instance was provided), use it as prototype (unless it is `ReactRxStore` already), add `reactSubscription` implementation.
 
 ```ts
 const store = createReactRxStore('value');
