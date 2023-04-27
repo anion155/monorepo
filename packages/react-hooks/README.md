@@ -118,7 +118,7 @@ Creates value every time `deps` are changed.
 <!-- markdownlint-disable-next-line -->
 > ### Note
 >
-> This is fully controlled version of `useMemo`, that will not follow `useMemo` cache policies. See ![`useMemo caveats`](https://react.dev/reference/react/useMemo#caveats)
+> This is fully controlled version of `useMemo`, that will not follow `useMemo` cache policies. See [`useMemo caveats`](https://react.dev/reference/react/useMemo#caveats)
 
 ```ts
 const controller = useFabric(() => new ControllerClass(value), [value]);

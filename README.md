@@ -6,9 +6,9 @@ This repository contains public libraries used created by me through out work. M
 
 ## Content
 
-- ![@monorepo/config](./packages/config/) set of shared repository specific configurations
-- ![@anion155/react-hooks](./packages/react-hooks/README.md) react utilities library
-- ![@anion155/react-rxjs-hooks](./packages/react-rxjs-hooks/README.md) set of utilities to use rxjs in react
+- [@monorepo/config](./packages/config/) set of shared repository specific configurations
+- [@anion155/react-hooks](./packages/react-hooks/README.md) react utilities library
+- [@anion155/react-rxjs-hooks](./packages/react-rxjs-hooks/README.md) set of utilities to use rxjs in react
 
 ## License
 
