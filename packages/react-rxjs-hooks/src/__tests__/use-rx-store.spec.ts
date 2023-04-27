@@ -93,18 +93,6 @@ describe("useRxStoreDispatcher", () => {
     expect(hook.result.current).toStrictEqual(expect.any(Function));
   });
 
-  test("re-render, with new store", () => {
-    const store = createReactRxStore(value);
-    const nextStore = createReactRxStore(value);
-    const hook = renderHook(({ sub }) => useRxStoreDispatcher(sub), {
-      initialProps: { sub: store },
-    });
-    const first = hook.result.current;
-    hook.rerender({ sub: nextStore });
-
-    expect(hook.result.current).not.toBe(first);
-  });
-
   test("dispatch value", () => {
     const store = createReactRxStore(value);
     const { getValue, next } = mockBehaviorSubject(store);

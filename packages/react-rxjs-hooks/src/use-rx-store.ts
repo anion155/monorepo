@@ -1,5 +1,6 @@
 import type { SetStateDispatcher } from "@anion155/react-hooks";
 import {
+  useStableCallback,
   useConst,
   useRenderEffect,
   useSetStateDispatcher,
@@ -20,7 +21,10 @@ export function useRxStore<T>(initial: ReactRxStoreInput<T>): ReactRxStore<T> {
 }
 
 export function useRxStoreValue<T>(store: ReactRxStore<T>): T {
-  return useSyncExternalStore(store.reactSubscription, store.getValue);
+  return useSyncExternalStore(
+    store.reactSubscription,
+    useStableCallback(() => store.getValue())
+  );
 }
 
 export function useRxStoreDispatcher<T>(
