@@ -14,5 +14,7 @@
 			"path": "packages/react-rxjs-hooks"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"jest.disabledWorkspaceFolders": ["monorepo"]
+	}
 }
