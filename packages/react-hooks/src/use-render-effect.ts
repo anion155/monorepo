@@ -1,5 +1,5 @@
 import type { DependencyList, EffectCallback } from "react";
-import { useEffect } from "react";
+import { useRef, useEffect } from "react";
 
 import { useRenderDispatcher } from "./utils";
 
@@ -14,5 +14,9 @@ export function useRenderEffect(
       return effect();
     }
   );
-  useEffect(() => destructor, [destructor]);
+
+  const lastDestructor = useRef<ReturnType<EffectCallback>>();
+  lastDestructor.current = destructor;
+
+  useEffect(() => lastDestructor.current, []);
 }
