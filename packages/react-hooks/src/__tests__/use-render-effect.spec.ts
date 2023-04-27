@@ -1,7 +1,7 @@
 import { jest, expect, test, describe } from "@jest/globals";
 
-import { wrapHook } from "../../test-utils/wrap-hook";
 import { useRenderEffect } from "../use-render-effect";
+import { wrapHook } from "../utils/tests/wrap-hook";
 
 const renderRenderEffectHook = wrapHook(useRenderEffect);
 

@@ -2,8 +2,8 @@ import { jest, expect, test, describe } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
 import { Subscription, of } from "rxjs";
 
-import { mockObservable } from "../../test-utils/mock-observable";
 import { useRxSubscription } from "../use-rx-subscription";
+import { mockObservable } from "../utils/tests/mock-observable";
 
 describe("useRxSubscription", () => {
   function renderRxSubscriptionHook(

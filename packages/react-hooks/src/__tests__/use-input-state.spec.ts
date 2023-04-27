@@ -1,8 +1,8 @@
 import { jest, expect, test, describe } from "@jest/globals";
 import { act } from "@testing-library/react";
 
-import { wrapHook } from "../../test-utils/wrap-hook";
 import { useInputState } from "../use-input-state";
+import { wrapHook } from "../utils/tests/wrap-hook";
 
 const renderInputStateHook = wrapHook(useInputState<symbol>);
 

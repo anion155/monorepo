@@ -2,14 +2,14 @@ import { expect, test, describe } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
 import { BehaviorSubject } from "rxjs";
 
-import { mockBehaviorSubject } from "../../test-utils/mock-behavior-subject";
-import { mockObservable } from "../../test-utils/mock-observable";
 import {
   useRxStore,
   useRxStoreDispatcher,
   useRxStoreValue,
 } from "../use-rx-store";
 import { createReactRxStore } from "../utils";
+import { mockBehaviorSubject } from "../utils/tests/mock-behavior-subject";
+import { mockObservable } from "../utils/tests/mock-observable";
 
 describe("useRxStore", () => {
   const value = Symbol("test-value") as symbol;

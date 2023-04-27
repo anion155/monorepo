@@ -1,6 +1,6 @@
 import { jest, expect, test, describe } from "@jest/globals";
 
-import { wrapHook } from "../../../test-utils/wrap-hook";
+import { wrapHook } from "../tests/wrap-hook";
 import { useRenderDispatcher } from "../use-render-dispatcher";
 
 const renderRenderDispatcherHook = wrapHook(useRenderDispatcher<symbol>);
