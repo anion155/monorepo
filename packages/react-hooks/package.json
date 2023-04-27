@@ -19,11 +19,25 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": {
+        "production": "./dist/index.prod.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "default": {
+        "production": "./dist/index.prod.js",
+        "default": "./dist/index.js"
+      }
     },
     "./utils": {
       "types": "./dist/utils/index.d.ts",
-      "default": "./dist/utils.js"
+      "import": {
+        "production": "./dist/utils.prod.mjs",
+        "default": "./dist/utils.mjs"
+      },
+      "default": {
+        "production": "./dist/utils.prod.js",
+        "default": "./dist/utils.js"
+      }
     }
   },
   "scripts": {
