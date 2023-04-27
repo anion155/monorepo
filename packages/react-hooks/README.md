@@ -195,3 +195,16 @@ Creates cancelable promise that will be resolved with timeout passed.
 ```ts
 await asyncDelay(1000);
 ```
+
+### compareProps
+
+```ts
+function compareProps(prev: DependencyList, next: DependencyList): boolean;
+```
+
+Compares two dependencies arrays, return true if they are equal.
+
+```ts
+compareProps(["same", 1], ["same", 2]) === 2;
+```
+
