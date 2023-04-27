@@ -5,6 +5,9 @@
 			"path": "."
 		},
 		{
+			"path": "packages/eslint-config"
+		},
+		{
 			"path": "packages/config"
 		},
 		{
@@ -15,6 +18,10 @@
 		}
 	],
 	"settings": {
-		"jest.disabledWorkspaceFolders": ["monorepo"]
+		"jest.disabledWorkspaceFolders": [
+			"monorepo",
+			"eslint-config",
+			"config"
+		]
 	}
 }

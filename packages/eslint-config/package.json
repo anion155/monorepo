@@ -6,27 +6,17 @@
     "name": "Anton Mikhailov",
     "email": "anion155@gmail.com"
   },
-  "repository": "github:anion155/eslint-config",
+  "repository": "github:anion155/monorepo",
   "license": "MIT",
   "private": false,
-  "exports": {
-    ".": "./index.js",
-    "./jest": "./jest.js"
-  },
+  "main": "./index.js",
   "files": [
     "index.js",
     "jest.js"
   ],
-  "peerDependencies": {
-    "eslint": ">= 8",
-    "eslint-plugin-jest": "^27.0.4",
-    "prettier": ">= 2",
-    "typescript": ">= 4"
-  },
-  "peerDependenciesMeta": {
-    "eslint-plugin-jest": {
-      "optional": true
-    }
+  "exports": {
+    ".": "./index.js",
+    "./jest": "./jest.js"
   },
   "devDependencies": {
     "@types/eslint": "^8.4.6",
@@ -48,5 +38,16 @@
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-react": "^7.31.8",
     "eslint-plugin-react-hooks": "^4.6.0"
+  },
+  "peerDependencies": {
+    "eslint": ">= 8",
+    "eslint-plugin-jest": "^27.0.4",
+    "prettier": ">= 2",
+    "typescript": ">= 4"
+  },
+  "peerDependenciesMeta": {
+    "eslint-plugin-jest": {
+      "optional": true
+    }
   }
 }
