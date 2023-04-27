@@ -1,27 +1,23 @@
 import type { DependencyList } from "react";
-import { useCallback, useMemo } from "react";
+
+import { useStableCallback } from "./use-stable-callback";
 
 export type SetStateDispatcher<T> = (state: T | { (current: T): T }) => void;
 
 export function useSetStateDispatcher<T>(
   get: () => T,
   set: (value: T) => void,
-  deps: DependencyList
+  /** @deprecated returned callback is stable now, so no need in `deps`  */
+  _deps?: DependencyList
 ): SetStateDispatcher<T> {
-  /* eslint-disable react-hooks/exhaustive-deps -- argument memoization */
-  const memoizedGet = useMemo(() => get, deps);
-  const memoizedSet = useMemo(() => set, deps);
-  /* eslint-enable react-hooks/exhaustive-deps */
-
-  const dispatcher = useCallback<SetStateDispatcher<T>>(
+  const dispatcher = useStableCallback<SetStateDispatcher<T>>(
     (nextOrModifier) => {
       const next =
         nextOrModifier instanceof Function
-          ? nextOrModifier(memoizedGet())
+          ? nextOrModifier(get())
           : nextOrModifier;
-      memoizedSet(next);
-    },
-    [memoizedGet, memoizedSet]
+      set(next);
+    }
   );
 
   return dispatcher;

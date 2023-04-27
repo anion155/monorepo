@@ -46,10 +46,10 @@ useRenderEffect(() => {
 
 ```ts
 type SetStateDispatcher<T> = (state: T | ((current: T) => T)) => void;
-function useSetStateDispatcher(get: () => T, set: (value: T) => void, deps: DependencyList): SetStateDispatcher<T>;
+function useSetStateDispatcher(get: () => T, set: (value: T) => void): SetStateDispatcher<T>;
 ```
 
-Creates set state action dispatcher function, which accepts next value or modifier.
+Creates stable set state action dispatcher function, which accepts next value or modifier.
 
 ```ts
 const store = {
@@ -60,7 +60,6 @@ const store = {
 const dispatcher = useSetStateDispatcher(
   () => store.get(),
   (next) => store.set(next),
-  [store]
 );
 dispatcher(10);
 dispatcher(current => current * 2);

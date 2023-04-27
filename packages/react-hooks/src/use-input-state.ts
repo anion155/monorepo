@@ -39,8 +39,7 @@ export function useInputState<T extends {}>(
         state[1](next);
       }
       onValueChange?.(next);
-    }),
-    []
+    })
   );
 
   return [value, setValue];
