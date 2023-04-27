@@ -123,6 +123,36 @@ Creates value every time `deps` are changed.
 const controller = useFabric(() => new ControllerClass(value), [value]);
 ```
 
+### useInputState
+
+```ts
+function useInputState<T extends {}>(props: {
+  value: T;
+  defaultValue?: T;
+  onValueChange: (value: T) => void;
+}): [T, SetStateDispatcher<T>];
+function useInputState<T extends {}>(props: {
+  value?: T;
+  defaultValue: T;
+  onValueChange?: (value: T) => void;
+}): [T, SetStateDispatcher<T>];
+```
+
+Creates tuple of value and set state acton dispatcher based on commonly used set of props `value`, `onValueChange` and `defaultValue`.
+Allows to create input components capable of being used as controlled component and as uncontrolled.
+
+```ts
+function CustomInput(props) {
+  const [value, setValue] = useInputState(props);
+  return <input value={value} onChange={e => setValue(e.value)} />
+}
+// uncontrolled version
+<CustomInput defaultValue={5} />
+// or as controlled input
+const [value, setValue] = useState(5);
+<CustomInput value={value} onValueChange={(e) => setValue(e.value)} />
+```
+
 ## API utils
 
 There is submodule with utility functions
