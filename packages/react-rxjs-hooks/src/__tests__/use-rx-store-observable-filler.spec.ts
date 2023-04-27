@@ -1,6 +1,6 @@
 import { describe, expect, test } from "@jest/globals";
 import { act, renderHook } from "@testing-library/react";
-import { BehaviorSubject, of } from "rxjs";
+import { BehaviorSubject } from "rxjs";
 
 import { useRxStoreObservableFiller } from "../use-rx-store-observable-filler";
 
