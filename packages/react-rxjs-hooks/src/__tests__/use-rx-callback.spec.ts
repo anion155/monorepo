@@ -1,6 +1,5 @@
 import { wrapHook } from "@anion155/react-hooks/utils/tests";
 import { describe, expect, jest, test } from "@jest/globals";
-import { renderHook } from "@testing-library/react";
 import {
   delay,
   first as firstRx,
