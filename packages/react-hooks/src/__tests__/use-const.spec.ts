@@ -1,33 +1,33 @@
 import { jest, expect, test, describe } from "@jest/globals";
-import { renderHook } from "@testing-library/react";
 
+import { wrapHook } from "../../test-utils/wrap-hook";
 import { useConst } from "../use-const";
+
+const renderConstHook = wrapHook(useConst<symbol>);
 
 describe("useConst", () => {
   const result = Symbol("test-result");
-  const fabric = jest.fn().mockReturnValue(result);
+  const fabric = jest.fn(() => result);
 
   test("render", () => {
-    const hook = renderHook(() => useConst(fabric));
+    const hook = renderConstHook(fabric);
 
     expect(hook.result.current).toBe(result);
     expect(fabric).toHaveBeenCalledWith();
   });
 
   test("re-render", () => {
-    const hook = renderHook(() => useConst(fabric));
-    hook.rerender();
+    const hook = renderConstHook(fabric);
+    hook.rerender(fabric);
 
     expect(hook.result.current).toBe(result);
     expect(fabric).toHaveBeenCalledTimes(1);
   });
 
   test("re-render, with new fabric", () => {
-    const hook = renderHook((props) => useConst(props.fabric), {
-      initialProps: { fabric },
-    });
-    const newFabric = jest.fn().mockReturnValue(result);
-    hook.rerender({ fabric: newFabric });
+    const hook = renderConstHook(fabric);
+    const newFabric = jest.fn(() => result);
+    hook.rerender(newFabric);
 
     expect(hook.result.current).toBe(result);
     expect(fabric).toHaveBeenCalledTimes(1);

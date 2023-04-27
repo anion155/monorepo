@@ -1,12 +1,16 @@
 import { jest, expect, test, describe } from "@jest/globals";
-import { renderHook } from "@testing-library/react";
 
+import { wrapHook } from "../../test-utils/wrap-hook";
 import { useStableCallback } from "../use-stable-callback";
+
+const renderStableCallbackHook = wrapHook(
+  useStableCallback<(a: number, b: number) => void>
+);
 
 describe("useStableCallback", () => {
   test("render", () => {
     const cb = jest.fn();
-    const hook = renderHook(() => useStableCallback(cb));
+    const hook = renderStableCallbackHook(cb);
 
     expect(hook.result.current).toStrictEqual(expect.any(Function));
     hook.result.current(1, 2);
@@ -17,11 +21,9 @@ describe("useStableCallback", () => {
   test("re-render", () => {
     const firstCb = jest.fn();
     const nextCb = jest.fn();
-    const hook = renderHook(({ cb }) => useStableCallback(cb), {
-      initialProps: { cb: firstCb },
-    });
+    const hook = renderStableCallbackHook(firstCb);
     const firstResult = hook.result.current;
-    hook.rerender({ cb: nextCb });
+    hook.rerender(nextCb);
 
     expect(firstResult).toBe(hook.result.current);
     hook.result.current(1, 2);

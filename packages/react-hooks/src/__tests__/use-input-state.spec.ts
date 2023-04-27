@@ -1,17 +1,15 @@
 import { jest, expect, test, describe } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react";
+import { act } from "@testing-library/react";
 
-import type { InputProps } from "../use-input-state";
+import { wrapHook } from "../../test-utils/wrap-hook";
 import { useInputState } from "../use-input-state";
+
+const renderInputStateHook = wrapHook(useInputState<symbol>);
 
 describe("useInputState", () => {
   const value1 = Symbol("test-value-1");
   const value2 = Symbol("test-value-2");
   const onValueChange = jest.fn();
-
-  function renderInputStateHook(initialProps: InputProps<symbol>) {
-    return renderHook((props) => useInputState(props), { initialProps });
-  }
 
   describe("with value", () => {
     test("render", () => {

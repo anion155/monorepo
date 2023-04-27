@@ -1,21 +1,16 @@
 import { jest, expect, test, describe } from "@jest/globals";
-import { renderHook } from "@testing-library/react";
-import type { DependencyList } from "react";
 
+import { wrapHook } from "../../../test-utils/wrap-hook";
 import { useRenderDispatcher } from "../use-render-dispatcher";
+
+const renderRenderDispatcherHook = wrapHook(useRenderDispatcher<symbol>);
 
 describe("useRenderDispatcher", () => {
   const result = Symbol("test-result");
-  const onChange = jest.fn().mockReturnValue(result);
-
-  function renderUseRenderDispatcher(initialDeps: DependencyList) {
-    return renderHook(({ deps }) => useRenderDispatcher(deps, onChange), {
-      initialProps: { deps: initialDeps },
-    });
-  }
+  const onChange = jest.fn(() => result);
 
   test("render", () => {
-    const hook = renderUseRenderDispatcher([1]);
+    const hook = renderRenderDispatcherHook([1], onChange);
 
     expect(hook.result.current).toBe(result);
 
@@ -24,16 +19,16 @@ describe("useRenderDispatcher", () => {
   });
 
   test("render, with same deps", () => {
-    const hook = renderUseRenderDispatcher([1]);
-    hook.rerender({ deps: [1] });
+    const hook = renderRenderDispatcherHook([1], onChange);
+    hook.rerender([1], onChange);
 
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(hook.result.current).toBe(result);
   });
 
   test("render, with new deps", () => {
-    const hook = renderUseRenderDispatcher([1]);
-    hook.rerender({ deps: [2] });
+    const hook = renderRenderDispatcherHook([1], onChange);
+    hook.rerender([2], onChange);
 
     expect(onChange).toHaveBeenCalledTimes(2);
     expect(onChange).toHaveBeenCalledWith(result, [1]);
