@@ -38,6 +38,10 @@
         "production": "./dist/utils.prod.js",
         "default": "./dist/utils.js"
       }
+    },
+    "./utils/tests": {
+      "types": "./src/utils/tests/index.ts",
+      "default": "./src/utils/tests/index.ts"
     }
   },
   "scripts": {

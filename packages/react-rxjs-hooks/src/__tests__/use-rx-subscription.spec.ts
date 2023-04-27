@@ -1,19 +1,13 @@
+import { wrapHook } from "@anion155/react-hooks/utils/tests";
 import { jest, expect, test, describe } from "@jest/globals";
-import { renderHook } from "@testing-library/react";
 import { Subscription, of } from "rxjs";
 
 import { useRxSubscription } from "../use-rx-subscription";
 import { mockObservable } from "../utils/tests/mock-observable";
 
-describe("useRxSubscription", () => {
-  function renderRxSubscriptionHook(
-    ...[fabric, deps]: Parameters<typeof useRxSubscription>
-  ) {
-    return renderHook((props) => useRxSubscription(props.fabric, props.deps), {
-      initialProps: { fabric, deps },
-    });
-  }
+const renderRxSubscriptionHook = wrapHook(useRxSubscription);
 
+describe("useRxSubscription", () => {
   test("render, with subscription fabric", () => {
     const subscription = new Subscription();
     const fabric = jest.fn(() => subscription);
@@ -45,7 +39,7 @@ describe("useRxSubscription", () => {
     const createFabric = (unsubscribe: () => void) => () =>
       Object.assign(new Subscription(), { unsubscribe });
     const hook = renderRxSubscriptionHook(createFabric(unsubscribe1), [1]);
-    hook.rerender({ fabric: createFabric(unsubscribe2), deps: [2] });
+    hook.rerender(createFabric(unsubscribe2), [2]);
 
     expect(unsubscribe1).toHaveBeenCalledTimes(1);
     expect(unsubscribe2).not.toHaveBeenCalled();

@@ -1,8 +1,11 @@
+import { wrapHook } from "@anion155/react-hooks/utils/tests";
 import { describe, expect, test } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react";
+import { act } from "@testing-library/react";
 
 import { useRxState } from "../use-rx-state";
 import { createReactRxStore } from "../utils";
+
+const renderRxStateHook = wrapHook(useRxState<symbol>);
 
 describe("useRxState", () => {
   const value = Symbol("test-value") as symbol;
@@ -10,7 +13,7 @@ describe("useRxState", () => {
 
   test("render", () => {
     const store = createReactRxStore(value);
-    const hook = renderHook(() => useRxState(store));
+    const hook = renderRxStateHook(store);
 
     expect(hook.result.current).toStrictEqual([
       value,
@@ -21,7 +24,7 @@ describe("useRxState", () => {
 
   test("dispatch value", () => {
     const store = createReactRxStore(value);
-    const hook = renderHook(() => useRxState(store));
+    const hook = renderRxStateHook(store);
     act(() => hook.result.current[1](nextValue));
 
     expect(hook.result.current[0]).toBe(nextValue);
@@ -29,7 +32,7 @@ describe("useRxState", () => {
 
   test("dispatch value, with modifier", () => {
     const store = createReactRxStore(value);
-    const hook = renderHook(() => useRxState(store));
+    const hook = renderRxStateHook(store);
     act(() => hook.result.current[1]((curr: any) => [curr, nextValue] as any));
 
     expect(hook.result.current[0]).toStrictEqual([value, nextValue]);

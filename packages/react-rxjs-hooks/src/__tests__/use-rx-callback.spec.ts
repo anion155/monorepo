@@ -1,3 +1,4 @@
+import { wrapHook } from "@anion155/react-hooks/utils/tests";
 import { describe, expect, jest, test } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
 import {
@@ -13,19 +14,24 @@ import { useRxCallback } from "../use-rx-callback";
 import type { PromiseSubscriber } from "../utils";
 import { toPromise } from "../utils";
 
+const renderRxCallbackHook = wrapHook(useRxCallback<[], symbol>);
+const renderRxCallbackWithSubsHook = wrapHook(
+  useRxCallback<number[], symbol, symbol>
+);
+
 describe("useRxCallback", () => {
   const value = Symbol("test-value") as symbol;
   const next = Symbol("test-next") as symbol;
   const error = Symbol("test-error") as symbol;
 
   test("render", () => {
-    const hook = renderHook(() => useRxCallback(() => of(value), []));
+    const hook = renderRxCallbackHook(() => of(value), []);
     expect(hook.result.current).toStrictEqual(expect.any(Function));
   });
 
   test("unmount", () => {
     const unsubscribe = jest.spyOn(Subscription.prototype, "unsubscribe");
-    const hook = renderHook(() => useRxCallback(() => of(value), []));
+    const hook = renderRxCallbackHook(() => of(value), []);
     unsubscribe.mockClear();
     hook.unmount();
 
@@ -35,11 +41,9 @@ describe("useRxCallback", () => {
   test("re-render with next source, same deps", () => {
     const source = () => of(value);
     const nextSource = () => of(next);
-    const hook = renderHook(({ cb }) => useRxCallback(cb, []), {
-      initialProps: { cb: source },
-    });
+    const hook = renderRxCallbackHook(source, []);
     const first = hook.result.current;
-    hook.rerender({ cb: nextSource });
+    hook.rerender(nextSource, []);
 
     expect(hook.result.current).toBe(first);
   });
@@ -47,24 +51,21 @@ describe("useRxCallback", () => {
   test("re-render with next source, next deps", () => {
     const source = () => of(value);
     const nextSource = () => of(next);
-    const hook = renderHook(({ cb, deps }) => useRxCallback(cb, deps), {
-      initialProps: { cb: source, deps: [1] },
-    });
+    const hook = renderRxCallbackHook(source, [1]);
     const first = hook.result.current;
-    hook.rerender({ cb: nextSource, deps: [2] });
+    hook.rerender(nextSource, [2]);
 
     expect(hook.result.current).not.toBe(first);
   });
 
   test("re-render with next subscriber", () => {
-    const hook = renderHook(
-      ({ sub }) => useRxCallback(() => of(value), [], sub),
-      {
-        initialProps: { sub: useRxCallback.first<unknown>() },
-      }
+    const hook = renderRxCallbackWithSubsHook(
+      () => of(value),
+      [],
+      useRxCallback.first()
     );
     const first = hook.result.current;
-    hook.rerender({ sub: useRxCallback.last() });
+    hook.rerender(() => of(value), [], useRxCallback.last());
 
     expect(hook.result.current).toBe(first);
   });
@@ -80,7 +81,7 @@ describe("useRxCallback", () => {
     const source = of(value).pipe(delay(100));
     const cb = jest.fn((..._args: any[]) => source);
 
-    const hook = renderHook(() => useRxCallback(cb, [], subscriber));
+    const hook = renderRxCallbackWithSubsHook(cb, [], subscriber);
     const promise = hook.result.current(1, 2);
 
     expect(cb).toHaveBeenCalledWith(1, 2);

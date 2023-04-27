@@ -1,8 +1,14 @@
+import { wrapHook } from "@anion155/react-hooks/utils/tests";
 import { describe, expect, jest, test } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react";
+import { act } from "@testing-library/react";
 
 import { useRxEventStore } from "../use-rx-event-store";
 import { createReactRxStore } from "../utils";
+
+const renderRxEventStoreHook = wrapHook(useRxEventStore<symbol>);
+const renderRxEventStoreWithProjectHook = wrapHook(
+  useRxEventStore<[value: symbol], { v: symbol }>
+);
 
 describe("useRxEventStore", () => {
   const value = Symbol("test-value") as symbol;
@@ -11,45 +17,35 @@ describe("useRxEventStore", () => {
   const project = jest.fn((v: symbol) => ({ v }));
 
   test("render", () => {
-    const hook = renderHook(() => useRxEventStore(store));
+    const hook = renderRxEventStoreHook(store);
     expect(hook.result.current).toStrictEqual([store, expect.any(Function)]);
   });
 
   test("re-render with next store", () => {
     const nextStore = createReactRxStore(value);
-    const hook = renderHook(({ sub }) => useRxEventStore(sub), {
-      initialProps: { sub: store },
-    });
+    const hook = renderRxEventStoreHook(store);
     const first = hook.result.current;
-    hook.rerender({ sub: nextStore });
+    hook.rerender(nextStore);
 
     expect(hook.result.current).toStrictEqual(first);
   });
 
   test("re-render with next project, same deps", () => {
     const nextProject = jest.fn((v: symbol) => ({ v }));
-    const hook = renderHook(
-      ({ proj }) => useRxEventStore(projectedStore, proj, []),
-      {
-        initialProps: { proj: project },
-      }
-    );
+    const hook = renderRxEventStoreWithProjectHook(projectedStore, project, []);
     const first = hook.result.current;
-    hook.rerender({ proj: nextProject });
+    hook.rerender(projectedStore, nextProject, []);
 
     expect(hook.result.current).toStrictEqual(first);
   });
 
   test("re-render with next project, next deps", () => {
     const nextProject = jest.fn((v: symbol) => ({ v }));
-    const hook = renderHook(
-      ({ proj, deps }) => useRxEventStore(projectedStore, proj, deps),
-      {
-        initialProps: { proj: project, deps: [1] },
-      }
-    );
+    const hook = renderRxEventStoreWithProjectHook(projectedStore, project, [
+      1,
+    ]);
     const first = hook.result.current;
-    hook.rerender({ proj: nextProject, deps: [2] });
+    hook.rerender(projectedStore, nextProject, [2]);
 
     expect(hook.result.current[0]).toBe(first[0]);
     expect(hook.result.current[1]).not.toBe(first[1]);
@@ -57,7 +53,7 @@ describe("useRxEventStore", () => {
 
   test("handleEvent", () => {
     const nextValue = Symbol("test-next-value") as symbol;
-    const hook = renderHook(() => useRxEventStore(store));
+    const hook = renderRxEventStoreHook(store);
     act(() => hook.result.current[1](nextValue));
 
     expect(hook.result.current[0].getValue()).toBe(nextValue);
@@ -65,7 +61,7 @@ describe("useRxEventStore", () => {
 
   test("handleEvent with project", () => {
     const nextValue = Symbol("test-next-value") as symbol;
-    const hook = renderHook(() => useRxEventStore(projectedStore, project, []));
+    const hook = renderRxEventStoreWithProjectHook(projectedStore, project, []);
     act(() => hook.result.current[1](nextValue));
 
     expect(hook.result.current[0].getValue()).toStrictEqual({ v: nextValue });
