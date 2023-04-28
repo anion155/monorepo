@@ -13,6 +13,9 @@
   "exports": {
     ".": "./index.js"
   },
+  "scripts": {
+    "bump-version": "bump-version eslint-config"
+  },
   "dependencies": {
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^8.8.0",
@@ -24,6 +27,7 @@
     "eslint-plugin-react-hooks": "^4.6.0"
   },
   "devDependencies": {
+    "@monorepo/configs": "workspace:*",
     "@types/eslint": "^8.37.0",
     "eslint": "^8.39.0",
     "prettier": "^2.8.8"

@@ -48,7 +48,7 @@
     "lint": "eslint src",
     "test": "jest src",
     "build": "rimraf dist && rollup --bundleConfigAsCjs --config",
-    "bump-version": "bump-version",
+    "bump-version": "bump-version react-hooks",
     "prepack": "npm run lint && npm run test && npm run build"
   },
   "devDependencies": {

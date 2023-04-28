@@ -15,7 +15,11 @@
     ".": "./index.js",
     "./plain": "./plain.js"
   },
+  "scripts": {
+    "bump-version": "bump-version eslint-config"
+  },
   "devDependencies": {
+    "@monorepo/configs": "workspace:*",
     "@types/eslint": "^8.37.0",
     "eslint": "^8.39.0",
     "jest": "^29.5.0"
