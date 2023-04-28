@@ -1,3 +1,5 @@
+// FIXME: later
+// eslint-disable-next-line import/no-extraneous-dependencies -- :-(
 import { jest } from "@jest/globals";
 import type { Observable, Subscription } from "rxjs";
 

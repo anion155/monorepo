@@ -1,3 +1,5 @@
+// FIXME: later
+// eslint-disable-next-line import/no-extraneous-dependencies -- :-(
 import { renderHook } from "@testing-library/react";
 import type { RenderHookResult } from "@testing-library/react";
 
