@@ -10,13 +10,15 @@
   "license": "MIT",
   "private": false,
   "main": "./index.js",
-  "files": ["./plain.js"],
+  "files": [
+    "./plain.js"
+  ],
   "exports": {
     ".": "./index.js",
     "./plain": "./plain.js"
   },
   "scripts": {
-    "bump-version": "bump-version eslint-config"
+    "bump-version": "bump-version eslint-config-typescript"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^5.59.1",

@@ -10,13 +10,15 @@
   "license": "MIT",
   "private": false,
   "main": "./index.js",
-  "files": ["./plain.js"],
+  "files": [
+    "./plain.js"
+  ],
   "exports": {
     ".": "./index.js",
     "./plain": "./plain.js"
   },
   "scripts": {
-    "bump-version": "bump-version eslint-config"
+    "bump-version": "bump-version eslint-config-jest"
   },
   "devDependencies": {
     "@monorepo/configs": "workspace:*",
@@ -33,6 +35,8 @@
     "jest": ">= 4"
   },
   "peerDependenciesMeta": {
-    "jest": { "optional": true }
+    "jest": {
+      "optional": true
+    }
   }
 }
