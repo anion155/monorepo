@@ -1,1 +1,1 @@
-module.exports = require("@monorepo/config/jest");
+module.exports = require("@monorepo/configs/jest");

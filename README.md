@@ -6,7 +6,10 @@ This repository contains public libraries used created by me through out work. M
 
 ## Content
 
-- [@monorepo/config](./packages/config/) set of shared repository specific configurations
+- [@anion155/eslint-config](./packages/eslint-config/) personal eslint configuration
+- [@anion155/eslint-config-typescript](./packages/eslint-config-typescript/) personal eslint configuration for typescript
+- [@anion155/eslint-config-jest](./packages/eslint-config-jest/) personal eslint configuration for jest
+- [@monorepo/configs](./packages/configs/) set of shared repository specific configurations
 - [@anion155/react-hooks](./packages/react-hooks/README.md) react utilities library
 - [@anion155/react-rxjs-hooks](./packages/react-rxjs-hooks/README.md) set of utilities to use rxjs in react
 

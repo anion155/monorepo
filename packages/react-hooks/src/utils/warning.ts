@@ -1,4 +1,4 @@
-import "@monorepo/config/globals";
+import "@monorepo/configs/globals";
 
 export function warning(condition: unknown, message?: string) {
   if (condition) return;

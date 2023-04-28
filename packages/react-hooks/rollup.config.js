@@ -1,4 +1,4 @@
-import { createLibraryInput } from "@monorepo/config/rollup";
+import { createLibraryInput } from "@monorepo/configs/rollup";
 
 /** @type {import('rollup').MergedRollupOptions[]} */
 const config = [

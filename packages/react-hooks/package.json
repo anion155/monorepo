@@ -56,7 +56,7 @@
     "@anion155/eslint-config-typescript": "workspace:*",
     "@anion155/eslint-config-jest": "workspace:*",
     "@jest/globals": "^29.5.0",
-    "@monorepo/config": "workspace:*",
+    "@monorepo/configs": "workspace:*",
     "@testing-library/react": "^14.0.0",
     "@types/react": "^18.2.0",
     "eslint": "^8.39.0",
