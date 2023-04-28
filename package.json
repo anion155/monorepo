@@ -1,10 +1,5 @@
 {
   "name": "monorepo",
   "private": true,
-  "license": "MIT",
-  "devDependencies": {
-    "eslint": "*",
-    "jest": "*",
-    "prettier": "*"
-  }
+  "license": "MIT"
 }
