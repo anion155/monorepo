@@ -38,8 +38,7 @@
         "production": "./dist/utils.prod.js",
         "default": "./dist/utils.js"
       }
-    },
-    "./utils/tests": "./src/utils/tests/index.ts"
+    }
   },
   "scripts": {
     "lint": "eslint src",
@@ -47,6 +46,9 @@
     "build": "rimraf dist && rollup --bundleConfigAsCjs --config",
     "bump-version": "bump-version react-hooks",
     "prepack": "npm run lint && npm run test && npm run build"
+  },
+  "dependencies": {
+    "tslib": "^2.5.0"
   },
   "devDependencies": {
     "@anion155/eslint-config": "workspace:*",
@@ -64,9 +66,6 @@
     "rimraf": "^5.0.0",
     "rollup": "^3.21.0",
     "typescript": "^5.0.4"
-  },
-  "dependencies": {
-    "tslib": "^2.5.0"
   },
   "peerDependencies": {
     "react": "^18.2.0"

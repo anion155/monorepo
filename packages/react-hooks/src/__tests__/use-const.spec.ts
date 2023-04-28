@@ -1,7 +1,7 @@
 import { jest, expect, test, describe } from "@jest/globals";
+import { wrapHook } from "@monorepo/configs/src/wrap-hook";
 
 import { useConst } from "../use-const";
-import { wrapHook } from "../utils/tests/wrap-hook";
 
 const renderConstHook = wrapHook(useConst<symbol>);
 

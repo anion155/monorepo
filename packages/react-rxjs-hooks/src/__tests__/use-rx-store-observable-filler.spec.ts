@@ -1,5 +1,5 @@
-import { wrapHook } from "@anion155/react-hooks/utils/tests";
 import { describe, expect, test } from "@jest/globals";
+import { wrapHook } from "@monorepo/configs/src/wrap-hook";
 import { act } from "@testing-library/react";
 import { BehaviorSubject } from "rxjs";
 

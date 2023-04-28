@@ -1,9 +1,9 @@
-import { wrapHook } from "@anion155/react-hooks/utils/tests";
 import { jest, expect, test, describe } from "@jest/globals";
+import { wrapHook } from "@monorepo/configs/src/wrap-hook";
 import { Subscription, of } from "rxjs";
 
+import { mockObservable } from "../../tests/mock-observable";
 import { useRxSubscription } from "../use-rx-subscription";
-import { mockObservable } from "../utils/tests/mock-observable";
 
 const renderRxSubscriptionHook = wrapHook(useRxSubscription);
 

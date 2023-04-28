@@ -1,7 +1,7 @@
 import { jest, expect, test, describe } from "@jest/globals";
+import { wrapHook } from "@monorepo/configs/src/wrap-hook";
 
 import { useStableCallback } from "../use-stable-callback";
-import { wrapHook } from "../utils/tests/wrap-hook";
 
 const renderStableCallbackHook = wrapHook(
   useStableCallback<(a: number, b: number) => void>

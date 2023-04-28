@@ -1,5 +1,5 @@
-import { wrapHook } from "@anion155/react-hooks/utils/tests";
 import { describe, expect, jest, test } from "@jest/globals";
+import { wrapHook } from "@monorepo/configs/src/wrap-hook";
 import {
   delay,
   first as firstRx,

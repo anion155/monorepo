@@ -1,15 +1,15 @@
-import { wrapHook } from "@anion155/react-hooks/utils/tests";
 import { expect, test, describe } from "@jest/globals";
+import { wrapHook } from "@monorepo/configs/src/wrap-hook";
 import { BehaviorSubject } from "rxjs";
 
+import { mockBehaviorSubject } from "../../tests/mock-behavior-subject";
+import { mockObservable } from "../../tests/mock-observable";
 import {
   useRxStore,
   useRxStoreDispatcher,
   useRxStoreValue,
 } from "../use-rx-store";
 import { createReactRxStore } from "../utils";
-import { mockBehaviorSubject } from "../utils/tests/mock-behavior-subject";
-import { mockObservable } from "../utils/tests/mock-observable";
 
 const renderRxStoreHook = wrapHook(useRxStore<symbol>);
 const renderRxStoreValueHook = wrapHook(useRxStoreValue<symbol>);

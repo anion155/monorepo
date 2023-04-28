@@ -1,6 +1,6 @@
 import { jest, expect, test, describe } from "@jest/globals";
+import { wrapHook } from "@monorepo/configs/src/wrap-hook";
 
-import { wrapHook } from "../tests/wrap-hook";
 import { useRenderDispatcher } from "../use-render-dispatcher";
 
 const renderRenderDispatcherHook = wrapHook(useRenderDispatcher<symbol>);

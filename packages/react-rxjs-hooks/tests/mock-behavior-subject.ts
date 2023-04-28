@@ -1,5 +1,3 @@
-// FIXME: later
-// eslint-disable-next-line import/no-extraneous-dependencies -- :-(
 import { jest } from "@jest/globals";
 import type { BehaviorSubject } from "rxjs";
 

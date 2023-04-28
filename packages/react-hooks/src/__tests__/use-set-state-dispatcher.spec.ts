@@ -1,7 +1,7 @@
 import { jest, expect, test, describe } from "@jest/globals";
+import { wrapHook } from "@monorepo/configs/src/wrap-hook";
 
 import { useSetStateDispatcher } from "../use-set-state-dispatcher";
-import { wrapHook } from "../utils/tests/wrap-hook";
 
 const renderSetStateDispatcherHook = wrapHook(useSetStateDispatcher<symbol>);
 

@@ -1,8 +1,8 @@
 import { jest, expect, test, describe } from "@jest/globals";
+import { wrapHook } from "@monorepo/configs/src/wrap-hook";
 import { act } from "@testing-library/react";
 
 import { useInputState } from "../use-input-state";
-import { wrapHook } from "../utils/tests/wrap-hook";
 
 const renderInputStateHook = wrapHook(useInputState<symbol>);
 
