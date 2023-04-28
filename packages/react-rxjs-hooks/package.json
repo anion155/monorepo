@@ -48,6 +48,7 @@
     "prepack": "npm run lint && npm run test && npm run build"
   },
   "devDependencies": {
+    "@anion155/eslint-config": "workspace:*",
     "@jest/globals": "^29.5.0",
     "@monorepo/config": "workspace:*",
     "@testing-library/react": "^13.4.0",
