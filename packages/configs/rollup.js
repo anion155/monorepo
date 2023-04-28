@@ -8,9 +8,10 @@ const external = require("rollup-plugin-peer-deps-external");
 
 /**
  * @param {boolean} production
+ * @param {import("@rollup/plugin-typescript").RollupTypescriptOptions} tsconfig
  * @returns {import("rollup").Plugin[]}
  */
-function createPlugins(production) {
+function createPlugins(production, tsconfig) {
   return [
     external({ includeDependencies: true }),
     replace({
@@ -19,7 +20,7 @@ function createPlugins(production) {
         __DEV__: production ? "false" : "true",
       },
     }),
-    typescript({ tsconfig: "./tsconfig.build.json" }),
+    typescript({ ...tsconfig, tsconfig: "./tsconfig.build.json" }),
     nodeResolve(),
     commonjs(),
   ];
@@ -53,6 +54,7 @@ function fileI(filePath) {
  *     outputMjs: string;
  *   } | string;
  *   production?: boolean;
+ *   tsconfig?: import("@rollup/plugin-typescript").RollupTypescriptOptions;
  *   outputOptions?: OutputOptions | OutputOptionsCreator;
  * }} config
  * @param {import("rollup").MergedRollupOptions} [extension]
@@ -101,7 +103,7 @@ function createLibraryInput(config, extension) {
       },
     ],
     plugins: [
-      ...createPlugins(config.production),
+      ...createPlugins(config.production, config.tsconfig),
       ...(extension?.plugins ?? []),
     ],
   };

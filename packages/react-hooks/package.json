@@ -9,7 +9,7 @@
   "repository": "github:anion155/monorepo",
   "license": "MIT",
   "private": false,
-  "types": "./dist/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "main": "./dist/index.js",
   "files": [
     "./utils.js",
@@ -18,7 +18,7 @@
   ],
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/types/index.d.ts",
       "import": {
         "production": "./dist/index.prod.mjs",
         "default": "./dist/index.mjs"
@@ -29,7 +29,7 @@
       }
     },
     "./utils": {
-      "types": "./dist/utils/index.d.ts",
+      "types": "./dist/types/utils/index.d.ts",
       "import": {
         "production": "./dist/utils.prod.mjs",
         "default": "./dist/utils.mjs"
@@ -39,10 +39,7 @@
         "default": "./dist/utils.js"
       }
     },
-    "./utils/tests": {
-      "types": "./src/utils/tests/index.ts",
-      "default": "./src/utils/tests/index.ts"
-    }
+    "./utils/tests": "./src/utils/tests/index.ts"
   },
   "scripts": {
     "lint": "eslint src",

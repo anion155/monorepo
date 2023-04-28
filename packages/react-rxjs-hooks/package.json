@@ -9,7 +9,7 @@
   "repository": "github:anion155/monorepo",
   "license": "MIT",
   "private": false,
-  "types": "./dist/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "main": "./dist/index.js",
   "files": [
     "./utils.js",
