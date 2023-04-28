@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "bin": {
-    "run-with-args": "./run-with-args.sh"
+    "bump-version": "./bump-version.sh"
   },
   "dependencies": {
     "@anion155/eslint-config": "^0.2.10",

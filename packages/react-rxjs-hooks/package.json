@@ -44,7 +44,7 @@
     "lint": "eslint src",
     "test": "jest src",
     "build": "rimraf dist && rollup --bundleConfigAsCjs --config",
-    "bump-version": "run-with-args 'pnpm version $1 && git add ./package.json && git commit -m \"bump: react-rxjs-hooks $1\" && git tag \"react-rxjs-hooks-v$1\"'",
+    "bump-version": "bump-version",
     "prepack": "npm run lint && npm run test && npm run build"
   },
   "devDependencies": {
