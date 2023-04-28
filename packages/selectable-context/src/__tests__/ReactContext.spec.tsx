@@ -1,6 +1,5 @@
 import { jest, expect, test } from "@jest/globals";
 import { render } from "@testing-library/react";
-import type { FC } from "react";
 import { createContext } from "react";
 
 test("React.Context components group, Context.Consumer component render count", () => {
@@ -11,9 +10,7 @@ test("React.Context components group, Context.Consumer component render count", 
   const Context = createContext<{ value: number; meta: string }>(
     undefined as never
   );
-  const renderer = jest
-    .fn<(value: any) => ReturnType<FC>>()
-    .mockReturnValue(null);
+  const renderer = jest.fn(() => null);
 
   const consumer = <Context.Consumer>{renderer}</Context.Consumer>;
 

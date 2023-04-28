@@ -21,6 +21,9 @@
 		},
 		{
 			"path": "packages/react-rxjs-hooks"
+		},
+		{
+			"path": "packages/selectable-context"
 		}
 	],
 	"settings": {

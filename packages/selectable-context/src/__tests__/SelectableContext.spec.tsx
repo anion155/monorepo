@@ -1,6 +1,5 @@
 import { describe, jest, expect, test } from "@jest/globals";
 import { render } from "@testing-library/react";
-import type { FC } from "react";
 
 import { createSelectableContext } from "../createSelectableContext";
 import { INVALID_CONTEXT_ERROR_MESSAGE } from "../internal";
@@ -15,23 +14,17 @@ describe("SelectableContext components group", () => {
     context
   );
 
-  const renderer = jest
-    .fn<(value: any) => ReturnType<FC>>()
-    .mockReturnValue(null);
+  const renderer = jest.fn(() => null);
   const consumer = <Context.Consumer>{renderer}</Context.Consumer>;
 
-  const valueRenderer = jest
-    .fn<(value: any) => ReturnType<FC>>()
-    .mockReturnValue(null);
+  const valueRenderer = jest.fn(() => null);
   const valueConsumer = (
     <Context.Consumer<number> selector={(v) => v.value}>
       {valueRenderer}
     </Context.Consumer>
   );
 
-  const metaRenderer = jest
-    .fn<(value: any) => ReturnType<FC>>()
-    .mockReturnValue(null);
+  const metaRenderer = jest.fn(() => null);
   const metaConsumer = (
     <Context.Consumer<string> selector={(v) => v.meta}>
       {metaRenderer}

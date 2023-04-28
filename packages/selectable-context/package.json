@@ -6,54 +6,63 @@
     "name": "Anton Mikhailov",
     "email": "anion155@gmail.com"
   },
-  "repository": "github:anion155/selectable-context",
+  "repository": "github:anion155/monorepo",
   "license": "MIT",
   "private": false,
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "require": "./dist/index.js"
+      "import": {
+        "production": "./dist/index.prod.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "default": {
+        "production": "./dist/index.prod.js",
+        "default": "./dist/index.js"
+      }
     },
     "./internal": {
       "types": "./dist/internal.d.ts",
-      "require": "./dist/internal.js"
+      "import": {
+        "production": "./dist/internals.prod.mjs",
+        "default": "./dist/internals.mjs"
+      },
+      "default": {
+        "production": "./dist/internals.prod.js",
+        "default": "./dist/internals.js"
+      }
     }
   },
-  "types": "./dist/index.d.ts",
-  "main": "./dist/index.js",
   "scripts": {
-    "build": "rimraf dist && rollup -c",
-    "prepack": "npm run build"
-  },
-  "devDependencies": {
-    "@anion155/eslint-config": "^0.2.6",
-    "@jest/globals": "^29.1.2",
-    "@rollup/plugin-commonjs": "^22.0.2",
-    "@rollup/plugin-node-resolve": "^14.1.0",
-    "@rollup/plugin-replace": "^4.0.0",
-    "@rollup/plugin-typescript": "^8.5.0",
-    "@testing-library/react": "^13.4.0",
-    "@types/react": "^18.0.21",
-    "@types/react-dom": "^18.0.6",
-    "@types/use-sync-external-store": "^0.0.3",
-    "@typescript-eslint/parser": "^5.39.0",
-    "eslint": "^8.24.0",
-    "eslint-plugin-jest": "^27.0.4",
-    "jest": "^29.1.2",
-    "jest-environment-jsdom": "^29.1.2",
-    "prettier": "^2.7.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "rimraf": "^3.0.2",
-    "rollup": "^2.79.1",
-    "rollup-plugin-peer-deps-external": "^2.2.4",
-    "ts-jest": "^29.0.3",
-    "typescript": "^4.8.3"
-  },
-  "peerDependencies": {
-    "react": "^18.2.0"
+    "lint": "eslint src",
+    "test": "jest src",
+    "build": "rimraf dist && rollup --bundleConfigAsCjs --config",
+    "bump-version": "bump-version react-hooks",
+    "prepack": "npm run lint && npm run test && npm run build"
   },
   "dependencies": {
     "use-sync-external-store": "^1.2.0"
+  },
+  "devDependencies": {
+    "@anion155/eslint-config": "workspace:*",
+    "@anion155/eslint-config-jest": "workspace:*",
+    "@anion155/eslint-config-typescript": "workspace:*",
+    "@jest/globals": "^29.1.2",
+    "@monorepo/configs": "workspace:^",
+    "@testing-library/react": "^13.4.0",
+    "@types/react": "^18.0.21",
+    "@types/use-sync-external-store": "^0.0.3",
+    "eslint": "^8.24.0",
+    "jest": "^29.1.2",
+    "prettier": "^2.7.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rollup": "^2.79.1",
+    "typescript": "^4.8.3"
+  },
+  "peerDependencies": {
+    "react": ">= 18"
   }
 }

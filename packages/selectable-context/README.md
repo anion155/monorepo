@@ -155,6 +155,7 @@ const controller = useSelectableContextController(CoolContext);
 console.log('Count of listeners on this render:', controller.listeners.size);
 ```
 
+<!-- markdownlint-disable-next-line -->
 > ### Note
 >
 > Subscription of listener or change of context value would not mark component using this hook for re-render. `Controller` is created once for lifecycle of the component.
