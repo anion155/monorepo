@@ -12,6 +12,17 @@ const config = {
     "plugin:eslint-comments/recommended",
   ],
   plugins: ["import", "react-hooks", "prettier", "eslint-comments"],
+  parserOptions: {
+    ecmaVersion: "latest",
+  },
+  overrides: [
+    {
+      files: ["*.js"],
+      env: {
+        node: true,
+      },
+    },
+  ],
   rules: {
     "eslint-comments/require-description": [
       "warn",

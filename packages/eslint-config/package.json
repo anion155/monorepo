@@ -1,6 +1,6 @@
 {
   "name": "@anion155/eslint-config",
-  "version": "0.2.10",
+  "version": "0.3.0",
   "description": "Personal eslint configuration",
   "author": {
     "name": "Anton Mikhailov",
@@ -10,46 +10,26 @@
   "license": "MIT",
   "private": false,
   "main": "./index.js",
-  "files": [
-    "index.js",
-    "jest.js",
-    "typescript.js"
-  ],
   "exports": {
-    ".": "./index.js",
-    "./jest": "./jest.js",
-    "./typescript": "./typescript.js"
-  },
-  "devDependencies": {
-    "@types/eslint": "^8.4.6",
-    "eslint": "^8.24.0",
-    "eslint-plugin-jest": "^27.0.4",
-    "prettier": "^2.7.1",
-    "typescript": "^4.8.4"
+    ".": "./index.js"
   },
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.38.1",
-    "@typescript-eslint/parser": "^5.38.1",
     "eslint-config-airbnb": "^19.0.4",
-    "eslint-config-airbnb-typescript": "^17.0.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-import-resolver-typescript": "^3.5.1",
+    "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-jsx-a11y": "^6.6.1",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-react": "^7.31.8",
+    "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/eslint": "^8.37.0",
+    "eslint": "^8.39.0",
+    "prettier": "^2.8.8"
   },
   "peerDependencies": {
     "eslint": ">= 8",
-    "eslint-plugin-jest": "^27.0.4",
-    "prettier": ">= 2",
-    "typescript": ">= 4"
-  },
-  "peerDependenciesMeta": {
-    "eslint-plugin-jest": {
-      "optional": true
-    }
+    "prettier": ">= 2"
   }
 }

@@ -1,32 +1,24 @@
-/**
- * @param {Partial<import('eslint').Linter.ConfigOverride>} [extension]
- * @return {import('eslint').Linter.ConfigOverride}
- */
-const config = (extension) => ({
-  ...extension,
-  files: ["**/*.ts", "**/*.tsx", ...(extension?.files ?? [])],
+/** @type {import('eslint').Linter.Config} */
+const config = {
   extends: [
-    "./index.js",
     "airbnb-typescript",
+    "prettier",
     "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
+    "plugin:import/recommended",
     "plugin:import/typescript",
-    ...(extension?.extends ?? []),
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    ...extension?.parserOptions,
     project: "./tsconfig.json",
   },
   settings: {
-    ...extension?.settings,
     "import/resolver": {
-      ...extension?.settings?.["import/resolver"],
       typescript: true,
     },
   },
-  plugins: ["@typescript-eslint", ...(extension?.plugins ?? [])],
+  plugins: ["@typescript-eslint"],
   rules: {
-    ...extension?.rules,
     "@typescript-eslint/consistent-type-imports": [
       "warn",
       { prefer: "type-imports" },
@@ -47,6 +39,6 @@ const config = (extension) => ({
       },
     ],
   },
-});
+};
 
 module.exports = config;

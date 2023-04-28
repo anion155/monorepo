@@ -5,10 +5,16 @@
 			"path": "."
 		},
 		{
+			"path": "packages/config"
+		},
+		{
 			"path": "packages/eslint-config"
 		},
 		{
-			"path": "packages/config"
+			"path": "packages/eslint-config-typescript"
+		},
+		{
+			"path": "packages/eslint-config-jest"
 		},
 		{
 			"path": "packages/react-hooks"
@@ -20,8 +26,10 @@
 	"settings": {
 		"jest.disabledWorkspaceFolders": [
 			"monorepo",
+			"config",
 			"eslint-config",
-			"config"
+			"eslint-config-typescript",
+			"eslint-config-jest",
 		]
 	}
 }
