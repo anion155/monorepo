@@ -38,7 +38,7 @@
   "scripts": {
     "lint": "eslint src",
     "test": "jest src",
-    "build": "rimraf dist && rollup --bundleConfigAsCjs --config",
+    "build": "rimraf dist && rollup --config",
     "bump-version": "bump-version react-hooks",
     "prepack": "npm run lint && npm run test && npm run build"
   },
@@ -46,11 +46,12 @@
     "use-sync-external-store": "^1.2.0"
   },
   "devDependencies": {
-    "@anion155/eslint-config": "workspace:*",
-    "@anion155/eslint-config-jest": "workspace:*",
-    "@anion155/eslint-config-typescript": "workspace:*",
+    "@anion155/eslint-config": "workspace:^",
+    "@anion155/eslint-config-jest": "workspace:^",
+    "@anion155/eslint-config-typescript": "workspace:^",
     "@jest/globals": "^29.1.2",
     "@monorepo/configs": "workspace:^",
+    "@monorepo/utils": "workspace:^",
     "@testing-library/react": "^13.4.0",
     "@types/react": "^18.0.21",
     "@types/use-sync-external-store": "^0.0.3",
@@ -59,6 +60,7 @@
     "prettier": "^2.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "rimraf": "^5.0.0",
     "rollup": "^2.79.1",
     "typescript": "^4.8.3"
   },

@@ -1,5 +1,6 @@
 import { describe, expect, jest, test } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
+import { wrapHook } from "@monorepo/utils";
+import { renderHook } from "@testing-library/react";
 import {
   delay,
   first as firstRx,
@@ -13,9 +14,10 @@ import { useRxCallback } from "../use-rx-callback";
 import type { PromiseSubscriber } from "../utils";
 import { toPromise } from "../utils";
 
-const renderRxCallbackHook = wrapHook(useRxCallback<[], symbol>);
+const renderRxCallbackHook = wrapHook(useRxCallback<[], symbol>, renderHook);
 const renderRxCallbackWithSubsHook = wrapHook(
-  useRxCallback<number[], symbol, symbol>
+  useRxCallback<number[], symbol, symbol>,
+  renderHook
 );
 
 describe("useRxCallback", () => {

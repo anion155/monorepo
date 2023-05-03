@@ -1,8 +1,9 @@
 import type { CancelablePromise } from "@anion155/react-hooks/utils";
-import { assert, cancelablePromise } from "@anion155/react-hooks/utils";
+import { cancelablePromise } from "@anion155/react-hooks/utils";
 import type { Observable } from "rxjs";
 import { Subscription } from "rxjs";
 
+import { assert } from "./bundled";
 import { EmptyValueError } from "./errors";
 
 export type PromiseSubscriber<T, U = T> = (

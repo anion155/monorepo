@@ -1,5 +1,6 @@
 import { expect, test, describe } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
+import { wrapHook } from "@monorepo/utils";
+import { renderHook } from "@testing-library/react";
 import { BehaviorSubject } from "rxjs";
 
 import { mockBehaviorSubject } from "../../tests/mock-behavior-subject";
@@ -11,9 +12,12 @@ import {
 } from "../use-rx-store";
 import { createReactRxStore } from "../utils";
 
-const renderRxStoreHook = wrapHook(useRxStore<symbol>);
-const renderRxStoreValueHook = wrapHook(useRxStoreValue<symbol>);
-const renderRxStoreDispatcherHook = wrapHook(useRxStoreDispatcher<symbol>);
+const renderRxStoreHook = wrapHook(useRxStore<symbol>, renderHook);
+const renderRxStoreValueHook = wrapHook(useRxStoreValue<symbol>, renderHook);
+const renderRxStoreDispatcherHook = wrapHook(
+  useRxStoreDispatcher<symbol>,
+  renderHook
+);
 
 describe("useRxStore", () => {
   const value = Symbol("test-value") as symbol;

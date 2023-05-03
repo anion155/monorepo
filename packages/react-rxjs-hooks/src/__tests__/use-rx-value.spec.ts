@@ -1,13 +1,13 @@
 import { asyncDelay } from "@anion155/react-hooks/utils";
 import { describe, expect, test } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
-import { waitFor } from "@testing-library/react";
+import { wrapHook } from "@monorepo/utils";
+import { renderHook, waitFor } from "@testing-library/react";
 import { delay, of } from "rxjs";
 
 import { mockObservable } from "../../tests/mock-observable";
 import { useRxValue } from "../use-rx-value";
 
-const renderRxValueHook = wrapHook(useRxValue<symbol>);
+const renderRxValueHook = wrapHook(useRxValue<symbol>, renderHook);
 
 describe("useRxValue", () => {
   const value = Symbol("test-value") as symbol;

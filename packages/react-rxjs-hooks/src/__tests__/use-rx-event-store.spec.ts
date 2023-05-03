@@ -1,13 +1,14 @@
 import { describe, expect, jest, test } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
-import { act } from "@testing-library/react";
+import { wrapHook } from "@monorepo/utils";
+import { act, renderHook } from "@testing-library/react";
 
 import { useRxEventStore } from "../use-rx-event-store";
 import { createReactRxStore } from "../utils";
 
-const renderRxEventStoreHook = wrapHook(useRxEventStore<symbol>);
+const renderRxEventStoreHook = wrapHook(useRxEventStore<symbol>, renderHook);
 const renderRxEventStoreWithProjectHook = wrapHook(
-  useRxEventStore<[value: symbol], { v: symbol }>
+  useRxEventStore<[value: symbol], { v: symbol }>,
+  renderHook
 );
 
 describe("useRxEventStore", () => {

@@ -1,11 +1,11 @@
 import { describe, expect, test } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
-import { act } from "@testing-library/react";
+import { wrapHook } from "@monorepo/utils";
+import { act, renderHook } from "@testing-library/react";
 
 import { useRxState } from "../use-rx-state";
 import { createReactRxStore } from "../utils";
 
-const renderRxStateHook = wrapHook(useRxState<symbol>);
+const renderRxStateHook = wrapHook(useRxState<symbol>, renderHook);
 
 describe("useRxState", () => {
   const value = Symbol("test-value") as symbol;

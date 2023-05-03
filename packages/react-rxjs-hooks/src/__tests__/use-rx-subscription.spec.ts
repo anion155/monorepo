@@ -1,11 +1,12 @@
 import { jest, expect, test, describe } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
+import { wrapHook } from "@monorepo/utils";
+import { renderHook } from "@testing-library/react";
 import { Subscription, of } from "rxjs";
 
 import { mockObservable } from "../../tests/mock-observable";
 import { useRxSubscription } from "../use-rx-subscription";
 
-const renderRxSubscriptionHook = wrapHook(useRxSubscription);
+const renderRxSubscriptionHook = wrapHook(useRxSubscription, renderHook);
 
 describe("useRxSubscription", () => {
   test("render, with subscription fabric", () => {

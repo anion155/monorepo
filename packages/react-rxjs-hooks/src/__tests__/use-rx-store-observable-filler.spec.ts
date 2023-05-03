@@ -1,12 +1,13 @@
 import { describe, expect, test } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
-import { act } from "@testing-library/react";
+import { wrapHook } from "@monorepo/utils";
+import { act, renderHook } from "@testing-library/react";
 import { BehaviorSubject } from "rxjs";
 
 import { useRxStoreObservableFiller } from "../use-rx-store-observable-filler";
 
 const renderRxStoreObservableFillerHook = wrapHook(
-  useRxStoreObservableFiller<number>
+  useRxStoreObservableFiller<number>,
+  renderHook
 );
 
 describe("useRxStoreObservableFiller", () => {

@@ -1,8 +1,7 @@
 import { useContext } from "react";
 
+import { warning } from "./bundled";
 import type { SelectableContext, SelectableContextController } from "./types";
-
-import "./global";
 
 export const ControllerContextSymbol: unique symbol = Symbol(
   "SelectableContext#ControllerContext"
@@ -13,9 +12,6 @@ export const invalidController = Object.freeze({
   listeners: new Set(),
   subscribe: () => () => {},
 } as SelectableContextController<unknown>);
-
-export const INVALID_CONTEXT_ERROR_MESSAGE =
-  "DeveloperError: SelectableContext is not provided";
 
 export type SelectableContextWithController<T> = SelectableContext<T> & {
   [ControllerContextSymbol]: React.Context<SelectableContextController<T>>;
@@ -33,10 +29,7 @@ export function useSelectableContextController<T>(
   let controller = useContext(controllerContext(Context));
   if (controller === invalidController) {
     controller = { ...controller, value: Context.defaultValue };
-    if (__DEV__) {
-      // eslint-disable-next-line no-console -- debugging message
-      console.warn(INVALID_CONTEXT_ERROR_MESSAGE);
-    }
+    warning(false, "DeveloperError: SelectableContext is not provided");
   }
   return controller;
 }
