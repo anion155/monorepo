@@ -1,3 +1,5 @@
+const airbnbStyleRules = require("eslint-config-airbnb-base/rules/style");
+
 /** @type {import('eslint').Linter.Config} */
 const config = {
   extends: [
@@ -17,9 +19,12 @@ const config = {
   },
   overrides: [
     {
-      files: ["*.js"],
+      files: ["./*.js", "./*.mjs"],
       env: {
         node: true,
+      },
+      rules: {
+        "import/no-extraneous-dependencies": "off",
       },
     },
   ],
@@ -67,6 +72,9 @@ const config = {
         allowTernary: true,
       },
     ],
+    "no-restricted-syntax": airbnbStyleRules.rules[
+      "no-restricted-syntax"
+    ].filter((r) => typeof r === "string" || r.selector !== "ForOfStatement"),
     "react-hooks/exhaustive-deps": "warn",
     "react-hooks/rules-of-hooks": "error",
     "react/destructuring-assignment": [
