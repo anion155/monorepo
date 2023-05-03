@@ -10,7 +10,8 @@
   "license": "MIT",
   "private": false,
   "types": "./dist/types/index.d.ts",
-  "main": "./dist/index.js",
+  "main": "./dist/dev/index.js",
+  "module": "./dist/dev/index.mjs",
   "files": [
     "./utils.js",
     "./utils.d.ts",
@@ -19,31 +20,31 @@
   "exports": {
     ".": {
       "types": "./dist/types/index.d.ts",
-      "import": {
-        "production": "./dist/index.prod.mjs",
-        "default": "./dist/index.mjs"
+      "production": {
+        "import": "./dist/prod/index.mjs",
+        "default": "./dist/prod/index.js"
       },
       "default": {
-        "production": "./dist/index.prod.js",
-        "default": "./dist/index.js"
+        "import": "./dist/dev/index.mjs",
+        "default": "./dist/dev/index.js"
       }
     },
     "./utils": {
-      "types": "./dist/types/utils/index.d.ts",
-      "import": {
-        "production": "./dist/utils.prod.mjs",
-        "default": "./dist/utils.mjs"
+      "types": "./dist/types/utils.d.ts",
+      "production": {
+        "import": "./dist/prod/utils.mjs",
+        "default": "./dist/prod/utils.js"
       },
       "default": {
-        "production": "./dist/utils.prod.js",
-        "default": "./dist/utils.js"
+        "import": "./dist/dev/utils.mjs",
+        "default": "./dist/dev/utils.js"
       }
     }
   },
   "scripts": {
     "lint": "eslint src",
     "test": "jest src",
-    "build": "rimraf dist && rollup --bundleConfigAsCjs --config",
+    "build": "rimraf dist && rollup --config",
     "bump-version": "bump-version react-hooks",
     "prepack": "npm run lint && npm run test && npm run build"
   },
