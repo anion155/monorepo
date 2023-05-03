@@ -1,10 +1,10 @@
 import { jest, expect, test, describe } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
-import { act } from "@testing-library/react";
+import { wrapHook } from "@monorepo/utils";
+import { act, renderHook } from "@testing-library/react";
 
 import { useInputState } from "../use-input-state";
 
-const renderInputStateHook = wrapHook(useInputState<symbol>);
+const renderInputStateHook = wrapHook(useInputState<symbol>, renderHook);
 
 describe("useInputState", () => {
   const value1 = Symbol("test-value-1");

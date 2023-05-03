@@ -1,4 +1,4 @@
-import { assert } from "./assert";
+import { assert } from "./bundled";
 
 export class CanceledError extends Error {}
 

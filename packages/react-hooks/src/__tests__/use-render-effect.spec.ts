@@ -1,9 +1,10 @@
 import { jest, expect, test, describe } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
+import { wrapHook } from "@monorepo/utils";
+import { renderHook } from "@testing-library/react";
 
 import { useRenderEffect } from "../use-render-effect";
 
-const renderRenderEffectHook = wrapHook(useRenderEffect);
+const renderRenderEffectHook = wrapHook(useRenderEffect, renderHook);
 
 describe("useRenderEffect", () => {
   const cleanup = jest.fn(() => {});

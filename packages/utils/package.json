@@ -16,7 +16,8 @@
     "lint": "eslint src",
     "test": "jest src",
     "build": "rimraf dist && rollup --config",
-    "bump-version": "bump-version react-hooks"
+    "bump-version": "bump-version react-hooks",
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@anion155/eslint-config": "workspace:^",

@@ -1,9 +1,13 @@
 import { jest, expect, test, describe } from "@jest/globals";
-import { wrapHook } from "@monorepo/configs/src/wrap-hook";
+import { wrapHook } from "@monorepo/utils";
+import { renderHook } from "@testing-library/react";
 
 import { useRenderDispatcher } from "../use-render-dispatcher";
 
-const renderRenderDispatcherHook = wrapHook(useRenderDispatcher<symbol>);
+const renderRenderDispatcherHook = wrapHook(
+  useRenderDispatcher<symbol>,
+  renderHook
+);
 
 describe("useRenderDispatcher", () => {
   const result = Symbol("test-result");

@@ -199,32 +199,6 @@ if (hasOwnProperty(obj, 'field')) {
 }
 ```
 
-### assert
-
-```ts
-function assert(condition: unknown, message?: string): asserts condition;
-```
-
-Simple assert function.
-
-```ts
-assert(hasOwnProperty(obj, 'field'), 'obj does not have property named "field"');
-obj.field; // ts now knows that obj has property 'field' of unknown type
-```
-
-### warning
-
-```ts
-function warning(condition: unknown, message?: string): void;
-```
-
-Output warning message to console, falsy condition can be used as a debugger breakpoint if 'pause on all exceptions' enabled in debugger. Does not assert value.
-
-```ts
-warning(hasOwnProperty(obj, 'field'), 'obj does not have property named "field"');
-obj?.field; // ts now knows that obj has property 'field' of unknown type
-```
-
 ### cancelablePromise
 
 ```ts

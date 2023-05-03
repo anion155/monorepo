@@ -8,6 +8,9 @@
 			"path": "packages/configs"
 		},
 		{
+			"path": "packages/utils"
+		},
+		{
 			"path": "packages/eslint-config"
 		},
 		{
