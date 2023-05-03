@@ -1,7 +1,4 @@
-// FIXME: later
-// eslint-disable-next-line import/no-extraneous-dependencies -- :-(
-import { renderHook } from "@testing-library/react";
-import type { RenderHookResult } from "@testing-library/react";
+import type { renderHook, RenderHookResult } from "@testing-library/react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- only `any` suitable in this case
 type WrappedRenderHookResult<As extends any[], R> = RenderHookResult<
@@ -19,10 +16,11 @@ type WrappedHookRenderer<F extends (...args: any[]) => any> = F extends (
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- only `any` suitable in this case
 export function wrapHook<F extends (...args: any[]) => any>(
-  useHook: F
+  useHook: F,
+  renderer: typeof renderHook
 ): WrappedHookRenderer<F> {
   const wrappedRender = (...initialArgs: Parameters<F>) => {
-    const hook = renderHook(({ args }) => useHook(...args), {
+    const hook = renderer(({ args }) => useHook(...args), {
       initialProps: { args: initialArgs },
     });
     const origRerender = hook.rerender;

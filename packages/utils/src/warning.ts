@@ -1,5 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies -- intentional
-import "@monorepo/configs/globals";
+import "../globals";
 
 export function warning(condition: unknown, message?: string) {
   if (condition) return;
