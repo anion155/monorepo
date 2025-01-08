@@ -1,0 +1,5 @@
+{
+  "name": "@anion155/monorepo",
+  "private": true,
+  "workspaces": ["packages/*"]
+}
