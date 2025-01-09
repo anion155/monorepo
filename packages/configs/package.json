@@ -1,0 +1,14 @@
+{
+  "name": "@anion155/configs",
+  "private": true,
+  "type": "module",
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jest": "^28.10.0",
+    "typescript-eslint": "^8.19.1"
+  }
+}
