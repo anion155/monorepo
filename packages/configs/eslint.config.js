@@ -31,6 +31,12 @@ export const typescript = [
       },
     },
   ),
+  {
+    files: ["**/*.{test,spec}-d.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
 ];
 
 /** @type {import('eslint').Linter.Config[]} */
