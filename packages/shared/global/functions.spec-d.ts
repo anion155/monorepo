@@ -1,4 +1,4 @@
-import { Equal, Expect, ExpectNot, Extends } from "../type-tests";
+import { Equal, Expect, ExpectNot, expectType } from "type-tests";
 import "./functions";
 
 const functor = (a: number, b: string) => ({ c: `${a}-${b}`, d: [] });
@@ -36,14 +36,16 @@ proto_function.prototype.d = [] as null[];
 type Params = [a: number, b: string];
 type Result = { c: string; d: null[] };
 
-type FunctorCases = [
-  // should only accept functor-like functions
-  Expect<Equal<typeof functor, Functor<Params, Result>>>,
-  Expect<Equal<typeof method, Functor<Params, Result>>>,
-  ExpectNot<Extends<typeof constructor, Functor<Params, Result>>>,
-  ExpectNot<Extends<typeof abstract_constructor, Functor<Params, Result>>>,
-  Expect<Equal<typeof proto_function, Functor<Params, Result>>>,
+// should only accept functor-like functions
+expectType<Functor<Params, Result>>(functor);
+expectType<Functor<Params, Result>>(method);
+// @ts-expect-error(2345)
+expectType<Functor<Params, Result>>(constructor);
+// @ts-expect-error(2345)
+expectType<Functor<Params, Result>>(abstract_constructor);
+expectType<Functor<Params, Result>>(proto_function);
 
+type FunctorCases = [
   // should infer params and result, or return never
   Expect<Equal<InferFunctor<typeof functor>, { Params: Params; Result: Result }>>,
   Expect<Equal<InferFunctor<typeof method>, { Params: Params; Result: Result }>>,
@@ -51,16 +53,22 @@ type FunctorCases = [
   Expect<Equal<InferFunctor<typeof abstract_constructor>, never>>,
   Expect<Equal<InferFunctor<typeof proto_function>, { Params: Params; Result: Result }>>,
   Expect<Equal<InferCallable<object>, never>>,
+
+  // should infer call signature
+  ExpectNot<Equal<typeof functor & { test: string }, typeof functor>>,
+  Expect<Equal<InferFunctorSign<typeof functor & { test: string }>, typeof functor>>,
 ];
 
-type MethodCases = [
-  // should only accept method-like functions
-  Expect<Equal<typeof functor, Method<{ e: string }, Params, Result>>>,
-  Expect<Equal<typeof method, Method<{ e: string }, Params, Result>>>,
-  ExpectNot<Extends<typeof constructor, Method<{ e: string }, Params, Result>>>,
-  ExpectNot<Extends<typeof abstract_constructor, Method<{ e: string }, Params, Result>>>,
-  Expect<Extends<typeof proto_function, Method<Result, Params, Result>>>,
+// should only accept method-like functions
+expectType<Method<{ e: string }, Params, Result>>(functor);
+expectType<Method<{ e: string }, Params, Result>>(method);
+// @ts-expect-error(2345)
+expectType<Method<{ e: string }, Params, Result>>(constructor);
+// @ts-expect-error(2345)
+expectType<Method<{ e: string }, Params, Result>>(abstract_constructor);
+expectType<Method<Result, Params, Result>>(proto_function);
 
+type MethodCases = [
   // should infer instance, params and result, or return never
   Expect<Equal<InferMethod<typeof functor>, { Instance: unknown; Params: Params; Result: Result }>>,
   Expect<Equal<InferMethod<typeof method>, { Instance: { e: string }; Params: Params; Result: Result }>>,
@@ -70,14 +78,18 @@ type MethodCases = [
   Expect<Equal<InferCallable<object>, never>>,
 ];
 
-type ConstructorCases = [
-  // should only accept constructor-like functions
-  ExpectNot<Extends<typeof functor, Constructor<Params, Result>>>,
-  ExpectNot<Extends<typeof method, Constructor<Params, Result>>>,
-  Expect<Extends<typeof constructor, Constructor<Params, Result>>>,
-  ExpectNot<Extends<typeof abstract_constructor, Constructor<Params, Result>>>,
-  ExpectNot<Extends<typeof proto_function, Constructor<Params, Result>>>,
+// should only accept constructor-like functions
+// @ts-expect-error(2345)
+expectType<Constructor<Params, Result>>(functor);
+// @ts-expect-error(2345)
+expectType<Constructor<Params, Result>>(method);
+expectType<Constructor<Params, Result>>(constructor);
+// @ts-expect-error(2345)
+expectType<Constructor<Params, Result>>(abstract_constructor);
+// @ts-expect-error(2345)
+expectType<Constructor<Params, Result>>(proto_function);
 
+type ConstructorCases = [
   // should infer params and instance, or return never
   Expect<Equal<InferConstructor<typeof functor>, never>>,
   Expect<Equal<InferConstructor<typeof method>, never>>,
@@ -87,14 +99,17 @@ type ConstructorCases = [
   Expect<Equal<InferCallable<object>, never>>,
 ];
 
-type AbstractConstructorCases = [
-  // should only accept abstract constructor-like functions
-  ExpectNot<Extends<typeof functor, AbstractConstructor<Params, Result>>>,
-  ExpectNot<Extends<typeof method, AbstractConstructor<Params, Result>>>,
-  Expect<Extends<typeof constructor, AbstractConstructor<Params, Result>>>,
-  Expect<Extends<typeof abstract_constructor, AbstractConstructor<Params, Result>>>,
-  ExpectNot<Extends<typeof proto_function, AbstractConstructor<Params, Result>>>,
+// should only accept abstract constructor-like functions
+// @ts-expect-error(2345)
+expectType<AbstractConstructor<Params, Result>>(functor);
+// @ts-expect-error(2345)
+expectType<AbstractConstructor<Params, Result>>(method);
+expectType<AbstractConstructor<Params, Result>>(constructor);
+expectType<AbstractConstructor<Params, Result>>(abstract_constructor);
+// @ts-expect-error(2345)
+expectType<AbstractConstructor<Params, Result>>(proto_function);
 
+type AbstractConstructorCases = [
   // should infer params and instance, or return never
   Expect<Equal<InferAbstractConstructor<typeof functor>, never>>,
   Expect<Equal<InferAbstractConstructor<typeof method>, never>>,
@@ -104,14 +119,17 @@ type AbstractConstructorCases = [
   Expect<Equal<InferCallable<object>, never>>,
 ];
 
-type ProtoFunctorCases = [
-  // should only accept function with prototype like functions
-  Expect<Extends<typeof functor, ProtoFunctor<Params, Result>>>,
-  ExpectNot<Extends<typeof method, ProtoFunctor<Params, Result>>>,
-  ExpectNot<Extends<typeof constructor, ProtoFunctor<Params, Result>>>,
-  ExpectNot<Extends<typeof abstract_constructor, ProtoFunctor<Params, Result>>>,
-  Expect<Extends<typeof proto_function, ProtoFunctor<Params, Result>>>,
+// should only accept function with prototype like functions
+expectType<ProtoFunctor<Params, Result>>(functor);
+// @ts-expect-error(2345)
+expectType<ProtoFunctor<Params, Result>>(method);
+// @ts-expect-error(2345)
+expectType<ProtoFunctor<Params, Result>>(constructor);
+// @ts-expect-error(2345)
+expectType<ProtoFunctor<Params, Result>>(abstract_constructor);
+expectType<ProtoFunctor<Params, Result>>(proto_function);
 
+type ProtoFunctorCases = [
   // should infer params and instance, or return never
   Expect<Equal<InferProtoFunctor<typeof functor>, { Params: Params; Instance: Result }>>,
   Expect<Equal<InferProtoFunctor<typeof method>, never>>,
@@ -121,14 +139,15 @@ type ProtoFunctorCases = [
   Expect<Equal<InferCallable<object>, never>>,
 ];
 
-type ConstructableCases = [
-  // should only accept constructible-like functions
-  Expect<Extends<typeof functor, Constructable<Params, Result>>>,
-  ExpectNot<Extends<typeof method, Constructable<Params, Result>>>,
-  Expect<Extends<typeof constructor, Constructable<Params, Result>>>,
-  Expect<Extends<typeof abstract_constructor, Constructable<Params, Result>>>,
-  Expect<Extends<typeof proto_function, Constructable<Params, Result>>>,
+// should only accept constructible-like functions
+expectType<Constructable<Params, Result>>(functor);
+// @ts-expect-error(2345)
+expectType<Constructable<Params, Result>>(method);
+expectType<Constructable<Params, Result>>(constructor);
+expectType<Constructable<Params, Result>>(abstract_constructor);
+expectType<Constructable<Params, Result>>(proto_function);
 
+type ConstructableCases = [
   // should infer params and instance, or return never
   Expect<Equal<InferConstructable<typeof functor>, { Params: Params; Instance: Result }>>,
   Expect<Equal<InferConstructable<typeof method>, never>>,
@@ -138,14 +157,14 @@ type ConstructableCases = [
   Expect<Equal<InferCallable<object>, never>>,
 ];
 
-type CallableCases = [
-  // should only accept any callable type
-  Expect<Extends<typeof functor, Callable<Params, Result>>>,
-  Expect<Extends<typeof method, Callable<Params, Result>>>,
-  Expect<Extends<typeof constructor, Callable<Params, Result>>>,
-  Expect<Extends<typeof abstract_constructor, Callable<Params, Result>>>,
-  Expect<Extends<typeof proto_function, Callable<Params, Result>>>,
+// should only accept any callable type
+expectType<Callable<Params, Result>>(functor);
+expectType<Callable<Params, Result>>(method);
+expectType<Callable<Params, Result>>(constructor);
+expectType<Callable<Params, Result>>(abstract_constructor);
+expectType<Callable<Params, Result>>(proto_function);
 
+type CallableCases = [
   // should infer params and result, or return never
   Expect<Equal<InferCallable<typeof functor>, { Params: Params; Result: Result }>>,
   Expect<Equal<InferCallable<typeof method>, { Params: Params; Result: Result }>>,

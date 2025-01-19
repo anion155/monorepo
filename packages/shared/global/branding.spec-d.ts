@@ -1,4 +1,4 @@
-import { Equal, Expect, ExpectNot, Extends } from "../type-tests";
+import { Equal, Expect, ExpectNot, Extends } from "type-tests";
 import "./branding";
 
 type SomeId = Branded<string, "some-id", "meta">;

@@ -10,6 +10,9 @@ declare global {
   type Functor<Params extends unknown[], Result> = { (...args: Params): Result };
   /** Infers functor's params and result */
   type InferFunctor<_Functor> = _Functor extends Functor<infer Params extends unknown[], infer Result> ? { Params: Params; Result: Result } : never;
+  /** Infers functor's call signature */
+  type InferFunctorSign<_Functor extends Functor<never, unknown>> =
+    _Functor extends Functor<infer Params extends unknown[], infer Result> ? Functor<Params, Result> : never;
 
   /**
    * Generic method type, any type that can be called with context like in example
@@ -102,8 +105,12 @@ declare global {
    * declare const result: Result
    * result = Reflect.apple(callable, context, args)
    */
-  type Callable<Params extends unknown[], Result> = Constructable<Params, Result> | Method<unknown, Params, Result> | Functor<Params, Result>;
+  type Callable<Params extends unknown[], Result> = Constructable<Params, Result> | Functor<Params, Result>;
   /** Infers constructible params and result */
   type InferCallable<_Callable> =
-    _Callable extends Constructable<infer Params, infer Result> ? { Params: Params; Result: Result } : InferFunctor<_Callable>;
+    _Callable extends Constructable<infer Params, infer Result>
+      ? { Params: Params; Result: Result }
+      : _Callable extends Functor<infer Params extends unknown[], infer Result>
+        ? { Params: Params; Result: Result }
+        : never;
 }
