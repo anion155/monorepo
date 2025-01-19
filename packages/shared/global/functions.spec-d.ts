@@ -1,175 +1,278 @@
-import { Equal, Expect, ExpectNot, expectType } from "type-tests";
+import { Equal, Expect, expectType } from "type-tests";
 import "./functions";
 
-const functor = (a: number, b: string) => ({ c: `${a}-${b}`, d: [] });
+// should handle functor
+{
+  const functor = (a: number, b: string) => ({ c: `${a}-${b}` });
+  type Params = Parameters<typeof functor>;
+  type Result = ReturnType<typeof functor>;
 
-const method = {
-  a(this: { e: string }, a: number, b: string) {
-    return { c: `${a}-${b}`, d: [] };
-  },
-}["a"];
+  expectType<Functor<never, unknown>>(functor);
+  expectType<Method<never, never, unknown>>(functor);
+  // @ts-expect-error(2345)
+  expectType<Constructor<never, unknown>>(functor);
+  // @ts-expect-error(2345)
+  expectType<AbstractConstructor<never, unknown>>(functor);
+  // @ts-expect-error(2345)
+  expectType<Constructable<never, unknown>>(functor);
+  expectType<Callable<never, unknown>>(functor);
+  // @ts-expect-error(2345)
+  expectType<Predicate<unknown, unknown>>(functor);
 
-class constructor {
-  c: string;
-  d: null[] = [];
-  constructor(a: number, b: string) {
-    this.c = `${a}-${b}`;
+  type FunctorCases = [
+    Expect<Equal<InferFunctor<typeof functor>, { Params: Params; Result: Result }>>,
+    Expect<Equal<InferMethod<typeof functor>, { Context: unknown; Params: Params; Result: Result }>>,
+    Expect<Equal<InferConstructor<typeof functor>, never>>,
+    Expect<Equal<InferAbstractConstructor<typeof functor>, never>>,
+    Expect<Equal<InferConstructable<typeof functor>, never>>,
+    Expect<Equal<InferCallable<typeof functor>, { Params: Params; Result: Result }>>,
+    Expect<Equal<InferPredicate<typeof functor>, never>>,
+  ];
+}
+
+// should handle method
+{
+  const method = {
+    a(this: { e: string }, a: number, b: string) {
+      return { c: `${a}-${b}`, d: [] };
+    },
+  }["a"];
+  type Context = ThisParameterType<typeof method>;
+  type Params = Parameters<typeof method>;
+  type Result = ReturnType<typeof method>;
+
+  expectType<Functor<never, unknown>>(method);
+  expectType<Method<never, never, unknown>>(method);
+  // @ts-expect-error(2345)
+  expectType<Constructor<never, unknown>>(method);
+  // @ts-expect-error(2345)
+  expectType<AbstractConstructor<never, unknown>>(method);
+  // @ts-expect-error(2345)
+  expectType<ProtoFunctor<never, unknown>>(method);
+  // @ts-expect-error(2345)
+  expectType<Constructable<never, unknown>>(method);
+  expectType<Callable<never, unknown>>(method);
+  // @ts-expect-error(2345)
+  expectType<Predicate<unknown, unknown>>(method);
+
+  type MethodCases = [
+    Expect<Equal<InferFunctor<typeof method>, { Params: Params; Result: Result }>>,
+    Expect<Equal<InferMethod<typeof method>, { Context: Context; Params: Params; Result: Result }>>,
+    Expect<Equal<InferConstructor<typeof method>, never>>,
+    Expect<Equal<InferAbstractConstructor<typeof method>, never>>,
+    Expect<Equal<InferConstructable<typeof method>, never>>,
+    Expect<Equal<InferCallable<typeof method>, { Params: Params; Result: Result }>>,
+  ];
+}
+
+// should handle constructor
+{
+  class constructor {
+    c: string;
+    d: null[] = [];
+    constructor(a: number, b: string) {
+      this.c = `${a}-${b}`;
+    }
   }
+  type Instance = InstanceType<typeof constructor>;
+  type Params = ConstructorParameters<typeof constructor>;
+
+  // @ts-expect-error(2345)
+  expectType<Functor<never, unknown>>(constructor);
+  // @ts-expect-error(2345)
+  expectType<Method<never, never, unknown>>(constructor);
+  expectType<Constructor<never, unknown>>(constructor);
+  expectType<AbstractConstructor<never, unknown>>(constructor);
+  // @ts-expect-error(2345)
+  expectType<ProtoFunctor<never, unknown>>(constructor);
+  expectType<Constructable<never, unknown>>(constructor);
+  expectType<Callable<never, unknown>>(constructor);
+
+  type MethodCases = [
+    Expect<Equal<InferFunctor<typeof constructor>, never>>,
+    Expect<Equal<InferMethod<typeof constructor>, never>>,
+    Expect<Equal<InferConstructor<typeof constructor>, { Instance: Instance; Params: Params }>>,
+    Expect<Equal<InferAbstractConstructor<typeof constructor>, { Instance: Instance; Params: Params }>>,
+    Expect<Equal<InferConstructable<typeof constructor>, { Instance: Instance; Params: Params }>>,
+    Expect<Equal<InferCallable<typeof constructor>, { Params: Params; Result: Instance }>>,
+  ];
 }
 
-abstract class abstract_constructor {
-  abstract c: string;
-  d: null[] = [];
-  constructor(a: number, b: string) {
-    void a;
-    void b;
+// should handle abstract_constructor
+{
+  abstract class abstract_constructor {
+    abstract c: string;
+    d: null[] = [];
+    constructor(a: number, b: string) {
+      void a;
+      void b;
+    }
   }
+  type Instance = InstanceType<typeof abstract_constructor>;
+  type Params = ConstructorParameters<typeof abstract_constructor>;
+
+  // @ts-expect-error(2345)
+  expectType<Functor<never, unknown>>(abstract_constructor);
+  // @ts-expect-error(2345)
+  expectType<Method<never, never, unknown>>(abstract_constructor);
+  // @ts-expect-error(2345)
+  expectType<Constructor<never, unknown>>(abstract_constructor);
+  expectType<AbstractConstructor<never, unknown>>(abstract_constructor);
+  // @ts-expect-error(2345)
+  expectType<ProtoFunctor<never, unknown>>(abstract_constructor);
+  expectType<Constructable<never, unknown>>(abstract_constructor);
+  expectType<Callable<never, unknown>>(abstract_constructor);
+
+  type MethodCases = [
+    Expect<Equal<InferFunctor<typeof abstract_constructor>, never>>,
+    Expect<Equal<InferMethod<typeof abstract_constructor>, never>>,
+    Expect<Equal<InferConstructor<typeof abstract_constructor>, never>>,
+    Expect<Equal<InferAbstractConstructor<typeof abstract_constructor>, { Instance: Instance; Params: Params }>>,
+    Expect<Equal<InferConstructable<typeof abstract_constructor>, { Instance: Instance; Params: Params }>>,
+    Expect<Equal<InferCallable<typeof abstract_constructor>, { Params: Params; Result: Instance }>>,
+  ];
 }
 
-function proto_function(this: { c: string; d: null[] }, a: number, b: string) {
-  this.c = `${a}-${b}`;
-  return this;
+{
+  const isStringUntyped = (value: string | number): boolean => true;
+  const isStringTyped = (value: string | number): value is string => true;
+
+  type PredicateCases = [
+    Expect<Equal<InferPredicate<typeof isStringUntyped>, { Param: string | number; Result: string | number }>>,
+    Expect<Equal<InferPredicate<typeof isStringTyped>, { Param: string | number; Result: string }>>,
+    Expect<Equal<InferPredicate<(a: number, b: string) => boolean>, never>>,
+  ];
+
+  // @ts-expect-error(2345)
+  expectType<TypedPredicate<string | number, string>>(isStringUntyped);
+  expectType<TypedPredicate<string | number, string>>(isStringTyped);
+  expectType<UntypedPredicate<string | number>>(isStringUntyped);
+  expectType<UntypedPredicate<string | number>>(isStringTyped);
+  expectType<Predicate<string | number, string>>(isStringUntyped);
+  expectType<Predicate<string | number, string>>(isStringTyped);
+
+  class Collection<Value> {
+    values!: Value[];
+    push(value: Value) {}
+    typeCheck(checked: (value: Value) => void) {}
+
+    typedFilter<P extends TypedPredicate<Value, Value>>(predicate: P): Collection<InferPredicate<P>["Result"]> {
+      return new Collection();
+    }
+    untypedFilter<P extends UntypedPredicate<Value>>(predicate: P): Collection<InferPredicate<P>["Result"]> {
+      return new Collection();
+    }
+    filter<P extends Predicate<Value, Value>>(predicate: P): Collection<InferPredicate<P>["Result"]> {
+      return new Collection();
+    }
+  }
+
+  const source = new Collection<string | number>();
+  // @ts-expect-error(2345)
+  source.typedFilter(isStringUntyped);
+  source.typedFilter(isStringTyped).typeCheck((value) => {
+    type ValueInferCase = Expect<Equal<typeof value, string>>;
+  });
+  source.untypedFilter(isStringUntyped).typeCheck((value) => {
+    type ValueInferCase = Expect<Equal<typeof value, string | number>>;
+  });
+  source.untypedFilter(isStringTyped).typeCheck((value) => {
+    type ValueInferCase = Expect<Equal<typeof value, string>>;
+  });
+  source.filter(isStringUntyped).typeCheck((value) => {
+    type ValueInferCase = Expect<Equal<typeof value, string | number>>;
+  });
+  source.filter(isStringTyped).typeCheck((value) => {
+    type ValueInferCase = Expect<Equal<typeof value, string>>;
+  });
 }
-// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-proto_function.prototype.d = [] as null[];
 
-type Params = [a: number, b: string];
-type Result = { c: string; d: null[] };
+{
+  const assertTruthy = (value: "blah" | "foo" | ""): asserts value => {};
+  const assertBlah = (value: "blah" | "foo"): asserts value is "blah" => {};
+  const voidReturn = (a: number | undefined): void => {};
+  const neverReturn = (a: true | false): never => {
+    throw new Error();
+  };
 
-// should only accept functor-like functions
-expectType<Functor<Params, Result>>(functor);
-expectType<Functor<Params, Result>>(method);
-// @ts-expect-error(2345)
-expectType<Functor<Params, Result>>(constructor);
-// @ts-expect-error(2345)
-expectType<Functor<Params, Result>>(abstract_constructor);
-expectType<Functor<Params, Result>>(proto_function);
+  type AssertionCases = [
+    Expect<Equal<InferAssertion<typeof assertTruthy>, { Param: "blah" | "foo" | ""; Result: "blah" | "foo" }>>,
+    Expect<Equal<InferAssertion<typeof assertBlah>, { Param: "blah" | "foo"; Result: "blah" }>>,
+    Expect<Equal<InferAssertion<typeof voidReturn>, never>>,
+    Expect<Equal<InferAssertion<typeof neverReturn>, never>>,
+    Expect<Equal<InferAssertion<(a: number, b: string) => void>, never>>,
+  ];
 
-type FunctorCases = [
-  // should infer params and result, or return never
-  Expect<Equal<InferFunctor<typeof functor>, { Params: Params; Result: Result }>>,
-  Expect<Equal<InferFunctor<typeof method>, { Params: Params; Result: Result }>>,
-  Expect<Equal<InferFunctor<typeof constructor>, never>>,
-  Expect<Equal<InferFunctor<typeof abstract_constructor>, never>>,
-  Expect<Equal<InferFunctor<typeof proto_function>, { Params: Params; Result: Result }>>,
-  Expect<Equal<InferCallable<object>, never>>,
+  expectType<TypedAssertion<"blah" | "foo" | "", "blah" | "foo">>(assertTruthy);
+  expectType<TypedAssertion<"blah" | "foo", "blah" | "foo">>(assertBlah);
+  expectType<TypedAssertion<number | undefined, number>>(voidReturn);
+  expectType<TypedAssertion<true | false, true>>(neverReturn);
+  expectType<TruthyAssertion<"blah" | "foo" | "">>(assertTruthy);
+  expectType<TruthyAssertion<"blah" | "foo">>(assertBlah);
+  expectType<TruthyAssertion<number | undefined>>(voidReturn);
+  expectType<TruthyAssertion<true | false>>(neverReturn);
+  expectType<Assertion<"blah" | "foo" | "", "blah" | "foo">>(assertTruthy);
+  expectType<Assertion<"blah" | "foo", "blah" | "foo">>(assertBlah);
+  expectType<Assertion<number | undefined, number>>(voidReturn);
+  expectType<Assertion<true | false, true>>(neverReturn);
 
-  // should infer call signature
-  ExpectNot<Equal<typeof functor & { test: string }, typeof functor>>,
-  Expect<Equal<InferFunctorSign<typeof functor & { test: string }>, typeof functor>>,
-];
+  class Collection<Value> {
+    values!: Value[];
+    push(value: Value) {}
+    typeCheck(checked: (value: Value) => void) {}
 
-// should only accept method-like functions
-expectType<Method<{ e: string }, Params, Result>>(functor);
-expectType<Method<{ e: string }, Params, Result>>(method);
-// @ts-expect-error(2345)
-expectType<Method<{ e: string }, Params, Result>>(constructor);
-// @ts-expect-error(2345)
-expectType<Method<{ e: string }, Params, Result>>(abstract_constructor);
-expectType<Method<Result, Params, Result>>(proto_function);
+    assertionTypedFilter<A extends TypedAssertion<Value, Value>>(assertion: A): Collection<InferAssertion<A>["Result"]> {
+      return new Collection();
+    }
+    assertionTruthyFilter<A extends TruthyAssertion<Value>>(assertion: A): Collection<InferAssertion<A>["Result"]> {
+      return new Collection();
+    }
+    assertionFilter<A extends Assertion<Value, Value>>(assertion: A): Collection<InferAssertion<A>["Result"]> {
+      return new Collection();
+    }
+  }
 
-type MethodCases = [
-  // should infer instance, params and result, or return never
-  Expect<Equal<InferMethod<typeof functor>, { Instance: unknown; Params: Params; Result: Result }>>,
-  Expect<Equal<InferMethod<typeof method>, { Instance: { e: string }; Params: Params; Result: Result }>>,
-  Expect<Equal<InferMethod<typeof constructor>, never>>,
-  Expect<Equal<InferMethod<typeof abstract_constructor>, never>>,
-  Expect<Equal<InferMethod<typeof proto_function>, { Instance: Result; Params: Params; Result: Result }>>,
-  Expect<Equal<InferCallable<object>, never>>,
-];
+  const source = new Collection<"blah" | "foo" | "">();
 
-// should only accept constructor-like functions
-// @ts-expect-error(2345)
-expectType<Constructor<Params, Result>>(functor);
-// @ts-expect-error(2345)
-expectType<Constructor<Params, Result>>(method);
-expectType<Constructor<Params, Result>>(constructor);
-// @ts-expect-error(2345)
-expectType<Constructor<Params, Result>>(abstract_constructor);
-// @ts-expect-error(2345)
-expectType<Constructor<Params, Result>>(proto_function);
+  source.assertionTypedFilter(assertTruthy).typeCheck((value) => {
+    type ValueInferCase = Expect<Equal<typeof value, "blah" | "foo">>;
+  });
+  source
+    .assertionTypedFilter(assertTruthy)
+    .assertionTypedFilter(assertBlah)
+    .typeCheck((value) => {
+      type ValueInferCase = Expect<Equal<typeof value, "blah">>;
+    });
+  // @ts-expect-error(2345)
+  source.assertionTypedFilter(voidReturn);
+  // @ts-expect-error(2345)
+  source.assertionTypedFilter(neverReturn);
 
-type ConstructorCases = [
-  // should infer params and instance, or return never
-  Expect<Equal<InferConstructor<typeof functor>, never>>,
-  Expect<Equal<InferConstructor<typeof method>, never>>,
-  Expect<Equal<InferConstructor<typeof constructor>, { Params: Params; Instance: Result }>>,
-  Expect<Equal<InferConstructor<typeof abstract_constructor>, never>>,
-  Expect<Equal<InferConstructor<typeof proto_function>, never>>,
-  Expect<Equal<InferCallable<object>, never>>,
-];
+  source.assertionTruthyFilter(assertTruthy).typeCheck((value) => {
+    type ValueInferCase = Expect<Equal<typeof value, "blah" | "foo">>;
+  });
+  source
+    .assertionTruthyFilter(assertTruthy)
+    .assertionTruthyFilter(assertBlah)
+    .typeCheck((value) => {
+      type ValueInferCase = Expect<Equal<typeof value, "blah">>;
+    });
+  // @ts-expect-error(2345)
+  source.assertionTruthyFilter(voidReturn);
+  // @ts-expect-error(2345)
+  source.assertionTruthyFilter(neverReturn);
 
-// should only accept abstract constructor-like functions
-// @ts-expect-error(2345)
-expectType<AbstractConstructor<Params, Result>>(functor);
-// @ts-expect-error(2345)
-expectType<AbstractConstructor<Params, Result>>(method);
-expectType<AbstractConstructor<Params, Result>>(constructor);
-expectType<AbstractConstructor<Params, Result>>(abstract_constructor);
-// @ts-expect-error(2345)
-expectType<AbstractConstructor<Params, Result>>(proto_function);
-
-type AbstractConstructorCases = [
-  // should infer params and instance, or return never
-  Expect<Equal<InferAbstractConstructor<typeof functor>, never>>,
-  Expect<Equal<InferAbstractConstructor<typeof method>, never>>,
-  Expect<Equal<InferAbstractConstructor<typeof constructor>, { Params: Params; Instance: Result }>>,
-  Expect<Equal<InferAbstractConstructor<typeof abstract_constructor>, { Params: Params; Instance: Result }>>,
-  Expect<Equal<InferAbstractConstructor<typeof proto_function>, never>>,
-  Expect<Equal<InferCallable<object>, never>>,
-];
-
-// should only accept function with prototype like functions
-expectType<ProtoFunctor<Params, Result>>(functor);
-// @ts-expect-error(2345)
-expectType<ProtoFunctor<Params, Result>>(method);
-// @ts-expect-error(2345)
-expectType<ProtoFunctor<Params, Result>>(constructor);
-// @ts-expect-error(2345)
-expectType<ProtoFunctor<Params, Result>>(abstract_constructor);
-expectType<ProtoFunctor<Params, Result>>(proto_function);
-
-type ProtoFunctorCases = [
-  // should infer params and instance, or return never
-  Expect<Equal<InferProtoFunctor<typeof functor>, { Params: Params; Instance: Result }>>,
-  Expect<Equal<InferProtoFunctor<typeof method>, never>>,
-  Expect<Equal<InferProtoFunctor<typeof constructor>, never>>,
-  Expect<Equal<InferProtoFunctor<typeof abstract_constructor>, never>>,
-  Expect<Equal<InferProtoFunctor<typeof proto_function>, { Params: Params; Instance: Result }>>,
-  Expect<Equal<InferCallable<object>, never>>,
-];
-
-// should only accept constructible-like functions
-expectType<Constructable<Params, Result>>(functor);
-// @ts-expect-error(2345)
-expectType<Constructable<Params, Result>>(method);
-expectType<Constructable<Params, Result>>(constructor);
-expectType<Constructable<Params, Result>>(abstract_constructor);
-expectType<Constructable<Params, Result>>(proto_function);
-
-type ConstructableCases = [
-  // should infer params and instance, or return never
-  Expect<Equal<InferConstructable<typeof functor>, { Params: Params; Instance: Result }>>,
-  Expect<Equal<InferConstructable<typeof method>, never>>,
-  Expect<Equal<InferConstructable<typeof constructor>, { Params: Params; Instance: Result }>>,
-  Expect<Equal<InferConstructable<typeof abstract_constructor>, { Params: Params; Instance: Result }>>,
-  Expect<Equal<InferConstructable<typeof proto_function>, { Params: Params; Instance: Result }>>,
-  Expect<Equal<InferCallable<object>, never>>,
-];
-
-// should only accept any callable type
-expectType<Callable<Params, Result>>(functor);
-expectType<Callable<Params, Result>>(method);
-expectType<Callable<Params, Result>>(constructor);
-expectType<Callable<Params, Result>>(abstract_constructor);
-expectType<Callable<Params, Result>>(proto_function);
-
-type CallableCases = [
-  // should infer params and result, or return never
-  Expect<Equal<InferCallable<typeof functor>, { Params: Params; Result: Result }>>,
-  Expect<Equal<InferCallable<typeof method>, { Params: Params; Result: Result }>>,
-  Expect<Equal<InferCallable<typeof constructor>, { Params: Params; Result: Result }>>,
-  Expect<Equal<InferCallable<typeof abstract_constructor>, { Params: Params; Result: Result }>>,
-  Expect<Equal<InferCallable<typeof proto_function>, { Params: Params; Result: Result }>>,
-  Expect<Equal<InferCallable<object>, never>>,
-];
+  source.assertionFilter(assertTruthy).typeCheck((value) => {
+    type ValueInferCase = Expect<Equal<typeof value, "blah" | "foo">>;
+  });
+  source
+    .assertionFilter(assertTruthy)
+    .assertionFilter(assertBlah)
+    .typeCheck((value) => {
+      type ValueInferCase = Expect<Equal<typeof value, "blah">>;
+    });
+  // @ts-expect-error(2345)
+  source.assertionFilter(voidReturn);
+  // @ts-expect-error(2345)
+  source.assertionFilter(neverReturn);
+}

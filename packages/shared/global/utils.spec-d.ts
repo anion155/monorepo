@@ -1,4 +1,4 @@
-import { Equal, Expect } from "type-tests";
+import { Equal, Expect, ExpectNot } from "type-tests";
 
 type PickHelperCases = [
   // should autosuggest key names
@@ -70,8 +70,11 @@ type RequiredSomeCases = [
 
 type IfEqualsCases = [
   // should compare types
-  Expect<IfEquals<"a", "b", false, true>>,
+  ExpectNot<IfEquals<"a", "b", true, false>>,
   Expect<IfEquals<"a", "a", true, false>>,
+  Expect<IfEquals<never, never, true, false>>,
+  ExpectNot<IfEquals<"a", never, true, false>>,
+  ExpectNot<IfEquals<never, "a", true, false>>,
 ];
 
 type WritableKeysCases = [
