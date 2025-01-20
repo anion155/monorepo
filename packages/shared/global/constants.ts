@@ -1,4 +1,4 @@
 declare global {
   /** Falsy types */
-  type Falsy = false | 0 | "" | null | undefined;
+  type Falsy = false | 0 | 0n | "" | null | undefined;
 }
