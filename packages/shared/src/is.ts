@@ -1,4 +1,4 @@
-import { Curried, curryHelper } from "./functional";
+import { curryHelper } from "./functional";
 
 type TypeOfMap = {
   string: string;
@@ -8,8 +8,8 @@ type TypeOfMap = {
   symbol: symbol;
   undefined: undefined;
   object: object;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  function: Function;
+  function: Callable<unknown[], unknown>;
+  promise: PromiseLike<unknown>;
 };
 
 /** Tests if value is an object */
@@ -17,63 +17,52 @@ export function isObject(value: unknown): value is object {
   return typeof value === "object" && value !== null;
 }
 
-/** Creates predicate that tests if value has field */
-export function hasField<Key extends string | symbol | number>(key: Key): Curried<(value: object) => value is { [k in Key]: unknown }>;
 /** Tests if value has field */
-export function hasField<Key extends string | symbol | number>(value: object, key: Key): value is { [k in Key]: unknown };
-export function hasField(...params: [key: string | symbol | number] | [value: object, key: string | symbol | number]) {
-  if (params.length === 1) {
-    return curryHelper((value: object) => hasField(value, params[0]));
-  }
-  return params[1] in params[0];
+export function hasField<Key extends string | symbol | number>(value: object, key: Key): value is { [k in Key]: unknown } {
+  return key in value;
 }
-
-/** Creates predicate that tests if value has own field */
-export function hasOwnField<Key extends string | symbol | number>(key: Key): Curried<(value: object) => value is { [k in Key]: unknown }>;
+/** Creates predicate that tests if value has field */
+hasField.create = function createHasField<Key extends string | symbol | number>(key: Key) {
+  return curryHelper((value: object): value is { [k in Key]: unknown } => hasField(value, key));
+};
 /** Tests if value has own field */
-export function hasOwnField<Key extends string | symbol | number>(value: object, key: Key): value is { [k in Key]: unknown };
-export function hasOwnField<Key extends string | symbol | number>(...params: [key: Key] | [value: object, key: Key]) {
-  if (params.length === 1) {
-    return curryHelper((value: object) => hasOwnField(value, params[0]));
-  }
-  return Object.prototype.hasOwnProperty.call(params[0], params[1]);
+function hasOwnField<Key extends string | symbol | number>(value: object, key: Key): value is { [k in Key]: unknown } {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+/** Creates predicate that tests if value has own field */
+hasOwnField.create = function createHasOwnField<Key extends string | symbol | number>(key: Key) {
+  return curryHelper((value: object): value is { [k in Key]: unknown } => hasOwnField(value, key));
+};
+hasField.own = hasOwnField;
+
+/** Tests if value is promise like */
+export function isPromiseLike<T>(value: unknown): value is PromiseLike<T> {
+  return isObject(value) && hasField(value, "then") && typeof value.then === "function";
 }
 
-/** Creates predicate that tests if value is of type */
-export function isTypeOf<Type extends keyof TypeOfMap>(type: Type): Curried<(value: unknown) => value is TypeOfMap[Type]>;
 /** Tests if value is of type */
-export function isTypeOf<Type extends keyof TypeOfMap>(value: unknown, type: Type): value is TypeOfMap[Type];
-export function isTypeOf(...params: [type: keyof TypeOfMap] | [value: unknown, type: keyof TypeOfMap]) {
-  if (params.length === 1) {
-    return curryHelper((value: unknown) => isTypeOf(value, params[0]));
-  }
-  const [value, type] = params;
+export function isTypeOf<Type extends keyof TypeOfMap>(value: unknown, type: Type): value is TypeOfMap[Type] {
   switch (type) {
     case "object":
       return isObject(value);
     case "undefined":
       return value === undefined;
+    case "promise":
+      return isPromiseLike(value);
     default:
       return typeof value === type;
   }
 }
+/** Creates predicate that tests if value is of type */
+isTypeOf.create = function createIsTypeOf<Type extends keyof TypeOfMap>(type: Type) {
+  return curryHelper((value: unknown): value is TypeOfMap[Type] => isTypeOf(value, type));
+};
 
-/** Creates predicate that tests if value is an error */
-export function isError<ErrorClass extends Constructable<never, Error>>(
-  ErrorClass: ErrorClass,
-): Curried<(value: unknown) => value is InferConstructable<ErrorClass>["Instance"]>;
 /** Tests if value is an error */
 export function isError<ErrorClass extends Constructable<never, Error>>(
   value: unknown,
   ErrorClass: ErrorClass,
-): value is InferConstructable<ErrorClass>["Instance"];
-export function isError<ErrorClass extends Constructable<never, Error>>(
-  ...params: [ErrorClass: ErrorClass] | [value: unknown, ErrorClass: ErrorClass]
-) {
-  if (params.length === 1) {
-    return curryHelper((value: unknown) => isError(value, params[0]));
-  }
-  const [value, ErrorClass] = params;
+): value is InferConstructable<ErrorClass>["Instance"] {
   const name = (ErrorClass.prototype as Error).name;
   if (value instanceof ErrorClass) return true;
   if (value instanceof Error) return value.name === name;
@@ -86,6 +75,10 @@ export function isError<ErrorClass extends Constructable<never, Error>>(
     isTypeOf(value.message, "string")
   );
 }
+/** Creates predicate that tests if value is an error */
+isError.create = function createIsError<ErrorClass extends Constructable<never, Error>>(ErrorClass: ErrorClass) {
+  return curryHelper((value: unknown): value is InferConstructable<ErrorClass>["Instance"] => isError(value, ErrorClass));
+};
 
 type IsType = Constructable<never, unknown> | keyof TypeOfMap;
 type IsInferInstance<Type extends IsType> = Type extends keyof TypeOfMap
@@ -93,20 +86,8 @@ type IsInferInstance<Type extends IsType> = Type extends keyof TypeOfMap
   : Type extends ObjectConstructor
     ? object
     : InferConstructable<Type>["Instance"];
-/** Creates predicate that tests if value is of specified type */
-export function is<Type extends IsType>(constrOrType: Type): Curried<(value: unknown) => value is IsInferInstance<Type>>;
 /** Tests if value is of specified type */
-export function is<Type extends IsType>(value: unknown, constrOrType: Type): value is IsInferInstance<Type>;
-export function is<Type extends IsType>(...params: [constrOrType: Type] | [value: unknown, constrOrType: Type]) {
-  if (params.length === 1) {
-    const constrOrType = params[0];
-    if (typeof constrOrType === "string") return curryHelper((value: unknown) => isTypeOf(value, constrOrType));
-    const constr = constrOrType as Constructable<unknown[], unknown>;
-    if (Object.is(constr, Object)) return curryHelper((value: unknown) => isObject(value));
-    if (constr.prototype instanceof Error) return curryHelper((value: unknown) => isError(value, constr as Constructable<unknown[], Error>));
-    return curryHelper((value: unknown) => is(value, constrOrType));
-  }
-  const [value, constrOrType] = params;
+export function is<Type extends IsType>(value: unknown, constrOrType: Type): value is IsInferInstance<Type> {
   if (typeof constrOrType === "string") return isTypeOf(value, constrOrType);
   const constr = constrOrType as Constructable<unknown[], unknown>;
   if (Object.is(constr, Object)) return isObject(value);
@@ -115,11 +96,10 @@ export function is<Type extends IsType>(...params: [constrOrType: Type] | [value
   if (value === undefined || value === null) return false;
   return value.constructor === constr;
 }
-
-/** Tests if value is promise like */
-export function isPromiseLike<T>(value: unknown): value is PromiseLike<T> {
-  return isObject(value) && hasField(value, "then") && isTypeOf(value.then, "function");
-}
+/** Creates predicate that tests if value is of specified type */
+is.create = function createIs<Type extends IsType>(constrOrType: Type) {
+  return curryHelper((value: unknown): value is IsInferInstance<Type> => is(value, constrOrType));
+};
 
 /** Tests if value is truthy */
 export const isTruthy: <Value>(value: Value) => value is Exclude<Value, Falsy> = Boolean as never;

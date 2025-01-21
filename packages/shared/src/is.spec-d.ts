@@ -1,5 +1,5 @@
 import { Equal, Expect } from "type-tests";
-import { hasField, hasOwnField, is, isError, isObject, isPromiseLike, isTruthy, isTypeOf } from "./is";
+import { hasField, is, isError, isObject, isPromiseLike, isTruthy, isTypeOf } from "./is";
 
 const value = null as unknown;
 
@@ -10,8 +10,7 @@ if (isObject(value)) {
 if (isObject(value) && hasField(value, "a")) {
   type Case = Expect<Equal<typeof value, { a: unknown }>>;
 }
-
-if (isObject(value) && hasOwnField(value, "a")) {
+if (isObject(value) && hasField.own(value, "a")) {
   type Case = Expect<Equal<typeof value, { a: unknown }>>;
 }
 
@@ -37,8 +36,10 @@ if (isTypeOf(value, "object")) {
   type Case = Expect<Equal<typeof value, object>>;
 }
 if (isTypeOf(value, "function")) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  type Case = Expect<Equal<typeof value, Function>>;
+  type Case = Expect<Equal<typeof value, Callable<unknown[], unknown>>>;
+}
+if (isTypeOf(value, "promise")) {
+  type Case = Expect<Equal<typeof value, PromiseLike<unknown>>>;
 }
 
 class TestError extends Error {}

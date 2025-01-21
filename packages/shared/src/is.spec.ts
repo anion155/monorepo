@@ -1,13 +1,13 @@
 import { describe, expect, it } from "@jest/globals";
-import { hasField, hasOwnField, is, isError, isObject, isPromiseLike, isTruthy, isTypeOf } from "./is";
+import { hasField, is, isError, isObject, isPromiseLike, isTruthy, isTypeOf } from "./is";
 
 describe("is utils", () => {
-  const values = ["test", 55, 55n, true, Symbol(), undefined, null, {}, [], function () {}] as const;
-  const resultsTable = (results: { [Index in Extract<keyof typeof values, number>]: boolean }) =>
-    values.map((value, index) => [value, results[index]] as const);
+  const values = ["test", 55, 55n, true, Symbol(), undefined, null, {}, [], function () {}, Promise.resolve(undefined), { then() {} }] as const;
+  const resultsTable = (results: { [Index in Extract<keyof typeof values, number>]: unknown }) =>
+    values.map((value, index) => [value, Boolean(results[index])] as const);
 
   it("isObject() should detect object", () => {
-    resultsTable([false, false, false, false, false, false, false, true, true, false]).forEach(([value, result]) =>
+    resultsTable([false, false, false, false, false, false, false, true, true, false, true, true]).forEach(([value, result]) =>
       expect(isObject(value)).toBe(result),
     );
   });
@@ -24,35 +24,36 @@ describe("is utils", () => {
       ["b", protoObject, false] as const,
     ] as const;
     cases.forEach(([field, object, result]) => expect(hasField(object, field)).toBe(result));
-    cases.forEach(([field, object, result]) => expect(hasField(field)(object)).toBe(result));
+    cases.forEach(([field, object, result]) => expect(hasField.create(field)(object)).toBe(result));
   });
 
-  it("hasOwnField() should detect own field in object", () => {
+  it("hasField.own() should detect own field in object", () => {
     const cases = [
       ["a", plainObject, true] as const,
       ["b", plainObject, false] as const,
       ["a", protoObject, false] as const,
       ["b", protoObject, false] as const,
     ] as const;
-    cases.forEach(([field, object, result]) => expect(hasOwnField(object, field)).toBe(result));
-    cases.forEach(([field, object, result]) => expect(hasOwnField(field)(object)).toBe(result));
+    cases.forEach(([field, object, result]) => expect(hasField.own(object, field)).toBe(result));
+    cases.forEach(([field, object, result]) => expect(hasField.own.create(field)(object)).toBe(result));
   });
 
   it("isTypeOf() should detect value type", () => {
     const results = [
-      /* prettier-ignore */ ["string",    resultsTable([true, false, false, false, false, false, false, false, false, false])] as const,
-      /* prettier-ignore */ ["number",    resultsTable([false, true, false, false, false, false, false, false, false, false])] as const,
-      /* prettier-ignore */ ["bigint",    resultsTable([false, false, true, false, false, false, false, false, false, false])] as const,
-      /* prettier-ignore */ ["boolean",   resultsTable([false, false, false, true, false, false, false, false, false, false])] as const,
-      /* prettier-ignore */ ["symbol",    resultsTable([false, false, false, false, true, false, false, false, false, false])] as const,
-      /* prettier-ignore */ ["undefined", resultsTable([false, false, false, false, false, true, false, false, false, false])] as const,
-      /* prettier-ignore */ ["object",    resultsTable([false, false, false, false, false, false, false, true, true, false])] as const,
-      /* prettier-ignore */ ["function",  resultsTable([false, false, false, false, false, false, false, false, false, true])] as const,
+      /* prettier-ignore */ ["string",    resultsTable([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
+      /* prettier-ignore */ ["number",    resultsTable([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
+      /* prettier-ignore */ ["bigint",    resultsTable([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
+      /* prettier-ignore */ ["boolean",   resultsTable([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
+      /* prettier-ignore */ ["symbol",    resultsTable([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0])] as const,
+      /* prettier-ignore */ ["undefined", resultsTable([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])] as const,
+      /* prettier-ignore */ ["object",    resultsTable([0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1])] as const,
+      /* prettier-ignore */ ["function",  resultsTable([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])] as const,
+      /* prettier-ignore */ ["promise",   resultsTable([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1])] as const,
     ] as const;
 
     results.forEach(([type, results]) => results.forEach(([value, result]) => expect(isTypeOf(value, type)).toBe(result)));
     results.forEach(([type, results]) => {
-      const predicate = isTypeOf(type);
+      const predicate = isTypeOf.create(type);
       results.forEach(([value, result]) => expect(predicate(value)).toBe(result));
     });
   });
@@ -67,7 +68,7 @@ describe("is utils", () => {
     expect(isError({ name: "TestError" }, TestError)).toBe(false);
     expect(isError({}, TestError)).toBe(false);
 
-    const isTestError = isError(TestError);
+    const isTestError = isError.create(TestError);
 
     expect(isTestError(new TestError(undefined))).toBe(true);
     expect(isTestError(Object.assign(new Error(), { name: "TestError" }))).toBe(true);
@@ -93,14 +94,14 @@ describe("is utils", () => {
     expect(is(Reflect.construct(B, []), B as never)).toBe(true);
     expect(is(new A(), B as never)).toBe(false);
 
-    expect(is("string")("test")).toBe(true);
-    expect(is("number")("test")).toBe(false);
-    expect(is(Object)({})).toBe(true);
-    expect(is(Object)("test")).toBe(false);
-    expect(is(TestError)(Object.assign(new Error(), { name: "TestError" }))).toBe(true);
-    expect(is(TestError)(new Error())).toBe(false);
-    expect(is(A)(new A())).toBe(true);
-    expect(is(Date)(new A())).toBe(false);
+    expect(is.create("string")("test")).toBe(true);
+    expect(is.create("number")("test")).toBe(false);
+    expect(is.create(Object)({})).toBe(true);
+    expect(is.create(Object)("test")).toBe(false);
+    expect(is.create(TestError)(Object.assign(new Error(), { name: "TestError" }))).toBe(true);
+    expect(is.create(TestError)(new Error())).toBe(false);
+    expect(is.create(A)(new A())).toBe(true);
+    expect(is.create(Date)(new A())).toBe(false);
   });
 
   it("isPromiseLike() should detect promise like objects", () => {
