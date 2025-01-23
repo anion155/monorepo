@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { clone, curryHelper, identity, liftContext, noop, wrapFunctor } from "./functional";
+import { clone, curryHelper, identity, liftContext, noop, pipe, wrapFunctor } from "./functional";
 
 describe("functional utils", () => {
   describe("noop()", () => {
@@ -27,11 +27,11 @@ describe("functional utils", () => {
 
   describe("wrapFunctor()", () => {
     it("should return same value", () => {
-      const orig = jest.fn((..._args: unknown[]) => "test");
+      const orig = jest.fn((..._params: unknown[]) => "test");
       Object.defineProperty(orig, "name", { value: "test", configurable: true });
       const wrapped = wrapFunctor(
         orig,
-        Object.assign((...args: unknown[]) => orig(...args), { test: "test" }),
+        Object.assign((...params: unknown[]) => orig(...params), { test: "test" }),
       );
       expect(wrapped.name).toBe("test");
       expect(wrapped()).toBe("test");
@@ -55,6 +55,19 @@ describe("functional utils", () => {
       const fn = <A>() => curryHelper(<B>(modifier: (value: A) => B) => ["test", modifier] as const);
       expect(fn<string>()(Number)).toStrictEqual(["test", Number]);
       expect(fn<string>().curried(Number)).toStrictEqual(["test", Number]);
+    });
+  });
+
+  describe("pipe()", () => {
+    it("should create pipe", () => {
+      const piped = pipe((a: string, b: number) => ({
+        test(c: string) {
+          return (b + a + c).length;
+        },
+      }))
+        .method("test", "5")
+        .pipe((length) => Array.from({ length }, (_, i) => i));
+      expect(piped("test", 5)).toStrictEqual([0, 1, 2, 3, 4, 5]);
     });
   });
 });

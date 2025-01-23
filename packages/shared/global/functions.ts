@@ -27,6 +27,9 @@ declare global {
   /** Infers methods's context, params and result */
   type InferMethod<_Method> =
     _Method extends Method<infer Context, infer Params, infer Result> ? { Context: Context; Params: Params; Result: Result } : never;
+  /** Infers method's call signature */
+  type InferMethodSign<_Method extends Method<never, never, unknown>> =
+    _Method extends Method<infer Context, infer Params, infer Result> ? Method<Context, Params, Result> : never;
 
   /**
    * Generic constructor type, any typeof class

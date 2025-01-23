@@ -88,7 +88,7 @@ import "./functions";
   expectType<Constructable<never, unknown>>(constructor);
   expectType<Callable<never, unknown>>(constructor);
 
-  type MethodCases = [
+  type ConstructorCases = [
     Expect<Equal<InferFunctor<typeof constructor>, never>>,
     Expect<Equal<InferMethod<typeof constructor>, never>>,
     Expect<Equal<InferConstructor<typeof constructor>, { Instance: Instance; Params: Params }>>,
@@ -123,13 +123,30 @@ import "./functions";
   expectType<Constructable<never, unknown>>(abstract_constructor);
   expectType<Callable<never, unknown>>(abstract_constructor);
 
-  type MethodCases = [
+  type AbstractConstructorCases = [
     Expect<Equal<InferFunctor<typeof abstract_constructor>, never>>,
     Expect<Equal<InferMethod<typeof abstract_constructor>, never>>,
     Expect<Equal<InferConstructor<typeof abstract_constructor>, never>>,
     Expect<Equal<InferAbstractConstructor<typeof abstract_constructor>, { Instance: Instance; Params: Params }>>,
     Expect<Equal<InferConstructable<typeof abstract_constructor>, { Instance: Instance; Params: Params }>>,
     Expect<Equal<InferCallable<typeof abstract_constructor>, { Params: Params; Result: Instance }>>,
+  ];
+}
+
+{
+  type Params = [a: number, b: string];
+  type Result = { c: string };
+  type Instance = { d: string };
+  type InstanceA = { e: string };
+  type CombinedType = (abstract new (a: number, b: string) => InstanceA) & {
+    new (a: number, b: string): Instance;
+    (this: { d: string }, a: number, b: string): { c: string };
+    blah: string;
+  };
+
+  type InferSignCases = [
+    Expect<Equal<InferFunctorSign<CombinedType>, Functor<Params, Result>>>,
+    Expect<Equal<InferMethodSign<CombinedType>, Method<Instance, Params, Result>>>,
   ];
 }
 

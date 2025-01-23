@@ -11,9 +11,9 @@ export function identity<Value>(value: Value) {
  * WARNING: Does not hoists function fields or name, but due to limitation of type system ts won't show this.
  */
 export function clone<Fn extends Functor<never, unknown>>(fn: Fn): Fn {
-  // @ts-expect-error(2322)
-  return function (this, ...args) {
-    return fn.call(this, ...args);
+  // @ts-expect-error(2322): types are intentionally broken
+  return function (this, ...params) {
+    return fn.call(this, ...params);
   };
 }
 
@@ -22,9 +22,9 @@ export function clone<Fn extends Functor<never, unknown>>(fn: Fn): Fn {
  * but provides own implementation.
  *
  * @example
- * const logWrapper = <Fn extends AnyFunctor>(fn: Fn) => wrapFunctor<Fn>(fn, (...args) => {
- *   log('called with:', ...args);
- *   const result = fn(...args);
+ * const logWrapper = <Fn extends AnyFunctor>(fn: Fn) => wrapFunctor<Fn>(fn, (...params) => {
+ *   log('called with:', ...params);
+ *   const result = fn(...params);
  *   log('call result:', result);
  *   return result
  * })
@@ -36,7 +36,7 @@ export function wrapFunctor<Fn extends Functor<never, unknown>, Wrapped = InferF
   type _ = InferFunctor<Fn>;
   Object.setPrototypeOf(wrapped, fn);
   if (Object.getOwnPropertyDescriptor(wrapped, "name")) {
-    // @ts-expect-error(2704) there is name in fn
+    // @ts-expect-error(2704): there is name in fn
     delete wrapped.name;
   }
   return wrapped as never;
@@ -54,9 +54,9 @@ export function wrapFunctor<Fn extends Functor<never, unknown>, Wrapped = InferF
 export function liftContext<Fn extends Functor<[unknown, ...never], unknown>>(fn: Fn) {
   type FnInferred = InferFunctor<Fn>;
   type Params = TupleUnshift<FnInferred["Params"]>;
-  return wrapFunctor<Fn, Method<Params[0], Params[1], FnInferred["Result"]>>(fn, function (this, ...args) {
-    // @ts-expect-error(2345)
-    return fn(this, ...args);
+  return wrapFunctor<Fn, Method<Params[0], Params[1], FnInferred["Result"]>>(fn, function (this, ...params) {
+    // @ts-expect-error(2345): types are intentionally broken
+    return fn(this, ...params);
   });
 }
 
@@ -75,4 +75,71 @@ export type Curried<C extends Functor<never, unknown>> = C & { curried: C };
  */
 export function curryHelper<Fn extends Functor<never, unknown>>(fn: Fn): Curried<Fn> {
   return Object.assign(clone(fn), { curried: fn });
+}
+
+type MethodsNames<Value, ValObject = Pick<Value, keyof Value>> = {
+  [Name in keyof ValObject]: ValObject[Name] extends Method<Value, never, unknown> ? Name : never;
+}[keyof ValObject];
+export type PipeFunctor<Params extends unknown[], Result> = {
+  (...params: Params): Result;
+  create(): (...params: Params) => Result;
+  pipe: {
+    /* prettier-ignore */ <Next1>
+    /* prettier-ignore */ (fn1: Functor<[Result], Next1>): PipeFunctor<Params, Next1>;
+    /* prettier-ignore */ <Next1, Next2>
+    /* prettier-ignore */ (fn1: Functor<[Result], Next1>, fn2: Functor<[Next1], Next2>): PipeFunctor<Params, Next2>;
+    /* prettier-ignore */ <Next1, Next2, Next3>
+    /* prettier-ignore */ (fn1: Functor<[Result], Next1>, fn2: Functor<[Next1], Next2>, fn3: Functor<[Next2], Next3>): PipeFunctor<Params, Next3>;
+    /* prettier-ignore */ <Next1, Next2, Next3, Next4>
+    /* prettier-ignore */ (fn1: Functor<[Result], Next1>, fn2: Functor<[Next1], Next2>, fn3: Functor<[Next2], Next3>, fn4: Functor<[Next3], Next4>): PipeFunctor<Params, Next4>;
+    /* prettier-ignore */ <Next1, Next2, Next3, Next4, Next5>
+    /* prettier-ignore */ (fn1: Functor<[Result], Next1>, fn2: Functor<[Next1], Next2>, fn3: Functor<[Next2], Next3>, fn4: Functor<[Next3], Next4>, fn5: Functor<[Next4], Next5>): PipeFunctor<Params, Next5>;
+    /* prettier-ignore */ <Next1, Next2, Next3, Next4, Next5, Next6>
+    /* prettier-ignore */ (fn1: Functor<[Result], Next1>, fn2: Functor<[Next1], Next2>, fn3: Functor<[Next2], Next3>, fn4: Functor<[Next3], Next4>, fn5: Functor<[Next4], Next5>, fn6: Functor<[Next5], Next6>): PipeFunctor<Params, Next6>;
+    /* prettier-ignore */ <Next1, Next2, Next3, Next4, Next5, Next6, Next7>
+    /* prettier-ignore */ (fn1: Functor<[Result], Next1>, fn2: Functor<[Next1], Next2>, fn3: Functor<[Next2], Next3>, fn4: Functor<[Next3], Next4>, fn5: Functor<[Next4], Next5>, fn6: Functor<[Next5], Next6>, fn7: Functor<[Next6], Next7>): PipeFunctor<Params, Next7>;
+    /* prettier-ignore */ <Next1, Next2, Next3, Next4, Next5, Next6, Next7, Next8>
+    /* prettier-ignore */ (fn1: Functor<[Result], Next1>, fn2: Functor<[Next1], Next2>, fn3: Functor<[Next2], Next3>, fn4: Functor<[Next3], Next4>, fn5: Functor<[Next4], Next5>, fn6: Functor<[Next5], Next6>, fn7: Functor<[Next6], Next7>, fn8: Functor<[Next7], Next8>): PipeFunctor<Params, Next7>;
+    /* prettier-ignore */ <Next1, Next2, Next3, Next4, Next5, Next6, Next7, Next8, Next9>
+    /* prettier-ignore */ (fn1: Functor<[Result], Next1>, fn2: Functor<[Next1], Next2>, fn3: Functor<[Next2], Next3>, fn4: Functor<[Next3], Next4>, fn5: Functor<[Next4], Next5>, fn6: Functor<[Next5], Next6>, fn7: Functor<[Next6], Next7>, fn8: Functor<[Next7], Next8>, fn9: Functor<[Next8], Next9>): PipeFunctor<Params, Next9>;
+  };
+  method<Name extends MethodsNames<Result>>(
+    name: Name,
+    ...params: InferMethod<Result[Name]>["Params"]
+  ): PipeFunctor<Params, InferMethod<Result[Name]>["Result"]>;
+};
+function createPipe<Params extends unknown[], Result>(
+  head: Functor<Params, unknown>,
+  body: Functor<[unknown], unknown>[],
+): PipeFunctor<Params, Result> {
+  const create =
+    () =>
+    (...params: Params) =>
+      body.reduce((prev, fn) => fn(prev), head(...params));
+  const pipe = (...next: Functor<[unknown], unknown>[]) => createPipe(head, [...body, ...next] as never);
+  // @ts-expect-error(18046): value is previous result
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const method = (name: string, ...params: unknown[]) => pipe((value) => value[name](...params));
+  return Object.assign(create(), { create, pipe, method }) as never;
+}
+/* prettier-ignore */ export function pipe<Params extends unknown[], Result>
+/* prettier-ignore */ (fn: Functor<Params, Result>): PipeFunctor<Params, Result>;
+/* prettier-ignore */ export function pipe<Params extends unknown[], Result1, Result2>
+/* prettier-ignore */ (fn1: Functor<Params, Result1>, fn2: Functor<[Result1], Result2>): PipeFunctor<Params, Result2>;
+/* prettier-ignore */ export function pipe<Params extends unknown[], Result1, Result2, Result3>
+/* prettier-ignore */ (fn1: Functor<Params, Result1>, fn2: Functor<[Result1], Result2>, fn3: Functor<[Result2], Result3>): PipeFunctor<Params, Result3>;
+/* prettier-ignore */ export function pipe<Params extends unknown[], Result1, Result2, Result3, Result4>
+/* prettier-ignore */ (fn1: Functor<Params, Result1>, fn2: Functor<[Result1], Result2>, fn3: Functor<[Result2], Result3>, fn4: Functor<[Result3], Result4>): PipeFunctor<Params, Result4>;
+/* prettier-ignore */ export function pipe<Params extends unknown[], Result1, Result2, Result3, Result4, Result5>
+/* prettier-ignore */ (fn1: Functor<Params, Result1>, fn2: Functor<[Result1], Result2>, fn3: Functor<[Result2], Result3>, fn4: Functor<[Result3], Result4>, fn5: Functor<[Result4], Result5>): PipeFunctor<Params, Result5>;
+/* prettier-ignore */ export function pipe<Params extends unknown[], Result1, Result2, Result3, Result4, Result5, Result6>
+/* prettier-ignore */ (fn1: Functor<Params, Result1>, fn2: Functor<[Result1], Result2>, fn3: Functor<[Result2], Result3>, fn4: Functor<[Result3], Result4>, fn5: Functor<[Result4], Result5>, fn6: Functor<[Result5], Result6>): PipeFunctor<Params, Result6>;
+/* prettier-ignore */ export function pipe<Params extends unknown[], Result1, Result2, Result3, Result4, Result5, Result6, Result7>
+/* prettier-ignore */ (fn1: Functor<Params, Result1>, fn2: Functor<[Result1], Result2>, fn3: Functor<[Result2], Result3>, fn4: Functor<[Result3], Result4>, fn5: Functor<[Result4], Result5>, fn6: Functor<[Result5], Result6>, fn7: Functor<[Result6], Result7>): PipeFunctor<Params, Result7>;
+/* prettier-ignore */ export function pipe<Params extends unknown[], Result1, Result2, Result3, Result4, Result5, Result6, Result7, Result8>
+/* prettier-ignore */ (fn1: Functor<Params, Result1>, fn2: Functor<[Result1], Result2>, fn3: Functor<[Result2], Result3>, fn4: Functor<[Result3], Result4>, fn5: Functor<[Result4], Result5>, fn6: Functor<[Result5], Result6>, fn7: Functor<[Result6], Result7>, fn8: Functor<[Result7], Result8>): PipeFunctor<Params, Result8>;
+/* prettier-ignore */ export function pipe<Params extends unknown[], Result1, Result2, Result3, Result4, Result5, Result6, Result7, Result8, Result9>
+/* prettier-ignore */ (fn1: Functor<Params, Result1>, fn2: Functor<[Result1], Result2>, fn3: Functor<[Result2], Result3>, fn4: Functor<[Result3], Result4>, fn5: Functor<[Result4], Result5>, fn6: Functor<[Result5], Result6>, fn7: Functor<[Result6], Result7>, fn8: Functor<[Result7], Result8>, fn9: Functor<[Result8], Result9>): PipeFunctor<Params, Result9>;
+export function pipe(head: Functor<unknown[], unknown>, ...body: Functor<[unknown], unknown>[]) {
+  return createPipe(head, body);
 }
