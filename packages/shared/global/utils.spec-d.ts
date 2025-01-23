@@ -87,6 +87,11 @@ type ReadonlyKeysCases = [
   Expect<Equal<ReadonlyKeys<{ a: number; readonly b: string }>, "b">>,
 ];
 
+type MethodsKeysCases = [
+  // should return only readonly keys
+  Expect<Equal<MethodsKeys<{ a: number; b(): number }>, "b">>,
+];
+
 type TupleUnshiftCases = [
   // should create tuple
   Expect<Equal<TupleUnshift<[1, 2, 3]>, [1, [2, 3]]>>,

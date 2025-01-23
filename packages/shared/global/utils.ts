@@ -42,6 +42,10 @@ declare global {
   type ReadonlyKeys<T> = {
     [P in keyof T]-?: IfEquals<{ [Q in P]: T[Q] }, { -readonly [Q in P]: T[Q] }, never, P>;
   }[keyof T];
+  /** Return union of T methods keys */
+  type MethodsKeys<T> = {
+    [P in keyof T]: T[P] extends Method<T, never, unknown> ? P : never;
+  }[keyof T];
 
   /** Splits array/tuple into head and rest, and puts it in tuple */
   type TupleUnshift<T extends unknown[]> = T extends []
