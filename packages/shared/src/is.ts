@@ -103,3 +103,16 @@ is.create = function createIs<Type extends IsType>(constrOrType: Type) {
 
 /** Tests if value is truthy */
 export const isTruthy: <Value>(value: Value) => value is Exclude<Value, Falsy> = Boolean as never;
+
+/** Tests if value has typed field */
+export function hasTypedField<Key extends string | symbol | number, _IsType extends IsType>(
+  value: unknown,
+  key: Key,
+  isType: _IsType,
+): value is { [k in Key]: IsInferInstance<_IsType> } {
+  return isObject(value) && hasField(value, key) && is(value[key], isType);
+}
+/** Creates predicate that tests if value has typed field */
+hasTypedField.create = function createHasTypedField<Key extends string | symbol | number, _IsType extends IsType>(key: Key, isType: _IsType) {
+  return curryHelper((value: unknown): value is { [k in Key]: IsInferInstance<_IsType> } => hasTypedField(value, key, isType));
+};

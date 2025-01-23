@@ -1,5 +1,5 @@
 import { Equal, Expect } from "type-tests";
-import { hasField, is, isError, isObject, isTypeOf } from "./is";
+import { hasField, hasTypedField, is, isError, isObject, isTypeOf } from "./is";
 
 const value = null as unknown;
 
@@ -52,4 +52,8 @@ if (is.create("string")(value)) {
 }
 if (is.create(A)(value)) {
   type Case = Expect<Equal<typeof value, A>>;
+}
+
+if (hasTypedField.create("test", "function")(value)) {
+  type Case = Expect<Equal<typeof value, { test: Callable<unknown[], unknown> }>>;
 }

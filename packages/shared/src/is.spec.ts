@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
-import { hasField, is, isError, isObject, isPromiseLike, isTruthy, isTypeOf } from "./is";
+import { hasField, hasTypedField, is, isError, isObject, isPromiseLike, isTruthy, isTypeOf } from "./is";
 
 describe("is utils", () => {
   const values = ["test", 55, 55n, true, Symbol(), undefined, null, {}, [], function () {}, Promise.resolve(undefined), { then() {} }] as const;
@@ -128,5 +128,17 @@ describe("is utils", () => {
     expect(isTruthy(-5)).toBe(true);
     expect(isTruthy(5n)).toBe(true);
     expect(isTruthy("g")).toBe(true);
+  });
+
+  it("hasTypedField() should detect typed field", () => {
+    expect(hasTypedField(5, "test", "function")).toBe(false);
+    expect(hasTypedField({}, "test", "function")).toBe(false);
+    expect(hasTypedField({ test() {} }, "test", "function")).toBe(true);
+
+    const hasTestFunction = hasTypedField.create("test", "function");
+
+    expect(hasTestFunction(5)).toBe(false);
+    expect(hasTestFunction({})).toBe(false);
+    expect(hasTestFunction({ test() {} })).toBe(true);
   });
 });

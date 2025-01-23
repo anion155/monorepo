@@ -1,5 +1,5 @@
 import { Equal, Expect } from "type-tests";
-import { hasField, is, isError, isObject, isPromiseLike, isTruthy, isTypeOf } from "./is";
+import { hasField, hasTypedField, is, isError, isObject, isPromiseLike, isTruthy, isTypeOf } from "./is";
 
 const value = null as unknown;
 
@@ -68,3 +68,7 @@ if (isPromiseLike(maybePromise)) {
 
 const isTruthyFilterCase = new Array<"A" | "B" | undefined>().filter(isTruthy);
 type IsTruthyFilterCase = Expect<Equal<typeof isTruthyFilterCase, Array<"A" | "B">>>;
+
+if (hasTypedField(value, "test", "function")) {
+  type Case = Expect<Equal<typeof value, { test: Callable<unknown[], unknown> }>>;
+}
