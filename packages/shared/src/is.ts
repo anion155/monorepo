@@ -1,6 +1,7 @@
+import { DeveloperError } from "./errors";
 import { curryHelper } from "./functional";
 
-type TypeOfMap = {
+export interface TypeOfMap {
   string: string;
   number: number;
   bigint: bigint;
@@ -9,12 +10,16 @@ type TypeOfMap = {
   undefined: undefined;
   object: object;
   function: Callable<unknown[], unknown>;
-  promise: PromiseLike<unknown>;
-};
+}
 
 /** Tests if value is an object */
 export function isObject(value: unknown): value is object {
   return typeof value === "object" && value !== null;
+}
+
+/** Tests if value is undefined */
+export function isUndefined(value: unknown): value is undefined {
+  return value === undefined;
 }
 
 /** Tests if value has field */
@@ -35,24 +40,36 @@ hasOwnField.create = function createHasOwnField<Key extends string | symbol | nu
 };
 hasField.own = hasOwnField;
 
-/** Tests if value is promise like */
-export function isPromiseLike<T>(value: unknown): value is PromiseLike<T> {
-  return isObject(value) && hasField(value, "then") && typeof value.then === "function";
-}
-
+const customTypeOf = {
+  string: undefined,
+  number: undefined,
+  bigint: undefined,
+  boolean: undefined,
+  symbol: undefined,
+  undefined: isUndefined,
+  object: isObject,
+  function: undefined,
+} as never as Record<keyof TypeOfMap, { (value: unknown): boolean } | undefined>;
 /** Tests if value is of type */
 export function isTypeOf<Type extends keyof TypeOfMap>(value: unknown, type: Type): value is TypeOfMap[Type] {
-  switch (type) {
-    case "object":
-      return isObject(value);
-    case "undefined":
-      return value === undefined;
-    case "promise":
-      return isPromiseLike(value);
-    default:
-      return typeof value === type;
-  }
+  if (customTypeOf[type]) return customTypeOf[type](value);
+  return typeof value === type;
 }
+/**
+ * Registers custom type of.
+ *
+ * @example
+ * declare module "./is" {
+ *   interface TypeOfMap {
+ *     test: 'test';
+ *   }
+ * }
+ * isTypeOf.register("test", value => value === "test");
+ */
+isTypeOf.register = function registerTypeOf<Type extends keyof TypeOfMap>(type: Type, check: (value: unknown) => boolean) {
+  if (type in customTypeOf) throw new DeveloperError("trying to override existing type of");
+  customTypeOf[type] = check;
+};
 /** Creates predicate that tests if value is of type */
 isTypeOf.create = function createIsTypeOf<Type extends keyof TypeOfMap>(type: Type) {
   return curryHelper((value: unknown): value is TypeOfMap[Type] => isTypeOf(value, type));

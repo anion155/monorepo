@@ -99,7 +99,7 @@ export function defineProperty<Target extends object, Key extends keyof Target>(
  *
  * @example
  * const obj = {} as { test(): number };
- * defineProperty.method(obj, "test", () => 5);
+ * defineMethod(obj, "test", () => 5);
  */
 export function defineMethod<Target extends object, Key extends MethodsKeys<Target>>(
   target: Target,
@@ -154,7 +154,7 @@ export function appendProperty<Target extends object, Key extends string | symbo
  *
  * @example
  * const obj = {}
- * appendProperty.method(obj, "test", () => 5);
+ * appendMethod(obj, "test", () => 5);
  */
 export function appendMethod<Target extends object, Key extends string | symbol, _Method extends Method<Target, never, unknown>>(
   target: Target,
@@ -225,7 +225,8 @@ export function assignProperties<Target extends object, Values extends object>(t
  * Create object  all own properties from {@link values} to {@link target}.
  *
  * @example
- * const target = assignProperties({ }, { @accessor b: 42 });
+ * const target = create({ a: 1 }, { @accessor b: 42 });
+ * Object.getOwnPropertyDescriptor(target, "1"); // undefined
  * Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
  */
 export function create<Proto extends object, Values extends object>(proto: Proto, values: Values): Extend<Proto, Values> {

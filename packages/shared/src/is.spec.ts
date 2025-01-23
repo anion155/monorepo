@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
-import { hasField, hasTypedField, is, isError, isObject, isPromiseLike, isTruthy, isTypeOf } from "./is";
+import { DeveloperError } from "./errors";
+import { hasField, hasTypedField, is, isError, isObject, isTruthy, isTypeOf, isUndefined } from "./is";
 
 describe("is utils", () => {
   const values = ["test", 55, 55n, true, Symbol(), undefined, null, {}, [], function () {}, Promise.resolve(undefined), { then() {} }] as const;
@@ -10,6 +11,11 @@ describe("is utils", () => {
     resultsTable([false, false, false, false, false, false, false, true, true, false, true, true]).forEach(([value, result]) =>
       expect(isObject(value)).toBe(result),
     );
+  });
+
+  it("isUndefined() should detect object", () => {
+    expect(isUndefined(undefined)).toBe(true);
+    expect(isUndefined({})).toBe(false);
   });
 
   const plainObject = { a: 55 };
@@ -38,23 +44,36 @@ describe("is utils", () => {
     cases.forEach(([field, object, result]) => expect(hasField.own.create(field)(object)).toBe(result));
   });
 
-  it("isTypeOf() should detect value type", () => {
-    const results = [
-      /* prettier-ignore */ ["string",    resultsTable([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
-      /* prettier-ignore */ ["number",    resultsTable([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
-      /* prettier-ignore */ ["bigint",    resultsTable([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
-      /* prettier-ignore */ ["boolean",   resultsTable([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
-      /* prettier-ignore */ ["symbol",    resultsTable([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0])] as const,
-      /* prettier-ignore */ ["undefined", resultsTable([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])] as const,
-      /* prettier-ignore */ ["object",    resultsTable([0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1])] as const,
-      /* prettier-ignore */ ["function",  resultsTable([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])] as const,
-      /* prettier-ignore */ ["promise",   resultsTable([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1])] as const,
-    ] as const;
+  describe("isTypeOf()", () => {
+    it("should detect value type", () => {
+      const results = [
+        /* prettier-ignore */ ["string",    resultsTable([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
+        /* prettier-ignore */ ["number",    resultsTable([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
+        /* prettier-ignore */ ["bigint",    resultsTable([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
+        /* prettier-ignore */ ["boolean",   resultsTable([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])] as const,
+        /* prettier-ignore */ ["symbol",    resultsTable([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0])] as const,
+        /* prettier-ignore */ ["undefined", resultsTable([0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])] as const,
+        /* prettier-ignore */ ["object",    resultsTable([0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1])] as const,
+        /* prettier-ignore */ ["function",  resultsTable([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])] as const,
+      ] as const;
 
-    results.forEach(([type, results]) => results.forEach(([value, result]) => expect(isTypeOf(value, type)).toBe(result)));
-    results.forEach(([type, results]) => {
-      const predicate = isTypeOf.create(type);
-      results.forEach(([value, result]) => expect(predicate(value)).toBe(result));
+      results.forEach(([type, results]) => results.forEach(([value, result]) => expect(isTypeOf(value, type)).toBe(result)));
+      results.forEach(([type, results]) => {
+        const predicate = isTypeOf.create(type);
+        results.forEach(([value, result]) => expect(predicate(value)).toBe(result));
+      });
+    });
+
+    it("should register custom is type of", () => {
+      isTypeOf.register("test" as never, (value) => value === "test");
+
+      expect(isTypeOf("test", "test" as never)).toBe(true);
+      expect(isTypeOf("test", "string")).toBe(true);
+      expect(isTypeOf("test", "number")).toBe(false);
+    });
+
+    it("should throw error on try to register second time", () => {
+      expect(() => isTypeOf.register("object", (value) => value === "test")).toThrow(new DeveloperError("trying to override existing type of"));
     });
   });
 
@@ -102,13 +121,6 @@ describe("is utils", () => {
     expect(is.create(TestError)(new Error())).toBe(false);
     expect(is.create(A)(new A())).toBe(true);
     expect(is.create(Date)(new A())).toBe(false);
-  });
-
-  it("isPromiseLike() should detect promise like objects", () => {
-    expect(isPromiseLike(Promise.resolve(undefined))).toBe(true);
-    expect(isPromiseLike({ then() {} })).toBe(true);
-    expect(isPromiseLike({})).toBe(false);
-    expect(isPromiseLike(new Date())).toBe(false);
   });
 
   it("isTruthy() should detect truthy values", () => {
