@@ -1,5 +1,11 @@
 {
-  "folders": [{ "path": "." }, { "path": "packages/configs" }, { "path": "packages/shared" }, { "path": "packages/signals" }],
+  "folders": [
+    { "path": "." },
+    { "path": "packages/configs" },
+    { "path": "packages/proposal-iterator-helpers" },
+    { "path": "packages/shared" },
+    { "path": "packages/signals" },
+  ],
   "settings": {
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",

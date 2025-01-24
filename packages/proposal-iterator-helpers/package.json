@@ -1,5 +1,5 @@
 {
-  "name": "@anion155/shared",
+  "name": "@anion155/proposal-iterator-helpers",
   "private": true,
   "module": "index.ts",
   "type": "module",

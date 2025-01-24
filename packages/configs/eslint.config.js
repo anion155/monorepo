@@ -28,6 +28,7 @@ export const typescript = [
             ignoreRestSiblings: true,
           },
         ],
+        "@typescript-eslint/unbound-method": "off",
       },
     },
   ),
