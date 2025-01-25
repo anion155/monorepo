@@ -2,8 +2,6 @@ import { describe, expect, it, jest } from "@jest/globals";
 
 import "../global";
 
-jest.mock("../polyfill");
-
 describe("Iterator helpers proposal", () => {
   function* inc() {
     let i = 0;

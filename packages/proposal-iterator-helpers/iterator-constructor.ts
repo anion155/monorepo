@@ -1,5 +1,5 @@
+import { polyfill, polyfillProperty } from "@anion155/polyfill-base";
 import { IteratorPrototype } from "./iterator-prototype";
-import { polyfill, polyfillProperty } from "./polyfill";
 import { isIteratorInstance } from "./utils";
 
 polyfill("constructor" in IteratorPrototype, () => {
@@ -11,4 +11,10 @@ polyfill("constructor" in IteratorPrototype, () => {
   IteratorConstructor.prototype = IteratorPrototype;
   polyfillProperty(IteratorPrototype, "constructor", { value: IteratorConstructor, enumerable: false });
 });
-export const IteratorConstructor = IteratorPrototype.constructor;
+export const IteratorConstructor = IteratorPrototype.constructor as never as (abstract new <T, TReturn = unknown, TNext = unknown>() => Iterator<
+  T,
+  TReturn,
+  TNext
+>) & {
+  from<T, TReturn = unknown, TNext = unknown>(it: Iterator<T, TReturn, TNext> | Iterable<T, TReturn, TNext>): IteratorObject<T, TReturn, TNext>;
+};

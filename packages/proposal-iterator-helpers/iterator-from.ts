@@ -1,6 +1,6 @@
+import { polyfillProperty } from "@anion155/polyfill-base";
 import { IteratorConstructor } from "./iterator-constructor";
 import { IteratorPrototype } from "./iterator-prototype";
-import { polyfillProperty } from "./polyfill";
 import { isIterable, isIteratorInstance } from "./utils";
 
 const doneKey = Symbol.for("proxy-iterator-done");
@@ -39,7 +39,7 @@ ProxyIterator.prototype = Object.create(IteratorPrototype, {
 }) as ProxyIterator<unknown, unknown, unknown>;
 
 polyfillProperty(IteratorConstructor, "from", {
-  value: function from<T, TReturn = unknown, TNext = unknown>(it: Iterator<T, TReturn, TNext> | Iterable<T>): Iterator<T, TReturn, TNext> {
+  value: function from<T, TReturn = unknown, TNext = unknown>(it: Iterator<T, TReturn, TNext> | Iterable<T>): IteratorObject<T, TReturn, TNext> {
     if (isIteratorInstance<T, TReturn, TNext>(it)) return it;
     const iterator = isIterable(it) ? it[Symbol.iterator]() : it;
     if (isIteratorInstance<T, TReturn, TNext>(iterator)) return iterator;

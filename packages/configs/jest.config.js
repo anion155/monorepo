@@ -202,3 +202,8 @@ export const typescript = {
     "^.+.tsx?$": ["ts-jest", { tsconfig: "./tsconfig.jest.json" }],
   },
 };
+
+/** @type {import('jest').Config} */
+export const polyfill = {
+  setupFiles: ["@anion155/polyfill-base/setup-jest.ts"],
+};

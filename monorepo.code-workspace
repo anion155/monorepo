@@ -1,10 +1,12 @@
 {
   "folders": [
-    { "path": "." },
-    { "path": "packages/configs" },
-    { "path": "packages/proposal-iterator-helpers" },
-    { "path": "packages/shared" },
     { "path": "packages/signals" },
+    { "path": "packages/shared" },
+    { "path": "packages/proposal-iterator-helpers" },
+    { "path": "packages/proposal-async-iterator-helpers" },
+    { "path": "packages/polyfill-base" },
+    { "path": "packages/configs" },
+    { "path": "." },
   ],
   "settings": {
     "editor.formatOnSave": true,

@@ -1,5 +1,5 @@
+import { polyfillProperty } from "@anion155/polyfill-base";
 import { IteratorPrototype } from "./iterator-prototype";
-import { polyfillProperty } from "./polyfill";
 
 polyfillProperty(IteratorPrototype, "take", {
   value: function* take<T, TReturn, TNext>(this: Iterator<T, TReturn, TNext>, limit: number): Generator<T, T | TReturn | undefined, TNext> {

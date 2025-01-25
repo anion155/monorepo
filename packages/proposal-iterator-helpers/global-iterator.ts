@@ -1,5 +1,5 @@
+import { polyfillProperty } from "@anion155/polyfill-base";
 import { IteratorConstructor } from "./iterator-constructor";
-import { polyfillProperty } from "./polyfill";
 
 polyfillProperty(globalThis, "Iterator", {
   value: IteratorConstructor,

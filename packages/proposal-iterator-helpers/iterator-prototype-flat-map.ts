@@ -1,5 +1,6 @@
+import { polyfillProperty } from "@anion155/polyfill-base";
+import { IteratorConstructor } from "./iterator-constructor";
 import { IteratorPrototype } from "./iterator-prototype";
-import { polyfillProperty } from "./polyfill";
 
 polyfillProperty(IteratorPrototype, "flatMap", {
   value: function* flatMap<T, TReturn, TNext, U>(
@@ -10,7 +11,7 @@ polyfillProperty(IteratorPrototype, "flatMap", {
     while (true) {
       const result = this.next();
       if (result.done) return result.value;
-      yield* Iterator.from(project(result.value, index));
+      yield* IteratorConstructor.from(project(result.value, index));
       index += 1;
     }
   },

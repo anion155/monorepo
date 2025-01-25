@@ -1,5 +1,5 @@
+import { polyfillProperty } from "@anion155/polyfill-base";
 import { IteratorPrototype } from "./iterator-prototype";
-import { polyfillProperty } from "./polyfill";
 
 polyfillProperty(IteratorPrototype, "map", {
   value: function* map<T, TReturn, TNext, U>(

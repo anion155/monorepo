@@ -1,6 +1,6 @@
 import { IteratorPrototype } from "./iterator-prototype";
 
-export function isIteratorInstance<T, TReturn = unknown, TNext = unknown>(value: object): value is Iterator<T, TReturn, TNext> {
+export function isIteratorInstance<T, TReturn = unknown, TNext = unknown>(value: object): value is IteratorObject<T, TReturn, TNext> {
   return Object.prototype.isPrototypeOf.call(IteratorPrototype, value);
 }
 
