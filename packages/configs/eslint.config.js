@@ -9,29 +9,29 @@ export const base = [{ files: ["**/*.{js,mjs,cjs,ts}"] }, pluginJs.configs.recom
 
 /** @type {import('eslint').Linter.Config[]} */
 export const typescript = [
-  ...tseslint.config(
-    tseslint.configs.recommendedTypeChecked,
-    {
-      languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
-    },
-    {
-      rules: {
-        "@typescript-eslint/no-unused-vars": [
-          "error",
-          {
-            args: "after-used",
-            argsIgnorePattern: "^_",
-            caughtErrors: "all",
-            caughtErrorsIgnorePattern: "^_",
-            destructuredArrayIgnorePattern: "^_",
-            varsIgnorePattern: "^_",
-            ignoreRestSiblings: true,
-          },
-        ],
-        "@typescript-eslint/unbound-method": "off",
+  ...tseslint
+    .config(
+      tseslint.configs.recommendedTypeChecked,
+      { languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } } },
+      {
+        rules: {
+          "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+              args: "after-used",
+              argsIgnorePattern: "^_",
+              caughtErrors: "all",
+              caughtErrorsIgnorePattern: "^_",
+              destructuredArrayIgnorePattern: "^_",
+              varsIgnorePattern: "^_",
+              ignoreRestSiblings: true,
+            },
+          ],
+          "@typescript-eslint/unbound-method": "off",
+        },
       },
-    },
-  ),
+    )
+    .map((config) => ({ files: ["**/*.{ts,tsx}"], ...config })),
   {
     files: ["**/*.{test,spec}-d.{ts,tsx}"],
     rules: {

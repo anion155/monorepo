@@ -133,7 +133,7 @@ export const base = {
   // runner: "jest-runner",
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
-  // setupFiles: [],
+  setupFiles: ["../proposal-explicit-resource-management/global.ts"],
 
   // A list of paths to modules that run some code to configure or set up the testing framework before each test
   // setupFilesAfterEnv: [],
@@ -203,7 +203,87 @@ export const typescript = {
   },
 };
 
-/** @type {import('jest').Config} */
-export const polyfill = {
-  setupFiles: ["@anion155/polyfill-base/setup-jest.ts"],
-};
+/**
+ * @param {...import('jest').Config} configs
+ * @returns {import('jest').Config}
+ */
+export function jestConfig(...configs) {
+  /**
+   * @param {import('jest').Config} left
+   * @param {import('jest').Config} right
+   * @param {keyof import('jest').Config} name
+   */
+  function array(left, right, name) {
+    if (name in left && name in right) {
+      left[name] = [...left[name], ...right[name]];
+    }
+  }
+  /**
+   * @param {import('jest').Config} left
+   * @param {import('jest').Config} right
+   * @param {keyof import('jest').Config} name
+   */
+  function orderedMap(left, right, name) {
+    if (name in left && name in right) {
+      const order = [];
+      const options = {};
+      function handle(config) {
+        for (const value of config) {
+          if (typeof value === "string") {
+            const index = order.indexOf(value);
+            if (index >= 0) {
+              order.splice(index, 1);
+              delete options[value];
+            }
+            order.push(value);
+          } else {
+            const name = value.unshift();
+            const index = order.indexOf(value);
+            if (index >= 0) {
+              order.splice(index, 1);
+              delete options[value];
+            }
+            order.push(name);
+            options[name] = value;
+          }
+        }
+      }
+      handle(left[name]);
+      handle(right[name]);
+      right[name] = order.map((name) => (name in options ? [name, options[name]] : name));
+    }
+  }
+  /**
+   * @param {import('jest').Config} left
+   * @param {import('jest').Config} right
+   * @param {keyof import('jest').Config} name
+   */
+  function object(left, right, name) {
+    if (name in left && name in right) {
+      left[name] = { ...left[name], ...right[name] };
+    }
+  }
+  return configs.reduce((combined, config) => {
+    const next = { ...combined, ...config };
+    array(next, config, "coveragePathIgnorePatterns");
+    orderedMap(next, config, "coverageReporters");
+    object(next, config, "fakeTimers");
+    array(next, config, "forceCoverageMatch");
+    object(next, config, "globals");
+    array(next, config, "moduleDirectories");
+    array(next, config, "moduleFileExtensions");
+    // object(next, config, "moduleNameMapper")
+    array(next, config, "modulePathIgnorePatterns");
+    array(next, config, "roots");
+    array(next, config, "setupFiles");
+    array(next, config, "setupFilesAfterEnv");
+    array(next, config, "snapshotSerializers");
+    object(next, config, "testEnvironmentOptions");
+    array(next, config, "testMatch");
+    array(next, config, "testPathIgnorePatterns");
+    array(next, config, "testRegex");
+    array(next, config, "transformIgnorePatterns");
+    array(next, config, "watchPathIgnorePatterns");
+    return next;
+  });
+}
