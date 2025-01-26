@@ -1,0 +1,6 @@
+{
+  "extends": ["./tsconfig.json", "@anion155/configs/tsconfig.jest.json"],
+  "compilerOptions": {
+    "target": "ES2024"
+  }
+}

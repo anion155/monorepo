@@ -1,0 +1,72 @@
+import { SuppressedError } from "./suppressed-error";
+
+import "./global-symbols";
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface DisposableStack {
+  readonly [Symbol.toStringTag]: string;
+}
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class DisposableStack {
+  #stack: Array<() => void>;
+  declare readonly disposed: boolean;
+
+  constructor() {
+    this.#stack = [];
+    Object.defineProperty(this, "disposed", { value: false, writable: false, configurable: true });
+  }
+
+  use<T extends Disposable | null | undefined>(value: T): T {
+    if (this.disposed) throw new ReferenceError("DisposableStack already disposed");
+    if (value === null || value === undefined) return value;
+    if (Symbol.dispose in value && typeof value[Symbol.dispose] === "function") {
+      this.#stack.push(value[Symbol.dispose].bind(value));
+      return value;
+    }
+    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+    throw new TypeError(`${value[Symbol.dispose]} is not a function`);
+  }
+  defer(onDispose: () => void): void {
+    if (this.disposed) throw new ReferenceError("DisposableStack already disposed");
+    this.#stack.push(onDispose);
+  }
+  adopt<T>(value: T, onDispose: (value: T) => void): T {
+    if (this.disposed) throw new ReferenceError("DisposableStack already disposed");
+    this.#stack.push(() => onDispose(value));
+    return value;
+  }
+
+  move(): DisposableStack {
+    if (this.disposed) throw new ReferenceError("DisposableStack already disposed");
+    const other = new DisposableStack();
+    other.#stack = this.#stack;
+    this.#stack = [];
+    Object.defineProperty(this, "disposed", { value: true, writable: false, configurable: true });
+    return other;
+  }
+
+  dispose(): void {
+    if (this.disposed) return;
+    Object.defineProperty(this, "disposed", { value: true, writable: false, configurable: true });
+    let error: unknown = null;
+    while (this.#stack.length) {
+      try {
+        this.#stack.pop()!.call(null);
+      } catch (currentError) {
+        error = error ? new SuppressedError(currentError, error) : currentError;
+      }
+    }
+    this.#stack = [];
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- it's an error
+    if (error) throw error;
+  }
+  [Symbol.dispose](): void {
+    this.dispose();
+  }
+}
+Object.defineProperty(DisposableStack.prototype, Symbol.toStringTag, {
+  value: "DisposableStack",
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});

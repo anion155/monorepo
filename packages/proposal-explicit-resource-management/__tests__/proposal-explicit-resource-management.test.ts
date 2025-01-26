@@ -1,0 +1,12 @@
+import { describe, expect, it } from "@jest/globals";
+
+import "../global";
+
+describe("Explicit resource management proposal", () => {
+  it("global polyfills", () => {
+    expect(Symbol).toHaveProperty("dispose");
+    expect(Symbol).toHaveProperty("asyncDispose");
+    expect(globalThis).toHaveProperty("SuppressedError");
+    expect(globalThis).toHaveProperty("DisposableStack");
+  });
+});

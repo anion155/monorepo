@@ -24,8 +24,6 @@ declare global {
       it: Iterator<T, TReturn, TNext> | Iterable<T> | AsyncIterator<T, TReturn, TNext> | AsyncIterable<T>,
     ): AsyncIteratorObject<T, TReturn, TNext>;
   }
-  // eslint-disable-next-line no-var -- declaring globally
-  var AsyncIterator: AsyncIteratorConstructor;
 }
 
 export {};
