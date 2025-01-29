@@ -1,6 +1,6 @@
-import { describe, expect, it, jest } from "@jest/globals";
-
 import "../global";
+
+import { describe, expect, it, jest } from "@jest/globals";
 
 describe("AsyncIterator helpers proposal", () => {
   async function* inc(max: number = Number.MAX_SAFE_INTEGER) {
@@ -39,7 +39,9 @@ describe("AsyncIterator helpers proposal", () => {
     });
 
     it("async iterator should have Symbol.toStringTag and constructor", () => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(AsyncIterator.prototype[Symbol.toStringTag]).toBe("AsyncIterator");
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(AsyncIterator.prototype.constructor).toBe(AsyncIterator);
     });
 

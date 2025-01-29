@@ -1,6 +1,6 @@
-import { SuppressedError } from "./suppressed-error";
-
 import "./global-symbols";
+
+import { SuppressedError } from "./suppressed-error";
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface DisposableStack {

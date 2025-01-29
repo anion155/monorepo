@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { disposableFrom, isDisposable } from "./disposable";
+
 import { is } from "./is";
 import { isPrototypeOf } from "./object";
 

@@ -1,6 +1,6 @@
-import { describe, expect, it, jest } from "@jest/globals";
-
 import "../global";
+
+import { describe, expect, it, jest } from "@jest/globals";
 
 describe("Iterator helpers proposal", () => {
   function* inc() {

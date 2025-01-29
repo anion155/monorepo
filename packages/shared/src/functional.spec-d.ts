@@ -1,4 +1,5 @@
 import { Equal, Expect, expectType } from "type-tests";
+
 import { clone, identity, noop, pipe, PipeFunctor } from "./functional";
 
 // noop should be accepted anywhere where undefined returned

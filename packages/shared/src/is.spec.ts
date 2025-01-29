@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
+
 import { DeveloperError } from "./errors";
 import { hasField, hasTypedField, is, isError, isObject, isTruthy, isTypeOf, isUndefined } from "./is";
 

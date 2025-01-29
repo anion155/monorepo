@@ -1,56 +1,10 @@
+import { polyfillProperty } from "@anion155/polyfill-base";
+import { IteratorConstructor } from "@anion155/proposal-iterator-helpers";
 import { isIterable } from "@anion155/proposal-iterator-helpers/utils";
 
-import { polyfillProperty } from "@anion155/polyfill-base";
 import { AsyncIteratorConstructor } from "./async-iterator-constructor";
-import { isAsyncIterable, isAsyncIteratorInstance } from "./utils";
-
-import "@anion155/proposal-iterator-helpers";
-import { IteratorConstructor } from "@anion155/proposal-iterator-helpers";
 import { AsyncIteratorPrototype } from "./async-iterator-prototype";
-
-// if (typeof AsyncIteratorConstructor.from !== "function") {
-
-//   const target = Symbol();
-
-//   const done = Symbol();
-//   const WrapForValidAsyncIteratorPrototype: WrapForValidAsyncIterator<unknown, unknown, unknown> = Object.create(
-//     AsyncIteratorPrototype,
-//     {
-//       [done]: {
-//         value: false,
-//         writable: true,
-//         enumerable: false,
-//       },
-//       next: {
-//         value: async function next(...args: [] | [any]) {
-//           if (this[done]) {
-//             return Promise.resolve({ done: true, value: undefined });
-//           }
-//           return this[target].next(...args);
-//         },
-//       },
-//       return: {
-//         value: async function returnMethod(value?: any) {
-//           this[done] = true;
-//           return this[target].return?.(await value) ?? { done: true };
-//         },
-//       },
-//       throw: {
-//         value: async function throwMethod(error?: any) {
-//           this[done] = true;
-//           if (!this[target].throw) throw error;
-//           return this[target].throw(error);
-//         },
-//       },
-//     },
-//   );
-
-//   AsyncIteratorConstructor.from = function from<T, TReturn = any, TNext = undefined>(
-//     it: AsyncIterator<T, TReturn, TNext> | AsyncIteratorLike<T, TReturn, TNext> | AsyncIterable<T> | Iterable<T>,
-//   ): AsyncIterator<T, TReturn, TNext> | WrapForValidAsyncIterator<T, TReturn, TNext> {
-
-//   };
-// }
+import { isAsyncIterable, isAsyncIteratorInstance } from "./utils";
 
 const doneKey = Symbol.for("proxy-async-iterator-done");
 const targetKey = Symbol.for("proxy-async-iterator-target");

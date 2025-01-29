@@ -106,7 +106,7 @@ export function defineMethod<Target extends object, Key extends MethodsKeys<Targ
   key: Key,
   method: (this: Target, ...params: InferMethod<Target[Key]>["Params"]) => InferMethod<Target[Key]>["Result"],
 ) {
-  defineProperty(target, key, { value: method, enumerable: false } as never);
+  defineProperty(target, key, { value: method } as never);
 }
 
 /**
@@ -127,7 +127,7 @@ export function defineProperties<Target extends object>(target: Target, values: 
       !hasTypedField(descriptor, "set", "function") &&
       hasTypedField(descriptor, "value", "function")
     ) {
-      Object.defineProperty(target, key, { value: descriptor.value, enumerable: false });
+      Object.defineProperty(target, key, { value: descriptor.value, enumerable: true, configurable: true, writable: true });
     } else {
       Object.defineProperty(target, key, descriptor);
     }
@@ -161,7 +161,7 @@ export function appendMethod<Target extends object, Key extends string | symbol,
   key: Key,
   method: _Method,
 ): asserts target is Target & { [k in Key]: _Method } {
-  defineProperty(target, key as never, { value: method, enumerable: false } as never);
+  defineProperty(target, key as never, { value: method } as never);
 }
 
 /**

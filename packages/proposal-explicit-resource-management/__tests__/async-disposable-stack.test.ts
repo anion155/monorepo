@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
+
 import { AsyncDisposableStack } from "../async-disposable-stack";
 import { SuppressedError } from "../suppressed-error";
 

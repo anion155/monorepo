@@ -1,37 +1,47 @@
-import comments from "@eslint-community/eslint-plugin-eslint-comments/configs";
 import pluginJs from "@eslint/js";
+import comments from "@eslint-community/eslint-plugin-eslint-comments/configs";
 import prettier from "eslint-config-prettier";
 import pluginJest from "eslint-plugin-jest";
+import importSort from "eslint-plugin-simple-import-sort";
 import tseslint from "typescript-eslint";
 
 /** @type {import('eslint').Linter.Config[]} */
-export const base = [{ files: ["**/*.{js,mjs,cjs,ts}"] }, pluginJs.configs.recommended, prettier, comments.recommended];
+export const base = [
+  pluginJs.configs.recommended,
+  prettier,
+  comments.recommended,
+  {
+    plugins: { "simple-import-sort": importSort },
+    rules: {
+      "sort-imports": "off",
+      "import-x/order": "off",
+      "simple-import-sort/imports": "warn",
+      "simple-import-sort/exports": "warn",
+    },
+  },
+];
 
 /** @type {import('eslint').Linter.Config[]} */
 export const typescript = [
-  ...tseslint
-    .config(
-      tseslint.configs.recommendedTypeChecked,
-      { languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } } },
-      {
-        rules: {
-          "@typescript-eslint/no-unused-vars": [
-            "error",
-            {
-              args: "after-used",
-              argsIgnorePattern: "^_",
-              caughtErrors: "all",
-              caughtErrorsIgnorePattern: "^_",
-              destructuredArrayIgnorePattern: "^_",
-              varsIgnorePattern: "^_",
-              ignoreRestSiblings: true,
-            },
-          ],
-          "@typescript-eslint/unbound-method": "off",
+  ...tseslint.config(tseslint.configs.recommendedTypeChecked),
+  { languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } } },
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          args: "after-used",
+          argsIgnorePattern: "^_",
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          ignoreRestSiblings: true,
         },
-      },
-    )
-    .map((config) => ({ files: ["**/*.{ts,tsx}"], ...config })),
+      ],
+      "@typescript-eslint/unbound-method": "off",
+    },
+  },
   {
     files: ["**/*.{test,spec}-d.{ts,tsx}"],
     rules: {
@@ -39,6 +49,10 @@ export const typescript = [
     },
   },
 ];
+typescript.forEach((config) => {
+  if (config.files) return;
+  config.files = ["**/*.{ts,tsx}"];
+});
 
 /** @type {import('eslint').Linter.Config[]} */
 export const jest = [

@@ -77,9 +77,6 @@ export function curryHelper<Fn extends Functor<never, unknown>>(fn: Fn): Curried
   return Object.assign(clone(fn), { curried: fn });
 }
 
-type MethodsNames<Value, ValObject = Pick<Value, keyof Value>> = {
-  [Name in keyof ValObject]: ValObject[Name] extends Method<Value, never, unknown> ? Name : never;
-}[keyof ValObject];
 export type PipeFunctor<Params extends unknown[], Result> = {
   (...params: Params): Result;
   create(): (...params: Params) => Result;
@@ -103,7 +100,7 @@ export type PipeFunctor<Params extends unknown[], Result> = {
     /* prettier-ignore */ <Next1, Next2, Next3, Next4, Next5, Next6, Next7, Next8, Next9>
     /* prettier-ignore */ (fn1: Functor<[Result], Next1>, fn2: Functor<[Next1], Next2>, fn3: Functor<[Next2], Next3>, fn4: Functor<[Next3], Next4>, fn5: Functor<[Next4], Next5>, fn6: Functor<[Next5], Next6>, fn7: Functor<[Next6], Next7>, fn8: Functor<[Next7], Next8>, fn9: Functor<[Next8], Next9>): PipeFunctor<Params, Next9>;
   };
-  method<Name extends MethodsNames<Result>>(
+  method<Name extends MethodsKeys<Pick<Result, keyof Result>>>(
     name: Name,
     ...params: InferMethod<Result[Name]>["Params"]
   ): PipeFunctor<Params, InferMethod<Result[Name]>["Result"]>;

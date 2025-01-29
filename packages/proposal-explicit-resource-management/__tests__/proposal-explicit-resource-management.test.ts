@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
-
 import "../global";
+
+import { describe, expect, it } from "@jest/globals";
 
 describe("Explicit resource management proposal", () => {
   it("global polyfills", () => {

@@ -1,4 +1,5 @@
 import { Equal, Expect } from "type-tests";
+
 import { hasField, hasTypedField, is, isError, isObject, isTruthy, isTypeOf, isUndefined } from "./is";
 
 const value = null as unknown;

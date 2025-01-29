@@ -1,5 +1,6 @@
-import { Equal, Expect, expectType } from "type-tests";
 import "./functions";
+
+import { Equal, Expect, expectType } from "type-tests";
 
 // should handle functor
 {

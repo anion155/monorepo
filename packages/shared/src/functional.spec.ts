@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
+
 import { clone, curryHelper, identity, liftContext, noop, pipe, wrapFunctor } from "./functional";
 
 describe("functional utils", () => {

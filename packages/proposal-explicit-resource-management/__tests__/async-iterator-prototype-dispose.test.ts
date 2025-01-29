@@ -1,7 +1,7 @@
+import "../index";
+
 import { AsyncIteratorPrototype } from "@anion155/proposal-async-iterator-helpers/async-iterator-prototype";
 import { describe, expect, it, jest } from "@jest/globals";
-
-import "../index";
 
 describe("Explicit resource management proposal", () => {
   describe("AsyncIterator.prototype[Symbol.asyncDispose]", () => {

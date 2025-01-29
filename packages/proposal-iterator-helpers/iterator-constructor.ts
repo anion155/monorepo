@@ -1,4 +1,5 @@
 import { polyfill, polyfillProperty } from "@anion155/polyfill-base";
+
 import { IteratorPrototype } from "./iterator-prototype";
 import { isIteratorInstance } from "./utils";
 

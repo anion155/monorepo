@@ -59,7 +59,7 @@ export function isTypeOf<Type extends keyof TypeOfMap>(value: unknown, type: Typ
  * Registers custom type of.
  *
  * @example
- * declare module "./is" {
+ * declare module "@anion155/shared" {
  *   interface TypeOfMap {
  *     test: 'test';
  *   }

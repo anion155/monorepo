@@ -1,7 +1,7 @@
+import "../iterator-prototype-dispose";
+
 import { IteratorPrototype } from "@anion155/proposal-iterator-helpers/iterator-prototype";
 import { describe, expect, it, jest } from "@jest/globals";
-
-import "../iterator-prototype-dispose";
 
 describe("Explicit resource management proposal", () => {
   describe("Iterator.prototype[Symbol.dispose]", () => {

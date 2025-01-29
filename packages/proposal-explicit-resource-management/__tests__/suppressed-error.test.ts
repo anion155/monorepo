@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@jest/globals";
+
 import { SuppressedError } from "../suppressed-error";
 
 describe("Explicit resource management proposal", () => {

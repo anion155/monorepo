@@ -1,4 +1,5 @@
 import { Equal, Expect } from "type-tests";
+
 import {
   appendMethod,
   appendProperties,
