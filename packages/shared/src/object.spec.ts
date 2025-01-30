@@ -11,6 +11,7 @@ import {
   defineProperty,
   getOwnProperty,
   getProperty,
+  isPrototypeOf,
   modifyMethod,
   modifyProperty,
   updateProperty,
@@ -59,9 +60,10 @@ describe("object utils", () => {
   describe("defineMethod()", () => {
     it("should define method in object", () => {
       const obj = {} as { test(): number };
-      defineMethod(obj, "test", () => 5);
+      const test = () => 5;
+      defineMethod(obj, "test", test);
       expect(obj.test()).toBe(5);
-      expect({ ...obj }).toStrictEqual({});
+      expect({ ...obj }).toStrictEqual({ test });
     });
   });
 
@@ -78,7 +80,7 @@ describe("object utils", () => {
         test,
       });
       expect(obj.test()).toBe(5);
-      expect({ ...obj }).toStrictEqual({ a: 1, b: 2 });
+      expect({ ...obj }).toStrictEqual({ a: 1, b: 2, test });
     });
 
     it("should only pass own properties", () => {
@@ -144,7 +146,7 @@ describe("object utils", () => {
     it("should assign properties to object", () => {
       const test = () => 3;
       const obj = assignProperties({ a: 1 }, { b: 2, test });
-      expect({ ...obj }).toStrictEqual({ a: 1, b: 2 });
+      expect({ ...obj }).toStrictEqual({ a: 1, b: 2, test });
       expect(obj.test()).toBe(3);
     });
   });
@@ -154,9 +156,20 @@ describe("object utils", () => {
       const proto = { a: 1 };
       const test = () => 3;
       const obj = create(proto, { b: 2, test });
-      expect({ ...obj }).toStrictEqual({ b: 2 });
+      expect({ ...obj }).toStrictEqual({ b: 2, test });
       expect(obj.a).toBe(1);
       expect(obj.test()).toBe(3);
+    });
+  });
+
+  describe("isPrototypeOf()", () => {
+    it("should detect if proto prototype of target", () => {
+      const proto = { a: 1 };
+      const obj = Object.create(proto) as object;
+      expect(isPrototypeOf(proto, obj)).toBe(true);
+      expect(isPrototypeOf(obj, proto)).toBe(false);
+      expect(isPrototypeOf(Object.prototype, proto)).toBe(true);
+      expect(isPrototypeOf(Object.prototype, obj)).toBe(true);
     });
   });
 });

@@ -1,0 +1,149 @@
+import "./disposable";
+
+import { describe, expect, it, jest } from "@jest/globals";
+
+import { DeveloperError } from "@/errors";
+import { isPending } from "@/promise";
+
+describe("disposable utils", () => {
+  describe("Async/DisposableStack extensions", () => {
+    const createDisposables = () => {
+      const disposables = [new DisposableStack(), jest.fn(), null, undefined] as const;
+      const dispose = (stack: DisposableStack) => {
+        stack.dispose();
+        expect(disposables[1]).toHaveBeenCalledWith();
+        expect(disposables[0].disposed).toBe(true);
+        return true;
+      };
+      return { disposables, dispose };
+    };
+    const createAsyncDisposables = () => {
+      const { promise, resolve } = Promise.withResolvers();
+      const disposables = [new DisposableStack(), jest.fn(() => promise), null, undefined, new AsyncDisposableStack()] as const;
+      const dispose = async (stack: AsyncDisposableStack) => {
+        const promise = stack.disposeAsync();
+        await expect(isPending(promise)).resolves.toBe(true);
+        resolve();
+        await promise;
+        expect(disposables[4].disposed).toBe(true);
+        expect(disposables[1]).toHaveBeenCalledWith();
+        expect(disposables[0].disposed).toBe(true);
+        return true;
+      };
+      return { disposables, dispose };
+    };
+
+    describe(".throwIfDisposed() should throw when disposed", () => {
+      it("sync", () => {
+        const stack = new DisposableStack();
+        expect(() => stack.throwIfDisposed()).not.toThrow();
+        stack.dispose();
+        // expect(undefined).toBePending();
+        expect(() => stack.throwIfDisposed()).toThrow(new DeveloperError("trying to use disposed stack"));
+      });
+
+      it("async", async () => {
+        const stack = new AsyncDisposableStack();
+        expect(() => stack.throwIfDisposed()).not.toThrow();
+        await stack.disposeAsync();
+        expect(() => stack.throwIfDisposed()).toThrow(new DeveloperError("trying to use disposed stack"));
+      });
+    });
+
+    describe(".append() should append disposables", () => {
+      it("sync", () => {
+        const { disposables, dispose } = createDisposables();
+        const stack = new DisposableStack();
+        stack.append(...disposables);
+        expect(dispose(stack)).toBe(true);
+      });
+
+      it("async", async () => {
+        const stack = new AsyncDisposableStack();
+        const { disposables, dispose } = createAsyncDisposables();
+        stack.append(...disposables);
+        await expect(dispose(stack)).resolves.toBe(true);
+      });
+    });
+
+    describe(".create() should create stack with disposables", () => {
+      it("sync", () => {
+        const { disposables, dispose } = createDisposables();
+        const stack = DisposableStack.create(...disposables);
+        expect(dispose(stack)).toBe(true);
+      });
+
+      it("async", async () => {
+        const { disposables, dispose } = createAsyncDisposables();
+        const stack = AsyncDisposableStack.create(...disposables);
+        await expect(dispose(stack)).resolves.toBe(true);
+      });
+    });
+
+    describe(".transaction()", () => {
+      describe("should run transaction", () => {
+        it("sync", () => {
+          const { disposables, dispose } = createDisposables();
+          const stack = DisposableStack.transaction((stack) => stack.append(...disposables));
+          expect(dispose(stack)).toBe(true);
+        });
+
+        it("async", async () => {
+          const { disposables, dispose } = createAsyncDisposables();
+          const stack = await AsyncDisposableStack.transaction((stack) => stack.append(...disposables));
+          await expect(dispose(stack)).resolves.toBe(true);
+        });
+      });
+
+      describe("should revert transaction", () => {
+        it("sync", () => {
+          const disposable = jest.fn();
+          expect(() =>
+            DisposableStack.transaction((stack) => {
+              stack.append(disposable);
+              throw new Error("test error");
+            }),
+          ).toThrow(new Error("test error"));
+          expect(disposable).toHaveBeenCalledWith();
+        });
+
+        it("async", async () => {
+          const disposable = jest.fn();
+          await expect(
+            AsyncDisposableStack.transaction((stack) => {
+              stack.append(disposable);
+              throw new Error("test error");
+            }),
+          ).rejects.toThrow(new Error("test error"));
+          expect(disposable).toHaveBeenCalledWith();
+        });
+      });
+
+      describe("should suppress dispose error", () => {
+        it("sync", () => {
+          const disposable = jest.fn(() => {
+            throw new Error("dispose error");
+          });
+          expect(() =>
+            DisposableStack.transaction((stack) => {
+              stack.append(disposable);
+              throw new Error("test error");
+            }),
+          ).toThrow(new SuppressedError(new Error("dispose error"), new Error("test error")));
+          expect(disposable).toHaveBeenCalledWith();
+        });
+
+        it("async", async () => {
+          const disposable = jest.fn().mockRejectedValue(new Error("dispose error") as never);
+          await expect(
+            AsyncDisposableStack.transaction((stack) => {
+              stack.append(disposable);
+              throw new Error("test error");
+            }),
+          ).rejects.toThrow(new SuppressedError(new Error("dispose error"), new Error("test error")));
+          expect(disposable).toHaveBeenCalledWith();
+        });
+      });
+    });
+  });
+});

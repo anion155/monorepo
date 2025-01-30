@@ -234,3 +234,8 @@ export function create<Proto extends object, Values extends object>(proto: Proto
   defineProperties(target, values);
   return target;
 }
+
+/** Determines whether an object exists in another object's prototype chain */
+export function isPrototypeOf(proto: object, target: object): boolean {
+  return Object.prototype.isPrototypeOf.call(proto, target);
+}
