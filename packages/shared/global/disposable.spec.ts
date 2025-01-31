@@ -3,7 +3,7 @@ import "./disposable";
 import { describe, expect, it, jest } from "@jest/globals";
 
 import { DeveloperError } from "@/errors";
-import { isPending } from "@/promise";
+import { isPromisePending } from "@/promise";
 
 describe("disposable utils", () => {
   describe("Async/DisposableStack extensions", () => {
@@ -22,7 +22,7 @@ describe("disposable utils", () => {
       const disposables = [new DisposableStack(), jest.fn(() => promise), null, undefined, new AsyncDisposableStack()] as const;
       const dispose = async (stack: AsyncDisposableStack) => {
         const promise = stack.disposeAsync();
-        await expect(isPending(promise)).resolves.toBe(true);
+        await expect(isPromisePending(promise)).resolves.toBe(true);
         resolve();
         await promise;
         expect(disposables[4].disposed).toBe(true);

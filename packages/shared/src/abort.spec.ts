@@ -2,7 +2,7 @@ import "./abort";
 
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { isPending } from "./promise";
+import { isPromisePending } from "./promise";
 
 describe("abort utils", () => {
   describe("AbortSignal extensions", () => {
@@ -28,7 +28,7 @@ describe("abort utils", () => {
       it("should create promise and reject it on abort", async () => {
         const controller = new AbortController();
         const promise = controller.signal.promise();
-        await expect(isPending(promise)).resolves.toBe(true);
+        await expect(isPromisePending(promise)).resolves.toBe(true);
         controller.abort(new Error("test error"));
         await expect(promise).rejects.toThrow(new Error("test error"));
       });
