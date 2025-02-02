@@ -1,0 +1,62 @@
+import { describe, expect, it, jest } from "@jest/globals";
+
+import { Stamper } from "./stamper";
+
+describe("Stamper utils", () => {
+  it("should store stamped value", () => {
+    const value = Object.freeze({});
+    const stamper = new Stamper(() => 0);
+    stamper.stamp(value, 5);
+    expect(stamper.get(value)).toBe(5);
+    stamper.set(value, 6);
+    expect(stamper.get(value)).toBe(6);
+    stamper.modify(value, (v) => v * 2);
+    expect(stamper.get(value)).toBe(12);
+  });
+
+  it(".stamp() should not change value", () => {
+    const value = Object.freeze({});
+    const stamper = new Stamper(() => 0);
+    stamper.stamp(value);
+    expect(value).toStrictEqual({});
+  });
+
+  it(".stamp() should throw TypeError on second stamp", () => {
+    const value = Object.freeze({});
+    const stamper = new Stamper(() => 0);
+    stamper.stamp(value);
+    expect(() => stamper.stamp(value)).toThrow(new TypeError("passed object was already stamped before"));
+  });
+
+  it(".get(), .set(), .modify() should throw TypeError if called before .stamp()", () => {
+    const value = Object.freeze({});
+    const stamper = new Stamper(() => 0);
+    expect(() => stamper.get(value)).toThrow(new TypeError("passed object wasn't stamped"));
+    expect(() => stamper.set(value, 5)).toThrow(new TypeError("passed object wasn't stamped"));
+    expect(() => stamper.modify(value, (v) => v + 1)).toThrow(new TypeError("passed object wasn't stamped"));
+  });
+
+  it(".getSafe(), .setSafe(), .modifySafe() should get value from stamped object and undefined from non stamped", () => {
+    const stamper = new Stamper(() => 0);
+    const s_value = Object.freeze({});
+    const e_value = Object.freeze({});
+    stamper.stamp(s_value, 5);
+
+    expect(stamper.getSafe(s_value)).toBe(5);
+    expect(stamper.getSafe(e_value)).toBeUndefined();
+
+    stamper.setSafe(s_value, 6);
+    expect(stamper.get(s_value)).toBe(6);
+    stamper.setSafe(e_value, 6);
+
+    const modify = jest.fn((v: number) => v + 1);
+
+    stamper.modifySafe(s_value, modify);
+    expect(modify).toHaveBeenCalledTimes(1);
+    expect(stamper.get(s_value)).toBe(7);
+
+    modify.mockClear();
+    stamper.modifySafe(e_value, modify);
+    expect(modify).not.toHaveBeenCalled();
+  });
+});

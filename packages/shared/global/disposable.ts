@@ -1,6 +1,7 @@
 import { isDisposable } from "@/disposable";
 import { DeveloperError } from "@/errors";
-import { defineMethod } from "@/object";
+import { appendMethod, defineMethod, defineProperty } from "@/object";
+import { Stamper } from "@/stamper";
 
 declare global {
   interface DisposableStack {
@@ -117,4 +118,40 @@ defineMethod(AsyncDisposableStack, "transaction", async function transaction(fn,
     }
     throw error;
   }
+});
+
+declare global {
+  interface DisposableStackConstructor {
+    /** {@link Stamper} that stamps {@link DisposableStack} into {@link Disposable} object */
+    readonly stamper: Stamper<Disposable, DisposableStack>;
+  }
+  interface AsyncDisposableStackConstructor {
+    /** {@link Stamper} that stamps {@link AsyncDisposableStack} into {@link AsyncDisposable} object */
+    readonly stamper: Stamper<AsyncDisposable, AsyncDisposableStack>;
+  }
+}
+defineProperty(DisposableStack, "stamper", {
+  value: new Stamper<Disposable, DisposableStack>((object) => {
+    const stack = new DisposableStack();
+    if (isDisposable(object)) stack.append(object[Symbol.dispose].bind(object));
+    appendMethod(object, Symbol.dispose, () => stack.dispose());
+    return stack;
+  }),
+  writable: false,
+  enumerable: false,
+});
+defineProperty(AsyncDisposableStack, "stamper", {
+  value: new Stamper<AsyncDisposable, AsyncDisposableStack>((object) => {
+    const stack = new AsyncDisposableStack();
+    if (isDisposable.async(object)) stack.append(object[Symbol.asyncDispose].bind(object));
+    if (isDisposable(object)) {
+      stack.append(object[Symbol.dispose].bind(object));
+      // @ts-expect-error(2790) - deletes old Symbol.dispose method
+      delete object[Symbol.dispose];
+    }
+    appendMethod(object, Symbol.asyncDispose, () => stack.disposeAsync());
+    return stack;
+  }),
+  writable: false,
+  enumerable: false,
 });

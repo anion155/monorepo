@@ -9,28 +9,34 @@ describe("disposable utils", () => {
   describe("Async/DisposableStack extensions", () => {
     const createDisposables = () => {
       const disposables = [new DisposableStack(), jest.fn(), null, undefined] as const;
-      const dispose = (stack: DisposableStack) => {
-        stack.dispose();
+      const exposeDisposed = () => {
         expect(disposables[1]).toHaveBeenCalledWith();
         expect(disposables[0].disposed).toBe(true);
         return true;
       };
-      return { disposables, dispose };
+      const dispose = (stack: DisposableStack) => {
+        stack.dispose();
+        return exposeDisposed;
+      };
+      return { disposables, dispose, exposeDisposed };
     };
     const createAsyncDisposables = () => {
       const { promise, resolve } = Promise.withResolvers();
       const disposables = [new DisposableStack(), jest.fn(() => promise), null, undefined, new AsyncDisposableStack()] as const;
-      const dispose = async (stack: AsyncDisposableStack) => {
-        const promise = stack.disposeAsync();
-        await expect(isPromisePending(promise)).resolves.toBe(true);
-        resolve();
-        await promise;
+      const expectDisposed = () => {
         expect(disposables[4].disposed).toBe(true);
         expect(disposables[1]).toHaveBeenCalledWith();
         expect(disposables[0].disposed).toBe(true);
         return true;
       };
-      return { disposables, dispose };
+      const dispose = async (stack: AsyncDisposableStack) => {
+        const promise = stack.disposeAsync();
+        await expect(isPromisePending(promise)).resolves.toBe(true);
+        resolve();
+        await promise;
+        return expectDisposed();
+      };
+      return { disposables, dispose, resolve, expectDisposed };
     };
 
     describe(".throwIfDisposed() should throw when disposed", () => {
@@ -142,6 +148,41 @@ describe("disposable utils", () => {
             }),
           ).rejects.toThrow(new SuppressedError(new Error("dispose error"), new Error("test error")));
           expect(disposable).toHaveBeenCalledWith();
+        });
+      });
+    });
+
+    describe("Async/DisposableStack.stamper", () => {
+      describe("should store Async/DisposableStack and describe new dispose method", () => {
+        it("sync", () => {
+          const dispose = jest.fn();
+          const value = { [Symbol.dispose]: dispose };
+          const testData = createDisposables();
+          DisposableStack.stamper.stamp(value).append(...testData.disposables);
+          expect(value[Symbol.dispose]).not.toBe(dispose);
+
+          value[Symbol.dispose]();
+          expect(dispose).toHaveBeenCalled();
+          testData.exposeDisposed();
+          expect(DisposableStack.stamper.get(value).disposed).toBe(true);
+        });
+
+        it("async", async () => {
+          const dispose = jest.fn();
+          const asyncDispose = jest.fn(() => Promise.resolve());
+          const value = { [Symbol.dispose]: dispose, [Symbol.asyncDispose]: asyncDispose };
+          const testData = createAsyncDisposables();
+          AsyncDisposableStack.stamper.stamp(value).append(...testData.disposables);
+          expect(value[Symbol.dispose]).toBeUndefined();
+          expect(value[Symbol.asyncDispose]).not.toBe(dispose);
+
+          const promise = value[Symbol.asyncDispose]();
+          testData.resolve();
+          await promise;
+          expect(asyncDispose).toHaveBeenCalled();
+          expect(dispose).toHaveBeenCalled();
+          testData.expectDisposed();
+          expect(AsyncDisposableStack.stamper.get(value).disposed).toBe(true);
         });
       });
     });
