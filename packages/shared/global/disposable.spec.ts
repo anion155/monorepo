@@ -187,4 +187,29 @@ describe("disposable utils", () => {
       });
     });
   });
+
+  describe("SuppressedError extensions", () => {
+    const typed = <Error, Suppressed>(error: Error, suppressed: Suppressed): Extend<SuppressedError, { error: Error; suppressed: Suppressed }> =>
+      new SuppressedError(error, suppressed);
+    const _ = typed(
+      new Error("top error"),
+      typed(
+        typed(new Error("middle error error"), new Error("middle error suppressed")),
+        typed(new Error("bottom error"), new Error("bottom suppressed")),
+      ),
+    );
+
+    it(".original() should return original error", () => {
+      expect(_.original()).toBe(_.suppressed.suppressed.suppressed);
+    });
+
+    it(".flatten() should return array of icons", () => {
+      const errors = _.flatten();
+      expect(errors.length).toBe(4);
+      expect(errors[0]).toBe(_.error);
+      expect(errors[1]).toBe(_.suppressed.error);
+      expect(errors[2]).toBe(_.suppressed.suppressed.error);
+      expect(errors[3]).toBe(_.suppressed.suppressed.suppressed);
+    });
+  });
 });

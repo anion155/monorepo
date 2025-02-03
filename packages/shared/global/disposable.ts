@@ -155,3 +155,26 @@ defineProperty(AsyncDisposableStack, "stamper", {
   writable: false,
   enumerable: false,
 });
+
+declare global {
+  interface SuppressedError {
+    /** Returns original suppressed error */
+    original(): unknown;
+  }
+}
+defineMethod(SuppressedError.prototype, "original", function original() {
+  return this.suppressed instanceof SuppressedError ? this.suppressed.original() : this.suppressed;
+});
+
+declare global {
+  interface SuppressedError {
+    /** Flattens errors and return as array */
+    flatten(): unknown[];
+  }
+}
+defineMethod(SuppressedError.prototype, "flatten", function flatten() {
+  const errors = [this.error] as unknown[];
+  if (this.suppressed instanceof SuppressedError) errors.push(...this.suppressed.flatten());
+  else errors.push(this.suppressed);
+  return errors;
+});
