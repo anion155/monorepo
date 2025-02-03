@@ -211,5 +211,17 @@ describe("disposable utils", () => {
       expect(errors[2]).toBe(_.suppressed.suppressed.error);
       expect(errors[3]).toBe(_.suppressed.suppressed.suppressed);
     });
+
+    it("SuppressError.suppress() should throw passed error", () => {
+      expect(() => SuppressedError.suppress(new Error("test error"), () => {})).toThrow(new Error("test error"));
+    });
+
+    it("SuppressError.suppress() should suppress passed error", () => {
+      expect(() =>
+        SuppressedError.suppress(new Error("test error"), () => {
+          throw new Error("dispose error");
+        }),
+      ).toThrow(new SuppressedError(new Error("dispose error"), new Error("test error")));
+    });
   });
 });

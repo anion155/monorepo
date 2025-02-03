@@ -10,9 +10,12 @@ export function createErrorClass(name: string, defaultMessage?: string) {
   return SpecificError;
 }
 
-export class DeveloperError extends createErrorClass("DeveloperError", "should not be visible in runtime") {}
+export class DeveloperError extends createErrorClass("DeveloperError", "should never happen in runtime") {}
+export function never(message?: string): never {
+  throw new DeveloperError(message);
+}
 
 export class NotImplementedYet extends createErrorClass("NotImplementedYet", "this functionality isn't implemented yet") {}
-export function TODO(message?: string) {
+export function TODO(message?: string): never {
   throw new NotImplementedYet(message);
 }

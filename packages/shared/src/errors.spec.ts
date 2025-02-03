@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { createErrorClass, DeveloperError, NotImplementedYet, TODO } from "./errors";
+import { createErrorClass, DeveloperError, never, NotImplementedYet, TODO } from "./errors";
 
 describe("errors utils", () => {
   it("should create test error", () => {
@@ -13,7 +13,11 @@ describe("errors utils", () => {
   it("should create DeveloperError", () => {
     expect(new DeveloperError()).toBeInstanceOf(Error);
     // eslint-disable-next-line @typescript-eslint/no-base-to-string
-    expect(String(new DeveloperError())).toBe("DeveloperError: should not be visible in runtime");
+    expect(String(new DeveloperError())).toBe("DeveloperError: should never happen in runtime");
+  });
+
+  it("never() should throw DeveloperError", () => {
+    expect(never).toThrow(new DeveloperError());
   });
 
   it("should create NotImplementedYet", () => {

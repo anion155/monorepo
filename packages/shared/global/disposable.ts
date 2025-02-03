@@ -1,5 +1,5 @@
 import { isDisposable } from "@/disposable";
-import { DeveloperError } from "@/errors";
+import { DeveloperError, never } from "@/errors";
 import { appendMethod, defineMethod, defineProperty } from "@/object";
 import { Stamper } from "@/stamper";
 
@@ -97,12 +97,7 @@ defineMethod(DisposableStack, "transaction", function transaction(fn, passedStac
     fn(stack);
     return stack.move();
   } catch (error) {
-    try {
-      stack.dispose();
-    } catch (disposeError) {
-      throw new SuppressedError(disposeError, error);
-    }
-    throw error;
+    SuppressedError.suppress(error, () => stack.dispose());
   }
 });
 defineMethod(AsyncDisposableStack, "transaction", async function transaction(fn, passedStack) {
@@ -111,12 +106,8 @@ defineMethod(AsyncDisposableStack, "transaction", async function transaction(fn,
     await fn(stack);
     return stack.move();
   } catch (error) {
-    try {
-      await stack.disposeAsync();
-    } catch (disposeError) {
-      throw new SuppressedError(disposeError, error);
-    }
-    throw error;
+    await SuppressedError.suppressAsync(error, () => stack.disposeAsync());
+    never();
   }
 });
 
@@ -177,4 +168,53 @@ defineMethod(SuppressedError.prototype, "flatten", function flatten() {
   if (this.suppressed instanceof SuppressedError) errors.push(...this.suppressed.flatten());
   else errors.push(this.suppressed);
   return errors;
+});
+
+declare global {
+  interface SuppressedErrorConstructor {
+    /**
+     * Calls {@link fn} and rethrows {@link error} and in case it does throws new error
+     * wraps both of them into {@link SuppressedError}.
+     *
+     * @example
+     * const disposables = DisposableStack.transaction(() => ...)
+     * try {
+     *   fn()
+     *   disposables[Symbol.dispose]()
+     * } catch (error) {
+     *   SuppressedError.suppress(error, () => disposables[Symbol.dispose]())
+     * }
+     */
+    suppress(error: unknown, fn: () => void): never;
+    /**
+     * Calls {@link fn} and rethrows {@link error} and in case it does throws new error
+     * wraps both of them into {@link SuppressedError}.
+     *
+     * @example
+     * const disposables = AsyncDisposableStack.transaction(() => ...)
+     * try {
+     *   fn()
+     *   disposables[Symbol.asyncDispose]()
+     * } catch (error) {
+     *   SuppressedError.suppressAsync(error, () => disposables[Symbol.asyncDispose]())
+     * }
+     */
+    suppressAsync(error: unknown, fn: () => Promise<void>): Promise<never>;
+  }
+}
+defineMethod(SuppressedError, "suppress", function suppress(error: unknown, fn: () => void) {
+  try {
+    fn();
+  } catch (fnError) {
+    throw new SuppressedError(fnError, error);
+  }
+  throw error;
+});
+defineMethod(SuppressedError, "suppressAsync", async function suppress(error: unknown, fn: () => Promise<void>) {
+  try {
+    await fn();
+  } catch (fnError) {
+    throw new SuppressedError(fnError, error);
+  }
+  throw error;
 });
