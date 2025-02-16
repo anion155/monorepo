@@ -107,7 +107,7 @@ describe("is utils", () => {
     expect(is("test", "number")).toBe(false);
     expect(is({}, Object)).toBe(true);
     expect(is(55, Object)).toBe(false);
-    expect(is(Object.assign(new Error(), { name: "TestError" }), TestError)).toBe(true);
+    expect(is(new TestError(), TestError)).toBe(true);
     expect(is(new Error(), TestError)).toBe(false);
     expect(is(new A(), A)).toBe(true);
     expect(is(undefined, A)).toBe(false);
@@ -118,7 +118,7 @@ describe("is utils", () => {
     expect(is.create("number")("test")).toBe(false);
     expect(is.create(Object)({})).toBe(true);
     expect(is.create(Object)("test")).toBe(false);
-    expect(is.create(TestError)(Object.assign(new Error(), { name: "TestError" }))).toBe(true);
+    expect(is.create(TestError)(new TestError())).toBe(true);
     expect(is.create(TestError)(new Error())).toBe(false);
     expect(is.create(A)(new A())).toBe(true);
     expect(is.create(Date)(new A())).toBe(false);

@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { clone, curryHelper, identity, liftContext, noop, pipe, wrapFunctor } from "./functional";
+import { clone, curryHelper, identity, liftContext, noop, pipe, reduce, wrapFunctor } from "./functional";
 
 describe("functional utils", () => {
   describe("noop()", () => {
@@ -69,6 +69,54 @@ describe("functional utils", () => {
         .method("test", "5")
         .pipe((length) => Array.from({ length }, (_, i) => i));
       expect(piped("test", 5)).toStrictEqual([0, 1, 2, 3, 4, 5]);
+    });
+  });
+
+  describe("reduce()", () => {
+    it("should reduce", () => {
+      const result = reduce([1, 2, 3], (acc, value) => `${acc}-${value}`, "");
+      expect(result).toBe("-1-2-3");
+    });
+
+    it("should handle empty array", () => {
+      const result = reduce([] as number[], (acc, value) => `${acc}-${value}`, "");
+      expect(result).toBe("");
+    });
+
+    it("should handle reduced value", () => {
+      const result = reduce(
+        [1, 2, 3],
+        (acc, value, index, reduce) => {
+          if (index === 2) reduce(acc);
+          return `${acc}-${value}`;
+        },
+        "",
+      );
+      expect(result).toBe("-1-2");
+    });
+
+    it("should handle error", () => {
+      expect(() =>
+        reduce(
+          [1, 2, 3],
+          (acc, value, index) => {
+            if (index === 2) throw new Error("test error");
+            return `${acc}-${value}`;
+          },
+          "",
+        ),
+      ).toThrow(new Error("test error"));
+    });
+  });
+
+  describe("reduce.plain()", () => {
+    it("should reduce", () => {
+      const result = reduce.plain([1, 2, 3], (acc, value) => acc + value);
+      expect(result).toBe(6);
+    });
+
+    it("should throw too short error", () => {
+      expect(() => reduce.plain([] as number[], (acc, value) => acc + value)).toThrow(new TypeError("reduce.plain can't handle empty iterable"));
     });
   });
 });

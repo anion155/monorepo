@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 
 import { is } from "./is";
-import { isPromiseLike, isPromisePending } from "./promise";
+import { isPromise, isPromiseLike, isPromisePending } from "./promise";
 
 describe("promise utils", () => {
   describe("isPromiseLike()", () => {
@@ -9,8 +9,19 @@ describe("promise utils", () => {
       expect(isPromiseLike(Promise.resolve())).toBe(true);
       expect(isPromiseLike({ then() {} })).toBe(true);
       expect(isPromiseLike({})).toBe(false);
+      expect(is(Promise.resolve(), "promiseLike")).toBe(true);
+      expect(is({ then() {} }, "promiseLike")).toBe(true);
+      expect(is({}, "promiseLike")).toBe(false);
+    });
+  });
+
+  describe("isPromise()", () => {
+    it("should test if value is promise", () => {
+      expect(isPromise(Promise.resolve())).toBe(true);
+      expect(isPromise({ then() {} })).toBe(false);
+      expect(isPromise({})).toBe(false);
       expect(is(Promise.resolve(), "promise")).toBe(true);
-      expect(is({ then() {} }, "promise")).toBe(true);
+      expect(is({ then() {} }, "promise")).toBe(false);
       expect(is({}, "promise")).toBe(false);
     });
   });

@@ -140,3 +140,51 @@ function createPipe<Params extends unknown[], Result>(
 export function pipe(head: Functor<unknown[], unknown>, ...body: Functor<[unknown], unknown>[]) {
   return createPipe(head, body);
 }
+
+const reducedSymbol = Symbol.for("reduced");
+/**
+ * Reduce function able to stop execution
+ *
+ * @example
+ * reduce([0,1,2,3,2,4], (arr, value, reduced) => {
+ *   if (value > 2) reduced(arr);
+ *   arr.push(value);
+ *   return arr;
+ * }, [] as number[]); // [0,1,2]
+ */
+export function reduce<Value, Result>(
+  values: Iterable<Value>,
+  reducer: (reduced: Result, value: Value, index: number, reduce: (result: Result) => never) => Result,
+  initial: Result,
+): Result {
+  try {
+    const iterator = values[Symbol.iterator]();
+    let results = iterator.next();
+    let reduced: Result = initial;
+    let index = 0;
+    while (!results.done) {
+      reduced = reducer(reduced, results.value, index, (result) => {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        throw { [reducedSymbol]: result };
+      });
+      index += 1;
+      results = iterator.next();
+    }
+    return reduced;
+  } catch (error) {
+    if (typeof error === "object" && error !== null && reducedSymbol in error) {
+      return error[reducedSymbol] as Result;
+    }
+    throw error;
+  }
+}
+reduce.plain = function reducePlain<Value>(
+  values: Iterable<Value>,
+  reducer: (reduced: Value, value: Value, index: number, reduce: (result: Value) => never) => Value,
+) {
+  const iterator = values[Symbol.iterator]();
+  const iterable = Object.create(iterator, { [Symbol.iterator]: { value: () => iterator } }) as Iterable<Value>;
+  const results = iterator.next();
+  if (results.done) throw new TypeError("reduce.plain can't handle empty iterable");
+  return reduce(iterable, (reduced, value, index, reduce) => reducer(reduced, value, index + 1, reduce), results.value);
+};

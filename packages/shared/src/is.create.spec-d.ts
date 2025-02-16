@@ -35,9 +35,6 @@ if (isTypeOf.create("object")(value)) {
 if (isTypeOf.create("function")(value)) {
   type Case = Expect<Equal<typeof value, Callable<unknown[], unknown>>>;
 }
-if (isTypeOf.create("promise")(value)) {
-  type Case = Expect<Equal<typeof value, PromiseLike<unknown>>>;
-}
 
 class TestError extends Error {}
 if (isError.create(TestError)(value)) {

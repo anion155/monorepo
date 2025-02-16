@@ -108,7 +108,6 @@ export function is<Type extends IsType>(value: unknown, constrOrType: Type): val
   if (typeof constrOrType === "string") return isTypeOf(value, constrOrType);
   const constr = constrOrType as Constructable<unknown[], unknown>;
   if (Object.is(constr, Object)) return isObject(value);
-  if (constr.prototype instanceof Error) return isError(value, constr as Constructable<unknown[], Error>);
   if (value instanceof constr) return true;
   if (value === undefined || value === null) return false;
   return value.constructor === constr;

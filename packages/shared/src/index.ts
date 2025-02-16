@@ -2,6 +2,7 @@ export * from "./abort";
 export * from "./asserts";
 export * from "./disposable";
 export * from "./errors";
+export * from "./fetch";
 export * from "./functional";
 export * from "./is";
 export * from "./object";
