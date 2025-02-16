@@ -1,5 +1,6 @@
 export * from "./abort";
 export * from "./asserts";
+export * from "./context";
 export * from "./disposable";
 export * from "./do";
 export * from "./errors";
