@@ -1,11 +1,21 @@
 {
   "name": "@anion155/signals",
-  "module": "index.ts",
+  "version": "0000.1.0",
   "type": "module",
-  "devDependencies": {
-    "@types/bun": "latest"
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "scripts": {
+    "test": "jest",
+    "lint": "eslint .",
+    "build": "pkgroll"
   },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/bun": "latest",
+    "eslint": "^9.21.0",
+    "jest": "^29.7.0",
+    "pkgroll": "^2.11.0",
+    "prettier": "^3.5.2"
   }
 }
