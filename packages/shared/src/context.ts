@@ -53,13 +53,13 @@ export function createContextStack<Context extends object>(initial: Context) {
   }
   /** Pushes new value to stack, and return {@link pop} function */
   function push(next: Context) {
-    stack.unshift(next);
-    return pop;
+    const index = stack.unshift(next) - 1;
+    return () => pop(index);
   }
   /** Pushes new value to stack, and returns {@link Disposable} that calls {@link pop} on dispose */
   function setup(next: Context) {
-    push(next);
-    return create(stack[0], { [Symbol.dispose]: pop });
+    const cleanup = push(next);
+    return create(stack[0], { [Symbol.dispose]: cleanup });
   }
 
   return { current, iterator, [Symbol.iterator]: iterator, push, pop, setup };

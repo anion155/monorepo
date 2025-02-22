@@ -22,18 +22,30 @@ describe("context utils", () => {
     it("should store and update value", () => {
       const context = createContextStack({ type: "none" });
       expect(context.current()).toStrictEqual({ type: "none" });
+
       context.push({ type: "store" });
       expect(context.current()).toStrictEqual({ type: "store" });
+
       context.push({ type: "remove" });
       expect(context.current()).toStrictEqual({ type: "remove" });
+
       expect(context.pop()).toStrictEqual({ type: "remove" });
       expect(context.current()).toStrictEqual({ type: "store" });
+
       context.push({ type: "remove" });
       expect(context.pop(2)).toStrictEqual([]);
       expect(context.pop(1)).toStrictEqual([{ type: "remove" }]);
+
       context.push({ type: "remove" });
       expect(context.pop(0)).toStrictEqual([{ type: "remove" }, { type: "store" }]);
       expect(context.current()).toStrictEqual({ type: "none" });
+
+      context.push({ type: "remove" });
+      const clean = context.push({ type: "store" });
+      expect(context.current()).toStrictEqual({ type: "store" });
+      context.push({ type: "remove" });
+      clean();
+      expect(context.current()).toStrictEqual({ type: "remove" });
     });
 
     it("should iterate over values in context in reverse order", () => {
