@@ -2,5 +2,6 @@
   "extends": "@anion155/configs/tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ESNext.Iterator"]
-  }
+  },
+  "exclude": ["./dist"]
 }

@@ -32,11 +32,11 @@ declare global {
 declare global {
   interface DisposableStack {
     /** Append any kind of disposables */
-    append(...disposables: Array<DisposableStackArgument>): void;
+    append(...disposables: Array<DisposableStackArgument>): this;
   }
   interface AsyncDisposableStack {
     /** Append any kind of disposables */
-    append(...disposables: Array<AsyncDisposableStackArgument>): void;
+    append(...disposables: Array<AsyncDisposableStackArgument>): this;
   }
 }
 defineMethod(DisposableStack.prototype, "append", function append(this: DisposableStack, ...disposables) {
@@ -44,12 +44,14 @@ defineMethod(DisposableStack.prototype, "append", function append(this: Disposab
     if (isDisposable(disposable)) this.use(disposable);
     else if (typeof disposable === "function") this.defer(disposable);
   });
+  return this;
 });
 defineMethod(AsyncDisposableStack.prototype, "append", function append(this: AsyncDisposableStack, ...disposables) {
   disposables.forEach((disposable) => {
     if (isDisposable(disposable) || isDisposable.async(disposable)) this.use(disposable);
     else if (typeof disposable === "function") this.defer(disposable);
   });
+  return this;
 });
 
 declare global {
