@@ -61,4 +61,6 @@ declare global {
       : T extends [infer Head, ...infer Rest extends unknown[]]
         ? [[Head, ...TuplePop<Rest>[0]], TuplePop<Rest>[1]]
         : [T, T[0]];
+
+  type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I extends U) => void ? I : never;
 }

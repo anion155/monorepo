@@ -1,4 +1,4 @@
-import "@global/disposable";
+import "@/global/disposable";
 
 import { hasTypedField, is, isTypeOf } from "./is";
 import { create } from "./object";
