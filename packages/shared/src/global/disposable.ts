@@ -1,7 +1,7 @@
-import { isDisposable } from "@/disposable";
-import { DeveloperError, never } from "@/errors";
-import { appendMethod, defineMethod, defineProperty } from "@/object";
-import { Stamper } from "@/stamper";
+import { isDisposable } from "../disposable";
+import { DeveloperError, never } from "../errors";
+import { appendMethod, defineMethod, defineProperty } from "../object";
+import { Stamper } from "../stamper";
 
 declare global {
   interface DisposableStack {

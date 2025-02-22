@@ -1,6 +1,6 @@
-import { noop } from "@/functional";
-import { defineMethod } from "@/object";
-import { TimeoutError } from "@/promise";
+import { noop } from "../functional";
+import { defineMethod } from "../object";
+import { TimeoutError } from "../promise";
 
 declare global {
   interface PromiseConstructor {

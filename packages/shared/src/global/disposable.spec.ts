@@ -61,7 +61,7 @@ describe("disposable utils", () => {
         const { disposables, dispose } = createDisposables();
         const stack = new DisposableStack();
         stack.append(...disposables);
-        expect(dispose(stack)).toBe(true);
+        expect(dispose(stack)()).toBe(true);
       });
 
       it("async", async () => {
@@ -76,7 +76,7 @@ describe("disposable utils", () => {
       it("sync", () => {
         const { disposables, dispose } = createDisposables();
         const stack = DisposableStack.create(...disposables);
-        expect(dispose(stack)).toBe(true);
+        expect(dispose(stack)()).toBe(true);
       });
 
       it("async", async () => {
@@ -91,7 +91,7 @@ describe("disposable utils", () => {
         it("sync", () => {
           const { disposables, dispose } = createDisposables();
           const stack = DisposableStack.transaction((stack) => stack.append(...disposables));
-          expect(dispose(stack)).toBe(true);
+          expect(dispose(stack)()).toBe(true);
         });
 
         it("async", async () => {
