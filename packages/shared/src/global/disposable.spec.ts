@@ -2,10 +2,10 @@ import "./disposable";
 
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { DeveloperError } from "@/errors";
-import { isPromisePending } from "@/promise";
+import { DeveloperError } from "../errors";
+import { isPromisePending } from "../promise";
 
-describe("disposable utils", () => {
+describe("disposable extensions", () => {
   describe("Async/DisposableStack extensions", () => {
     const createDisposables = () => {
       const disposables = [new DisposableStack(), jest.fn(), null, undefined] as const;
