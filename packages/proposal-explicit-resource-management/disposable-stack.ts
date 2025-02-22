@@ -2,11 +2,9 @@ import "./global-symbols";
 
 import { SuppressedError } from "./suppressed-error";
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface DisposableStack {
   readonly [Symbol.toStringTag]: string;
 }
-// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class DisposableStack {
   #stack: Array<() => void>;
   declare readonly disposed: boolean;

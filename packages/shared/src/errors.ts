@@ -16,6 +16,7 @@ export function never(message?: string): never {
 }
 
 export class NotImplementedYet extends createErrorClass("NotImplementedYet", "this functionality isn't implemented yet") {}
+/** @deprecated */
 export function TODO(message?: string): never {
   throw new NotImplementedYet(message);
 }

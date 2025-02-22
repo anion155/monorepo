@@ -40,6 +40,8 @@ export const typescript = [
         },
       ],
       "@typescript-eslint/unbound-method": "off",
+      "@typescript-eslint/no-unsafe-declaration-merging": "off",
+      "@typescript-eslint/no-empty-object-type": ["error", { allowInterfaces: "with-single-extends" }],
     },
   },
   {
