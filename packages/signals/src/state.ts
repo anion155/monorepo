@@ -16,8 +16,8 @@ export class SignalState<Value> extends Signal implements SignalWritableDependen
     internals.handleSubscriptionContext(this);
     return this.#current;
   }
-  set(next: Value) {
-    this.#current = next;
+  set(value: Value) {
+    this.#current = value;
     internals.dependents.get(this).forEach((dependent) => dependent[internals.invalidate]());
   }
 }

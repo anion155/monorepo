@@ -114,12 +114,33 @@ describe("signals tests", () => {
 
       const effectSpy = jest.fn((_n: number) => undefined);
       using effect = new SignalEffect(() => effectSpy(computed.get()), true);
+      effectSpy.mockClear();
 
       stateA.set(2);
       expect(computed.get()).toBe(4);
-      expect(effectSpy).toHaveBeenCalledTimes(2);
-      expect(effectSpy).toHaveBeenNthCalledWith(1, 2);
-      expect(effectSpy).toHaveBeenNthCalledWith(2, 4);
+      expect(effectSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("without setter .set() should throw TypeError", async () => {
+      using stateA = new SignalState(1);
+      using computed = new SignalComputed(() => stateA.get() * 2);
+
+      expect(() => computed.set(2)).toThrow(new TypeError("this computed signal is readonly"));
+    });
+
+    it("should update state", async () => {
+      using stateA = new SignalState(1);
+      using computed = new SignalComputed(
+        () => stateA.get() * 2,
+        (value) => stateA.set(value / 2),
+      );
+
+      const effectSpy = jest.fn((_n: number) => undefined);
+      using effect = new SignalEffect(() => effectSpy(computed.get()), true);
+
+      computed.set(4);
+      expect(stateA.get()).toBe(2);
+      expect;
     });
   });
 });
