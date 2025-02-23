@@ -2,7 +2,7 @@ import "./promise";
 
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { isPromisePending, TimeoutError } from "@/promise";
+import { isPromisePending, TimeoutError } from "../promise";
 
 jest.useFakeTimers();
 
