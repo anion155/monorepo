@@ -1,3 +1,5 @@
+import "./utils";
+
 declare global {
   /**
    * Generic functor type, any type that can be called like in example

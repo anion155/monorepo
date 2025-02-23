@@ -2,9 +2,28 @@
   "name": "@anion155/shared",
   "private": true,
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      }
+    },
+    "./global": {
+      "require": {
+        "types": "./dist/global/index.d.cts",
+        "default": "./dist/global/index.cjs"
+      },
+      "import": {
+        "types": "./dist/global/index.d.mts",
+        "default": "./dist/global/index.mjs"
+      }
+    }
+  },
   "scripts": {
     "test": "jest",
     "lint": "eslint .",

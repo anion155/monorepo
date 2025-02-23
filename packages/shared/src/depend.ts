@@ -1,3 +1,5 @@
+import "./global/branding";
+
 import { createErrorClass } from "./errors";
 import { Stamper } from "./stamper";
 

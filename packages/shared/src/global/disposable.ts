@@ -1,4 +1,4 @@
-import { isDisposable } from "../disposable";
+import { isDisposable } from "../disposable/is-disposable";
 import { DeveloperError, never } from "../errors";
 import { appendMethod, defineMethod, defineProperty } from "../object";
 import { Stamper } from "../stamper";

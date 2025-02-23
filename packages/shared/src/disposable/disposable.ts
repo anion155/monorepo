@@ -1,22 +1,8 @@
-import { hasTypedField, is, isTypeOf } from "./is";
-import { create } from "./object";
+import "../global/disposable";
 
-declare module "./is" {
-  interface TypeOfMap {
-    disposable: Disposable;
-    asyncDisposable: AsyncDisposable;
-  }
-}
-/** Tests if value is of Disposable */
-export function isDisposable(value: unknown): value is Disposable {
-  return hasTypedField(value, Symbol.dispose, "function");
-}
-/** Tests if value is of AsyncDisposable */
-isDisposable.async = function isAsyncDisposable(value: unknown): value is AsyncDisposable {
-  return hasTypedField(value, Symbol.asyncDispose, "function");
-};
-isTypeOf.register("disposable", isDisposable);
-isTypeOf.register("asyncDisposable", isDisposable.async);
+import { is } from "../is";
+import { create } from "../object";
+import { isDisposable } from "./is-disposable";
 
 /** Creates Disposable from AsyncDisposable */
 export function disposableFrom(value: AsyncDisposable) {

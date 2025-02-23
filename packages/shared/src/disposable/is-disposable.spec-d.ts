@@ -1,7 +1,6 @@
-import { Equal, Expect } from "type-tests";
-
-import { isDisposable } from "./disposable";
-import { isTypeOf } from "./is";
+import { Equal, Expect } from "../../type-tests";
+import { isTypeOf } from "../is";
+import { isDisposable } from "./is-disposable";
 
 const value = null as unknown;
 

@@ -31,6 +31,6 @@ fetch.original = globalThis.fetch;
 /** Polyfills {@link globalThis.fetch} with version that throws {@link RequestInit.signal}'s {@link AbortSignal.reason} */
 fetch.polyfill = () => {
   if (globalThis.fetch !== fetch) {
-    defineProperty(globalThis, "fetch", { value: fetch });
+    defineProperty(globalThis, "fetch", { value: fetch, writable: true });
   }
 };

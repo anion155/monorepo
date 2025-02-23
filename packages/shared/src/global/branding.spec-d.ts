@@ -1,6 +1,6 @@
 import "./branding";
 
-import { Equal, Expect, ExpectNot, Extends } from "type-tests";
+import { Equal, Expect, ExpectNot, Extends } from "../../type-tests";
 
 type SomeId = Branded<string, "some-id", "meta">;
 type NestedId = Branded<SomeId, "nested-id", 55>;

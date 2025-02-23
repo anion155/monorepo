@@ -1,3 +1,5 @@
+import "./global/constants";
+
 import { DeveloperError } from "./errors";
 import { curryHelper } from "./functional";
 

@@ -1,5 +1,4 @@
-import { Equal, Expect } from "type-tests";
-
+import { Equal, Expect } from "../type-tests";
 import { isTypeOf } from "./is";
 import { isPromise, isPromiseLike } from "./promise";
 

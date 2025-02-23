@@ -1,3 +1,5 @@
+import "./global/functions";
+
 import { createErrorClass } from "./errors";
 
 export class AssertionError extends createErrorClass("AssertionError") {

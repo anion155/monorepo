@@ -1,5 +1,3 @@
-import "./global";
-
 export * from "./abort";
 export * from "./asserts";
 export * from "./context";

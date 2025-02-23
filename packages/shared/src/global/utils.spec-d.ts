@@ -1,4 +1,4 @@
-import { Equal, Expect, ExpectNot } from "type-tests";
+import { Equal, Expect, ExpectNot } from "../../type-tests";
 
 type PickHelperCases = [
   // should autosuggest key names
