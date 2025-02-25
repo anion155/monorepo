@@ -49,3 +49,5 @@ defineMethod(AbortController.prototype, "bindToPromise", function bindToPromise(
   promise?.then(noop, (reason) => this.abort(reason));
   return this;
 });
+
+export {};

@@ -220,3 +220,5 @@ defineMethod(SuppressedError, "suppressAsync", async function suppress(error: un
   }
   throw error;
 });
+
+export {};

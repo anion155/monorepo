@@ -19,3 +19,5 @@ declare global {
   /** Returns branded type original type */
   type BrandType<Brand extends Branded<unknown, PropertyKey, unknown>> = Brand[typeof original];
 }
+
+export {};

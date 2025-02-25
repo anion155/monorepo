@@ -2,6 +2,8 @@ import pluginJs from "@eslint/js";
 import comments from "@eslint-community/eslint-plugin-eslint-comments/configs";
 import prettier from "eslint-config-prettier";
 import pluginJest from "eslint-plugin-jest";
+import reactPlugin from "eslint-plugin-react";
+import reactHooksPlugin from "eslint-plugin-react-hooks";
 import importSort from "eslint-plugin-simple-import-sort";
 import tseslint from "typescript-eslint";
 
@@ -61,6 +63,30 @@ export const jest = [
   {
     files: ["**/*.{test,spec}.{js,jsx,ts,tsx}"],
     ...pluginJest.configs["flat/recommended"],
+  },
+];
+
+/** @type {import('eslint').Linter.Config[]} */
+export const react = [
+  {
+    files: ["**/use*.{js,jsx,ts,tsx}", "**/*.{jsx,tsx}"],
+    plugins: {
+      react: reactPlugin,
+      "react-hooks": reactHooksPlugin,
+    },
+    languageOptions: {
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    rules: {
+      ...reactPlugin.configs.recommended.rules,
+      ...reactPlugin.configs["jsx-runtime"].rules,
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": ["warn", { additionalHooks: "(useRenderEffect)" }],
+    },
   },
 ];
 

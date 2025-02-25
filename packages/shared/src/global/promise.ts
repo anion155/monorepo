@@ -44,3 +44,5 @@ defineMethod(Promise.prototype, "signal", function signal() {
   this.then(noop, (reason) => controller.abort(reason));
   return controller.signal;
 });
+
+export {};

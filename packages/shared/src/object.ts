@@ -1,3 +1,5 @@
+import "./global/utils";
+
 import { hasTypedField } from "./is";
 
 export type PropertyDescriptorAccessorReadonly<Value> = {

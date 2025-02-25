@@ -64,3 +64,5 @@ declare global {
 
   type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I extends U) => void ? I : never;
 }
+
+export {};
