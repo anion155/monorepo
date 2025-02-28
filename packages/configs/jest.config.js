@@ -92,6 +92,16 @@ export function jestConfig(...configs) {
   return config;
 }
 
+/**
+ * @param {string} name
+ * @param {string[]} testMatch
+ * @param {...import('jest').Config} configs
+ * @returns {import('jest').Config}
+ */
+export function jestProject(name, testMatch, ...configs) {
+  return jestConfig({ displayName: name, testMatch }, ...configs);
+}
+
 /** @type {import('jest').Config} */
 export const base = {
   clearMocks: true,
@@ -118,4 +128,9 @@ export const typescript = (configPath = "./tsconfig.jest.json", baseConfigPath =
       moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: "<rootDir>/" }),
     },
   );
+};
+
+/** @type {import('jest').Config} */
+export const react = {
+  testEnvironment: "jsdom",
 };
