@@ -64,6 +64,7 @@ const updateTsConfig = async (filename: string, project: TSConfig) => {
   } else {
     await $`echo "${JSON.stringify(project, null, 2)}" > "${filename}"`;
   }
+  await $`prettier --write "${filename}"`;
 };
 
 try {

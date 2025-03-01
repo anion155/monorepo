@@ -2,7 +2,7 @@ import fs from "node:fs";
 
 import { pathsToModuleNameMapper } from "ts-jest";
 
-import { createObjectMerger, createOrderedMapMerger, createSchemeMerger, mergeArrays } from "./utils";
+import { createObjectMerger, createOrderedMapMerger, createSchemeMerger, mergeArrays } from "./utils.js";
 
 /**
  * For a detailed explanation regarding each configuration property, visit:

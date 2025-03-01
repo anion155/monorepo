@@ -1,9 +1,7 @@
-import { base, jestProject, react, typescript } from "@anion155/configs/jest.config.js";
+import { base, jestProjects, reactDOM, typescript } from "@anion155/configs/jest.config.js";
 
 /** @type {import('ts-jest').JestConfigWithTsJest} **/
-export default {
-  projects: [
-    jestProject("tests", ["<rootDir>/src/**/*.spec.ts"], base, typescript()),
-    jestProject("react tests", ["<rootDir>/src/react/**/*.spec.tsx"], base, typescript(), react),
-  ],
-};
+export default jestProjects({
+  tests: [{ testMatch: ["<rootDir>/src/**/*.spec.ts"] }, base, typescript()],
+  "reactDOM tests": [{ testMatch: ["<rootDir>/src/react/**/*.spec.tsx"] }, base, typescript(), reactDOM],
+});
