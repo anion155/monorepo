@@ -57,9 +57,12 @@ export function createContextStack<Context extends object>(initial: Context) {
     return () => pop(index);
   }
   /** Pushes new value to stack, and returns {@link Disposable} that calls {@link pop} on dispose */
-  function setup(next: Context) {
+  function setup<Specific extends Context>(next: Specific) {
     const cleanup = push(next);
-    return create(stack[0], { [Symbol.dispose]: cleanup });
+    const dispose = () => {
+      cleanup();
+    };
+    return create(stack[0] as Specific, { [Symbol.dispose]: dispose });
   }
 
   return { current, iterator, [Symbol.iterator]: iterator, push, pop, setup };
