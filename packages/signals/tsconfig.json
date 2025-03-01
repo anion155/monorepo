@@ -1,4 +1,9 @@
 {
-  "extends": "@anion155/configs/tsconfig.base.json",
-  "exclude": ["dist"]
+  "extends": ["./tsconfig.base.json"],
+  "exclude": ["dist", "coverage", "eslint.config.js", "jest.config.js", "**/*.spec.ts", "**/*.spec.tsx"],
+  "references": [
+    {
+      "path": "./tsconfig.jest.json"
+    }
+  ]
 }

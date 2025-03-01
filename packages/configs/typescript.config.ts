@@ -44,7 +44,7 @@ const jestProject: TSConfig = {
     esModuleInterop: true,
     composite: true,
   },
-  include: ["**/*.spec.ts", "**/*.spec.tsx"],
+  include: ["../configs/jest-setup.ts", "**/*.ts", "**/*.tsx"],
 };
 
 const tsConfigMerger = createSchemeMerger<Scheme<Partial<TSConfig>>>({
