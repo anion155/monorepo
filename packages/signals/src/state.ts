@@ -1,9 +1,11 @@
 import { Dependency } from "@anion155/shared";
-import { internals, SignalWritableDependency } from "./internals";
+
+import { internals, SignalWritableValue } from "./internals";
 import { Signal } from "./signal";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface SignalState<Value> extends Dependency {}
-export class SignalState<Value> extends Signal implements SignalWritableDependency<Value> {
+export class SignalState<Value> extends Signal implements SignalWritableValue<Value> {
   #current: Value;
 
   constructor(initialValue: Value) {
@@ -12,6 +14,9 @@ export class SignalState<Value> extends Signal implements SignalWritableDependen
     this.#current = initialValue;
   }
 
+  peak() {
+    return this.#current;
+  }
   get() {
     internals.handleSubscriptionContext(this);
     return this.#current;

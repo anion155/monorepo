@@ -1,12 +1,13 @@
 import { Dependent } from "@anion155/shared";
-import { internals, SignalDependent } from "./internals";
+
+import { internals, SignalListener } from "./internals";
 import { Signal } from "./signal";
 
 export type EffectCleanup = { (): void } | void;
 export type EffectCallback = { (): EffectCleanup };
 
 export interface SignalEffect extends Dependent {}
-export class SignalEffect extends Signal implements SignalDependent {
+export class SignalEffect extends Signal implements SignalListener {
   #callback: EffectCallback;
   #cleanup: EffectCleanup = undefined;
 
@@ -30,7 +31,7 @@ export class SignalEffect extends Signal implements SignalDependent {
 
   [internals.invalidate]() {
     this.#cleanup?.();
-    using subscription = internals.setupSubscriptionContext(this);
+    using _subscription = internals.setupSubscriptionContext(this);
     this.#cleanup = this.#callback();
   }
 }

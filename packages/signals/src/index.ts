@@ -1,5 +1,5 @@
-export { CircularDependencyError } from "@anion155/shared";
 export { SignalComputed } from "./computed";
-export { SignalEffect, type EffectCallback } from "./effect";
+export { type EffectCallback, SignalEffect } from "./effect";
 export { Signal } from "./signal";
 export { SignalState } from "./state";
+export { CircularDependencyError } from "@anion155/shared";

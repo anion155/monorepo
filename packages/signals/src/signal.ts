@@ -1,4 +1,7 @@
+import "@anion155/shared/global";
+
 import { updateProperty } from "@anion155/shared";
+
 import { internals } from "./internals";
 
 export interface Signal extends Disposable {}

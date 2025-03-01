@@ -1,5 +1,6 @@
 import { is } from "@anion155/shared";
 import { describe, expect, it, jest } from "@jest/globals";
+
 import { SignalComputed } from "./computed";
 import { SignalEffect } from "./effect";
 import { Signal } from "./signal";
@@ -83,20 +84,32 @@ describe("signals tests", () => {
       expect(effectSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("should run effect synchronously", async () => {
+    it("should run effect synchronously", () => {
       using stateA = new SignalState(1);
       const cleanupSpy = jest.fn();
       const effectSpy = jest.fn(() => {
         stateA.get();
         return cleanupSpy;
       });
-      using effect = new SignalEffect(effectSpy, true);
+      using _effect = new SignalEffect(effectSpy, true);
       expect(cleanupSpy).toHaveBeenCalledTimes(0);
       expect(effectSpy).toHaveBeenCalledTimes(1);
 
       stateA.set(2);
       expect(cleanupSpy).toHaveBeenCalledTimes(1);
       expect(effectSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it(".peak() should not subscribe to state", () => {
+      using stateA = new SignalState(1);
+      const effectSpy = jest.fn(() => {
+        stateA.peak();
+      });
+      using _effect = new SignalEffect(effectSpy, true);
+      expect(effectSpy).toHaveBeenCalledTimes(1);
+
+      stateA.set(2);
+      expect(effectSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -107,13 +120,13 @@ describe("signals tests", () => {
       expect(is(computed, Signal)).toBe(true);
     });
 
-    it("should update value on state change", async () => {
+    it("should update value on state change", () => {
       using stateA = new SignalState(1);
       using computed = new SignalComputed(() => stateA.get() * 2);
       expect(computed.get()).toBe(2);
 
       const effectSpy = jest.fn((_n: number) => undefined);
-      using effect = new SignalEffect(() => effectSpy(computed.get()), true);
+      using _effect = new SignalEffect(() => effectSpy(computed.get()), true);
       effectSpy.mockClear();
 
       stateA.set(2);
@@ -121,14 +134,28 @@ describe("signals tests", () => {
       expect(effectSpy).toHaveBeenCalledTimes(1);
     });
 
-    it("without setter .set() should throw TypeError", async () => {
+    it("should ignore .peak() call", () => {
+      using stateA = new SignalState(1);
+      using computed = new SignalComputed(() => stateA.get() * 2);
+      expect(computed.get()).toBe(2);
+
+      const effectSpy = jest.fn((_n: number) => undefined);
+      using _effect = new SignalEffect(() => effectSpy(computed.peak()), true);
+      effectSpy.mockClear();
+
+      stateA.set(2);
+      expect(computed.get()).toBe(4);
+      expect(effectSpy).toHaveBeenCalledTimes(0);
+    });
+
+    it("without setter .set() should throw TypeError", () => {
       using stateA = new SignalState(1);
       using computed = new SignalComputed(() => stateA.get() * 2);
 
       expect(() => computed.set(2)).toThrow(new TypeError("this computed signal is readonly"));
     });
 
-    it("should update state", async () => {
+    it("should update state", () => {
       using stateA = new SignalState(1);
       using computed = new SignalComputed(
         () => stateA.get() * 2,
@@ -136,11 +163,10 @@ describe("signals tests", () => {
       );
 
       const effectSpy = jest.fn((_n: number) => undefined);
-      using effect = new SignalEffect(() => effectSpy(computed.get()), true);
+      using _effect = new SignalEffect(() => effectSpy(computed.get()), true);
 
       computed.set(4);
       expect(stateA.get()).toBe(2);
-      expect;
     });
   });
 });

@@ -3,7 +3,7 @@ import { $ } from "bun";
 import { styleText } from "node:util";
 
 try {
-  await `rm -rf dist`;
+  await $`rm -rf dist`;
   await $`bunx tsc -p tsconfig.build.json --outDir dist/esm --module esnext`;
   await $`echo '{"type": "module"}' > dist/esm/package.json`;
 

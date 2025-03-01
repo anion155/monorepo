@@ -1,29 +1,28 @@
 import { createContextStack, createDependTools, Dependency, Dependent } from "@anion155/shared";
+
 import type { Signal } from "./signal";
 
 const invalidate = Symbol.for("Signal#invalidate");
 
-export interface SignalDependent extends Signal, Dependent {
+export interface SignalListener extends Signal, Dependent {
   [invalidate](): void;
 }
-export interface SignalReadonlyDependency<Value> extends Signal, Dependency {
+export interface SignalReadonlyValue<Value> extends Signal, Dependency {
+  peak(): Value;
   get(): Value;
 }
-export interface SignalWritableDependency<Value> extends Signal, SignalReadonlyDependency<Value> {
+export interface SignalWritableValue<Value> extends Signal, SignalReadonlyValue<Value> {
   set(value: Value): void;
 }
 
-const { dependents, dependencies, bind, unbind } = createDependTools<
-  SignalDependent,
-  SignalReadonlyDependency<unknown> | SignalWritableDependency<unknown>
->();
+const { dependents, dependencies, bind, unbind } = createDependTools<SignalListener, SignalReadonlyValue<unknown> | SignalWritableValue<unknown>>();
 
-const context = createContextStack<{ type: "empty" } | { type: "subscription"; dependent: SignalDependent }>({ type: "empty" });
-function setupSubscriptionContext(dependent: SignalDependent) {
+const context = createContextStack<{ type: "empty" } | { type: "subscription"; dependent: SignalListener }>({ type: "empty" });
+function setupSubscriptionContext(dependent: SignalListener) {
   return context.setup({ type: "subscription", dependent });
 }
 
-function handleSubscriptionContext(dependency: SignalReadonlyDependency<unknown> | SignalWritableDependency<unknown>) {
+function handleSubscriptionContext(dependency: SignalReadonlyValue<unknown> | SignalWritableValue<unknown>) {
   const current = context.current();
   if (current.type === "subscription") {
     bind(current.dependent, dependency);

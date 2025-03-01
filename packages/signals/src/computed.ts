@@ -1,9 +1,11 @@
 import { DependentDependency } from "@anion155/shared";
-import { internals, SignalDependent, SignalReadonlyDependency } from "./internals";
+
+import { internals, SignalListener, SignalReadonlyValue } from "./internals";
 import { Signal } from "./signal";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface SignalComputed<Value> extends DependentDependency {}
-export class SignalComputed<Value> extends Signal implements SignalDependent, SignalReadonlyDependency<Value> {
+export class SignalComputed<Value> extends Signal implements SignalListener, SignalReadonlyValue<Value> {
   #current!: Value;
   #getter: () => Value;
   #setter?: (value: Value) => void;
@@ -17,6 +19,9 @@ export class SignalComputed<Value> extends Signal implements SignalDependent, Si
     this[internals.invalidate]();
   }
 
+  peak() {
+    return this.#current;
+  }
   get() {
     internals.handleSubscriptionContext(this);
     return this.#current;
@@ -28,7 +33,7 @@ export class SignalComputed<Value> extends Signal implements SignalDependent, Si
     internals.dependents.get(this).forEach((dependent) => dependent[internals.invalidate]());
   }
   [internals.invalidate]() {
-    using subscription = internals.setupSubscriptionContext(this);
+    using _subscription = internals.setupSubscriptionContext(this);
     this.#current = this.#getter();
     internals.dependents.get(this).forEach((dependent) => dependent[internals.invalidate]());
   }
