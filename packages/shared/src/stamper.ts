@@ -29,8 +29,8 @@ export class Stamper<Object extends object, Value> {
     return value;
   }
 
-  /** Checks if {@link object} was stamped */
-  is(object: object): object is Object {
+  /** Checks if {@link object} was stamped  */
+  has(object: object): object is Object {
     return this.storage.has(object as never);
   }
 
@@ -39,13 +39,13 @@ export class Stamper<Object extends object, Value> {
    * Throws TypeError if {@link object} wasn't stamped.
    */
   get(object: object): Value {
-    if (!this.is(object)) throw new TypeError("passed object wasn't stamped");
+    if (!this.has(object)) throw new TypeError("passed object wasn't stamped");
     return this.storage.get(object)!;
   }
 
   /** Get's value stamped into {@link object}, otherwise return undefined */
   getSafe(object: object): Value | undefined {
-    return this.is(object) ? this.storage.get(object) : undefined;
+    return this.has(object) ? this.storage.get(object) : undefined;
   }
 
   /**
@@ -53,13 +53,13 @@ export class Stamper<Object extends object, Value> {
    * Throws TypeError if {@link object} wasn't stamped.
    */
   set(object: object, value: Value) {
-    if (!this.is(object)) throw new TypeError("passed object wasn't stamped");
+    if (!this.has(object)) throw new TypeError("passed object wasn't stamped");
     this.storage.set(object, value);
   }
 
   /** Set value into stamped {@link object} */
   setSafe(object: object, value: Value) {
-    if (this.is(object)) this.storage.set(object, value);
+    if (this.has(object)) this.storage.set(object, value);
   }
 
   /**
@@ -67,7 +67,7 @@ export class Stamper<Object extends object, Value> {
    * Throws TypeError if {@link object} wasn't stamped.
    */
   modify(object: object, modifier: (value: Value) => Value) {
-    if (!this.is(object)) throw new TypeError("passed object wasn't stamped");
+    if (!this.has(object)) throw new TypeError("passed object wasn't stamped");
     this.storage.set(object, modifier(this.storage.get(object)!));
   }
 
@@ -76,6 +76,6 @@ export class Stamper<Object extends object, Value> {
    * Does not call {@link modifier} if {@link object} wasn't stamped.
    */
   modifySafe(obj: object, modifier: (value: Value) => Value) {
-    if (this.is(obj)) this.storage.set(obj, modifier(this.storage.get(obj)!));
+    if (this.has(obj)) this.storage.set(obj, modifier(this.storage.get(obj)!));
   }
 }

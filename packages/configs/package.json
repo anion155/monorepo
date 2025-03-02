@@ -3,9 +3,6 @@
   "private": true,
   "type": "module",
   "bin": {
-    "eslint": "./scripts/eslint.sh",
-    "prettier": "./scripts/prettier.sh",
-    "jest": "./scripts/jest.sh",
     "builder": "./scripts/builder.ts",
     "typescript.config": "./scripts/typescript.config.ts"
   },

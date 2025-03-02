@@ -21,9 +21,9 @@ export function disposableFrom(value: AsyncDisposable) {
 export function appendDispose<Value extends object>(value: Value, ...disposables: Array<DisposableStackArgument>) {
   if (is(value, DisposableStack) || is(value, AsyncDisposableStack)) {
     value.append(...disposables);
-  } else if (DisposableStack.stamper.is(value)) {
+  } else if (DisposableStack.stamper.has(value)) {
     DisposableStack.stamper.get(value).append(...disposables);
-  } else if (AsyncDisposableStack.stamper.is(value)) {
+  } else if (AsyncDisposableStack.stamper.has(value)) {
     AsyncDisposableStack.stamper.get(value).append(...disposables);
   } else {
     DisposableStack.stamper.stamp(value as never).append(...disposables);
@@ -39,7 +39,7 @@ export function appendDispose<Value extends object>(value: Value, ...disposables
 appendDispose.async = function appendDisposeAsync<Value extends object>(value: Value, ...disposables: Array<AsyncDisposableStackArgument>) {
   if (is(value, AsyncDisposableStack)) {
     value.append(...disposables);
-  } else if (AsyncDisposableStack.stamper.is(value)) {
+  } else if (AsyncDisposableStack.stamper.has(value)) {
     AsyncDisposableStack.stamper.get(value).append(...disposables);
   } else {
     AsyncDisposableStack.stamper.stamp(value as never).append(...disposables);

@@ -10,6 +10,6 @@ export function useSignalValue<Value>(signal: SignalReadonlyValue<Value>) {
   return useSyncExternalStore(
     store.subscribe,
     () => signal.peak(),
-    () => signal.peak(),
+    () => signal.peak()
   );
 }

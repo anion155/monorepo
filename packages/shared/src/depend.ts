@@ -58,7 +58,7 @@ export function createDependTools<SDependent extends Dependent = Dependent, SDep
       const deps = dependencies.get(current);
       if (deps.has(dependency)) return rank + 1;
       dependencies.get(current).forEach((dep) => {
-        if (!dependencies.is(dep)) return;
+        if (!dependencies.has(dep)) return;
         queue.push([dep, rank + 1]);
       });
     }
@@ -70,7 +70,7 @@ export function createDependTools<SDependent extends Dependent = Dependent, SDep
    * @throws {CircularDependencyError} if {@link dependency} already depends on {@link dependent}.
    */
   function bind(dependent: SDependent, dependency: SDependency) {
-    if (dependencies.is(dependency) && dependents.is(dependent)) {
+    if (dependencies.has(dependency) && dependents.has(dependent)) {
       if (rank(dependency, dependent) >= 0) throw new CircularDependencyError();
     }
     dependencies.get(dependent).add(dependency);

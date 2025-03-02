@@ -81,6 +81,15 @@ importers:
       '@jest/types':
         specifier: ^29.6.3
         version: 29.6.3
+      eslint:
+        specifier: ^9.21.0
+        version: 9.21.0(jiti@2.4.2)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.13.8)
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.2
 
   packages/proposal-async-iterator-helpers:
     dependencies:
@@ -97,6 +106,12 @@ importers:
       eslint:
         specifier: ^9.21.0
         version: 9.21.0(jiti@2.4.2)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.13.8)
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.2
 
   packages/proposal-explicit-resource-management:
     dependencies:
@@ -113,6 +128,12 @@ importers:
       eslint:
         specifier: ^9.21.0
         version: 9.21.0(jiti@2.4.2)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.13.8)
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.2
 
   packages/proposal-iterator-helpers:
     dependencies:
@@ -129,6 +150,12 @@ importers:
       eslint:
         specifier: ^9.21.0
         version: 9.21.0(jiti@2.4.2)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.13.8)
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.2
 
   packages/proposal-promise-with-resolvers:
     dependencies:
@@ -145,6 +172,12 @@ importers:
       eslint:
         specifier: ^9.21.0
         version: 9.21.0(jiti@2.4.2)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.13.8)
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.2
 
   packages/shared:
     devDependencies:
@@ -160,6 +193,12 @@ importers:
       eslint:
         specifier: ^9.21.0
         version: 9.21.0(jiti@2.4.2)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.13.8)
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.2
     optionalDependencies:
       '@types/react':
         specifier: ^19.0.10
@@ -186,6 +225,12 @@ importers:
       eslint:
         specifier: ^9.21.0
         version: 9.21.0(jiti@2.4.2)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.13.8)
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.2
     optionalDependencies:
       '@types/react':
         specifier: ^19.0.10
