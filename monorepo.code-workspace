@@ -2,16 +2,16 @@
   "folders": [
     { "path": "packages/signals" },
     { "path": "packages/shared" },
-    { "path": "packages/configs" },
-    { "path": "." },
     { "path": "packages/proposal-promise-with-resolvers" },
     { "path": "packages/proposal-explicit-resource-management" },
-    { "path": "packages/proposal-iterator-helpers" },
     { "path": "packages/proposal-async-iterator-helpers" },
+    { "path": "packages/proposal-iterator-helpers" },
     { "path": "packages/polyfill-base" },
+    { "path": "packages/configs" },
+    { "path": "." }
   ],
   "settings": {
     "editor.formatOnSave": true,
-    "editor.formatOnSaveMode": "file",
-  },
+    "editor.formatOnSaveMode": "file"
+  }
 }

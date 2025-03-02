@@ -71,6 +71,42 @@ export class GlobalWrappers {
   }
 }
 
+export type AnyRender = (
+  ui: ReactNode,
+  options: { wrapper: JSXElementConstructor<{ children: ReactNode }> }
+) => {
+  rerender: (ui: ReactNode) => void;
+  unmount: () => void;
+};
+
+export type WrappedRenderFunction<BaseRender extends AnyRender> = {
+  (ui: ReactNode, options?: Omit<Parameters<BaseRender>[1], "wrapper"> & { wrapper?: WrapperArgP | WrapperArgP[] }): ReturnType<BaseRender>;
+};
+export type WrappedRender<BaseRender extends AnyRender> = WrappedRenderFunction<BaseRender> & {
+  render: WrappedRenderFunction<BaseRender>;
+  baseRender: BaseRender;
+  /**
+   * Adds {@link next} wrappers to current render function.
+   *
+   * @example
+   * const globalWrappers = new GlobalWrappers()
+   * const render = createRender(domRender, {}, globalWrappers, []);
+   * globalWrappers.push(<ProviderA />)
+   * render.with(<ProviderB />).render(<TestComponent />); // <ProviderA><ProviderB><TestComponent /></ProviderB></ProviderA>
+   */
+  with: (...next: WrapperArgP[]) => WrappedRender<BaseRender>;
+  /**
+   * Creates render function without wrappers.
+   *
+   * @example
+   * const globalWrappers = new GlobalWrappers()
+   * const render = createRender(domRender, {}, globalWrappers, []);
+   * globalWrappers.push(<ProviderA />)
+   * render.without().render(<TestComponent />); // <TestComponent />
+   */
+  without: () => WrappedRender<BaseRender>;
+};
+
 /**
  * Render wrapper that adds support for GlobalWrappers.
  *
@@ -80,45 +116,57 @@ export class GlobalWrappers {
  * globalWrappers.push(<Provider value={{}} />)
  * render(<TestComponent />); // <Provider value={{}}><TestComponent /></Provider>
  */
-export function createRender<
-  BaseRender extends (
-    ui: ReactNode,
-    options: { wrapper: JSXElementConstructor<{ children: ReactNode }> },
-  ) => {
-    rerender: (ui: ReactNode) => void;
-    unmount: () => void;
-  },
-  BaseOptions extends Partial<Omit<InferFunctor<BaseRender>["Params"][1], "wrapper">>,
->(baseRender: BaseRender, baseOptions: BaseOptions, globalWrappers: GlobalWrappers, wrappers: WrapperArgP[] | undefined) {
-  type Options = Omit<InferFunctor<BaseRender>["Params"][1], "wrapper"> & { wrapper?: WrapperArgP | WrapperArgP[] };
-  const render = (ui: ReactNode, options?: Options): InferFunctor<BaseRender>["Result"] => {
+export function createRender<BaseRender extends AnyRender>(
+  baseRender: BaseRender,
+  baseOptions: Parameters<BaseRender>[1],
+  globalWrappers: GlobalWrappers,
+  wrappers: WrapperArgP[] | undefined
+): WrappedRender<BaseRender> {
+  const render: WrappedRenderFunction<BaseRender> = (ui, options) => {
     const wrapper = globalWrappers.createWrapper(options?.wrapper, wrappers);
-    return baseRender(ui, { ...baseOptions, ...options, wrapper });
+    return baseRender(ui, { ...baseOptions, ...options, wrapper }) as ReturnType<BaseRender>;
   };
-  return Object.assign(render, {
+  const methods: Omit<WrappedRender<BaseRender>, ""> = {
     render,
-    /**
-     * Adds {@link next} wrappers to current render function.
-     *
-     * @example
-     * const globalWrappers = new GlobalWrappers()
-     * const render = createRender(domRender, {}, globalWrappers, []);
-     * globalWrappers.push(<ProviderA />)
-     * render.with(<ProviderB />).render(<TestComponent />); // <ProviderA><ProviderB><TestComponent /></ProviderB></ProviderA>
-     */
-    with: (...next: WrapperArgP[]) => createRender(baseRender, baseOptions, globalWrappers, [...(wrappers ?? []), ...next]),
-    /**
-     * Creates render function without wrappers.
-     *
-     * @example
-     * const globalWrappers = new GlobalWrappers()
-     * const render = createRender(domRender, {}, globalWrappers, []);
-     * globalWrappers.push(<ProviderA />)
-     * render.without().render(<TestComponent />); // <TestComponent />
-     */
+    baseRender,
+    with: (...next) => createRender(baseRender, baseOptions, globalWrappers, [...(wrappers ?? []), ...next]),
     without: () => createRender(baseRender, baseOptions, globalWrappers, []),
-  });
+  };
+  return Object.assign(render, methods);
 }
+
+export type RenderHookResult<Hook extends Functor<never, unknown>> = {
+  result: RefObject<InferFunctor<Hook>["Result"]>;
+  rerender: (...next: InferFunctor<Hook>["Params"]) => void;
+  unmount: () => void;
+};
+export type RenderHookFunction = {
+  <Hook extends Functor<never, unknown>>(useHook: Hook, ...params: InferFunctor<Hook>["Params"]): RenderHookResult<Hook>;
+};
+export type WrappedRenderHook<BaseRender extends AnyRender> = RenderHookFunction & {
+  renderHook: RenderHookFunction;
+  baseRender: BaseRender;
+  /**
+   * Adds {@link next} wrappers to current renderHook function.
+   *
+   * @example
+   * const globalWrappers = new GlobalWrappers()
+   * const renderHook = createRenderHook(domRender, {}, globalWrappers, []);
+   * globalWrappers.push(<ProviderA />)
+   * renderHook.with(<ProviderB />).renderHook(useHook, 1); // <ProviderA><ProviderB>{useHook(1)}</ProviderB></ProviderA>
+   */
+  with: (...next: WrapperArgP[]) => WrappedRenderHook<BaseRender>;
+  /**
+   * Creates render function without wrappers.
+   *
+   * @example
+   * const globalWrappers = new GlobalWrappers()
+   * const renderHook = createRenderHook(domRender, {}, globalWrappers, []);
+   * globalWrappers.push(<ProviderA />)
+   * renderHook.without().renderHook(useHook, 1); // useHook(1)
+   */
+  without: () => WrappedRenderHook<BaseRender>;
+};
 
 /**
  * Render hook wrapper that adds support for GlobalWrappers.
@@ -129,59 +177,33 @@ export function createRender<
  * globalWrappers.push(<Provider value={{}} />)
  * render(<TestComponent />); // <Provider value={{}}><TestComponent /></Provider>
  */
-export function createRenderHook<
-  BaseRender extends (
-    ui: ReactNode,
-    options: { wrapper: JSXElementConstructor<{ children: ReactNode }> },
-  ) => {
-    rerender: (ui: ReactNode) => void;
-    unmount: () => void;
-  },
->(
+export function createRenderHook<BaseRender extends AnyRender>(
   baseRender: BaseRender,
   options: Omit<InferFunctor<BaseRender>["Params"][1], "wrapper">,
   globalWrappers: GlobalWrappers,
-  wrappers: WrapperArgP[] | undefined,
-) {
-  const renderHook = <Hook extends Functor<never, unknown>>(useHook: Hook, ...params: InferFunctor<Hook>["Params"]) => {
-    const result: RefObject<InferFunctor<Hook>["Result"]> = { current: undefined };
-
-    function TestComponent({ params: current }: { params: InferFunctor<Hook>["Params"] }) {
-      const pendingResult = useHook(...current);
+  wrappers: WrapperArgP[] | undefined
+): WrappedRenderHook<BaseRender> {
+  const renderHook: RenderHookFunction = (useHook, ...initialParams) => {
+    const result: RefObject<unknown> = { current: undefined };
+    function TestComponent({ params }: { params: never }) {
+      const pendingResult = useHook(...params);
       useEffect(() => {
         result.current = pendingResult;
       });
       return null;
     }
     const wrapper = globalWrappers.createWrapper(undefined, wrappers);
-    const { rerender: baseRerender, unmount } = baseRender(createElement(TestComponent, { params }), { ...options, wrapper });
-    function rerender(...next: InferFunctor<Hook>["Params"]) {
-      return baseRerender(createElement(TestComponent, { params: next }));
+    const { rerender: baseRerender, unmount } = baseRender(createElement(TestComponent, { params: initialParams }), { ...options, wrapper });
+    function rerender(...nextParams: never) {
+      return baseRerender(createElement(TestComponent, { params: nextParams }));
     }
-
     return { result, rerender, unmount };
   };
-  return Object.assign(renderHook, {
+  const methods: Omit<WrappedRenderHook<BaseRender>, ""> = {
     renderHook,
-    /**
-     * Adds {@link next} wrappers to current renderHook function.
-     *
-     * @example
-     * const globalWrappers = new GlobalWrappers()
-     * const renderHook = createRenderHook(domRender, {}, globalWrappers, []);
-     * globalWrappers.push(<ProviderA />)
-     * renderHook.with(<ProviderB />).renderHook(useHook, 1); // <ProviderA><ProviderB>{useHook(1)}</ProviderB></ProviderA>
-     */
-    with: (...next: WrapperArgP[]) => createRenderHook(baseRender, options, globalWrappers, [...(wrappers ?? []), ...next]),
-    /**
-     * Creates render function without wrappers.
-     *
-     * @example
-     * const globalWrappers = new GlobalWrappers()
-     * const renderHook = createRenderHook(domRender, {}, globalWrappers, []);
-     * globalWrappers.push(<ProviderA />)
-     * renderHook.without().renderHook(useHook, 1); // useHook(1)
-     */
+    baseRender,
+    with: (...next) => createRenderHook(baseRender, options, globalWrappers, [...(wrappers ?? []), ...next]),
     without: () => createRenderHook(baseRender, options, globalWrappers, []),
-  });
+  };
+  return Object.assign(renderHook, methods);
 }

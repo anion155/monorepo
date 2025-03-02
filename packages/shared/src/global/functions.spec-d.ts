@@ -1,6 +1,6 @@
 import "./functions";
 
-import { Equal, Expect, expectType } from "../../type-tests";
+import { Equal, Expect, expectType } from "../type-tests";
 
 // should handle functor
 {
@@ -27,7 +27,7 @@ import { Equal, Expect, expectType } from "../../type-tests";
     Expect<Equal<InferAbstractConstructor<typeof functor>, never>>,
     Expect<Equal<InferConstructable<typeof functor>, never>>,
     Expect<Equal<InferCallable<typeof functor>, { Params: Params; Result: Result }>>,
-    Expect<Equal<InferPredicate<typeof functor>, never>>,
+    Expect<Equal<InferPredicate<typeof functor>, never>>
   ];
 }
 
@@ -62,7 +62,7 @@ import { Equal, Expect, expectType } from "../../type-tests";
     Expect<Equal<InferConstructor<typeof method>, never>>,
     Expect<Equal<InferAbstractConstructor<typeof method>, never>>,
     Expect<Equal<InferConstructable<typeof method>, never>>,
-    Expect<Equal<InferCallable<typeof method>, { Params: Params; Result: Result }>>,
+    Expect<Equal<InferCallable<typeof method>, { Params: Params; Result: Result }>>
   ];
 }
 
@@ -95,7 +95,7 @@ import { Equal, Expect, expectType } from "../../type-tests";
     Expect<Equal<InferConstructor<typeof constructor>, { Instance: Instance; Params: Params }>>,
     Expect<Equal<InferAbstractConstructor<typeof constructor>, { Instance: Instance; Params: Params }>>,
     Expect<Equal<InferConstructable<typeof constructor>, { Instance: Instance; Params: Params }>>,
-    Expect<Equal<InferCallable<typeof constructor>, { Params: Params; Result: Instance }>>,
+    Expect<Equal<InferCallable<typeof constructor>, { Params: Params; Result: Instance }>>
   ];
 }
 
@@ -130,7 +130,7 @@ import { Equal, Expect, expectType } from "../../type-tests";
     Expect<Equal<InferConstructor<typeof abstract_constructor>, never>>,
     Expect<Equal<InferAbstractConstructor<typeof abstract_constructor>, { Instance: Instance; Params: Params }>>,
     Expect<Equal<InferConstructable<typeof abstract_constructor>, { Instance: Instance; Params: Params }>>,
-    Expect<Equal<InferCallable<typeof abstract_constructor>, { Params: Params; Result: Instance }>>,
+    Expect<Equal<InferCallable<typeof abstract_constructor>, { Params: Params; Result: Instance }>>
   ];
 }
 
@@ -147,7 +147,7 @@ import { Equal, Expect, expectType } from "../../type-tests";
 
   type InferSignCases = [
     Expect<Equal<InferFunctorSign<CombinedType>, Functor<Params, Result>>>,
-    Expect<Equal<InferMethodSign<CombinedType>, Method<Instance, Params, Result>>>,
+    Expect<Equal<InferMethodSign<CombinedType>, Method<Instance, Params, Result>>>
   ];
 }
 
@@ -158,7 +158,7 @@ import { Equal, Expect, expectType } from "../../type-tests";
   type PredicateCases = [
     Expect<Equal<InferPredicate<typeof isStringUntyped>, { Param: string | number; Result: string | number }>>,
     Expect<Equal<InferPredicate<typeof isStringTyped>, { Param: string | number; Result: string }>>,
-    Expect<Equal<InferPredicate<(a: number, b: string) => boolean>, never>>,
+    Expect<Equal<InferPredicate<(a: number, b: string) => boolean>, never>>
   ];
 
   // @ts-expect-error(2345)
@@ -218,7 +218,7 @@ import { Equal, Expect, expectType } from "../../type-tests";
     Expect<Equal<InferAssertion<typeof assertBlah>, { Param: "blah" | "foo"; Result: "blah" }>>,
     Expect<Equal<InferAssertion<typeof voidReturn>, never>>,
     Expect<Equal<InferAssertion<typeof neverReturn>, never>>,
-    Expect<Equal<InferAssertion<(a: number, b: string) => void>, never>>,
+    Expect<Equal<InferAssertion<(a: number, b: string) => void>, never>>
   ];
 
   expectType<TypedAssertion<"blah" | "foo" | "", "blah" | "foo">>(assertTruthy);

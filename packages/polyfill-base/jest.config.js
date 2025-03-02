@@ -1,10 +1,16 @@
-/** @type {import('jest').Config} */
-export const polyfillConfig = {
-  setupFiles: ["@anion155/polyfill-base/setup-jest.ts"],
-};
+import { jestConfig } from "@anion155/configs/jest.config.js";
 
-/** @param {import('jest').Config} config */
+/** @typedef {import("@anion155/configs/jest.config.js").Config} Config */
+
+export const polyfillConfig = jestConfig({
+  setupFiles: ["@anion155/polyfill-base/setup-jest.ts"],
+});
+
+/**
+ * @param {Config} config
+ * @returns {Config}
+ */
 export const excludeProposals = (config) => {
-  config.setupFiles = config.setupFiles.filter((module) => !module.includes("proposal"));
+  config.setupFiles = config.setupFiles?.filter((module) => !module.includes("proposal"));
   return config;
 };

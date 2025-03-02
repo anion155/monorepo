@@ -21,7 +21,7 @@ describe("disposable extensions", () => {
       return { disposables, dispose, exposeDisposed };
     };
     const createAsyncDisposables = () => {
-      const { promise, resolve } = Promise.withResolvers();
+      const { promise, resolve } = Promise.withResolvers<void>();
       const disposables = [new DisposableStack(), jest.fn(() => promise), null, undefined, new AsyncDisposableStack()] as const;
       const expectDisposed = () => {
         expect(disposables[4].disposed).toBe(true);
@@ -101,7 +101,7 @@ describe("disposable extensions", () => {
           DisposableStack.transaction((stack) => {
             stack.append(disposable);
             throw new Error("test error");
-          }),
+          })
         ).toThrow(new Error("test error"));
         expect(disposable).toHaveBeenCalledWith();
       });
@@ -112,7 +112,7 @@ describe("disposable extensions", () => {
           AsyncDisposableStack.transaction((stack) => {
             stack.append(disposable);
             throw new Error("test error");
-          }),
+          })
         ).rejects.toThrow(new Error("test error"));
         expect(disposable).toHaveBeenCalledWith();
       });
@@ -125,7 +125,7 @@ describe("disposable extensions", () => {
           DisposableStack.transaction((stack) => {
             stack.append(disposable);
             throw new Error("test error");
-          }),
+          })
         ).toThrow(new SuppressedError(new Error("dispose error"), new Error("test error")));
         expect(disposable).toHaveBeenCalledWith();
       });
@@ -136,7 +136,7 @@ describe("disposable extensions", () => {
           AsyncDisposableStack.transaction((stack) => {
             stack.append(disposable);
             throw new Error("test error");
-          }),
+          })
         ).rejects.toThrow(new SuppressedError(new Error("dispose error"), new Error("test error")));
         expect(disposable).toHaveBeenCalledWith();
       });
@@ -183,8 +183,8 @@ describe("disposable extensions", () => {
       new Error("top error"),
       typed(
         typed(new Error("middle error error"), new Error("middle error suppressed")),
-        typed(new Error("bottom error"), new Error("bottom suppressed")),
-      ),
+        typed(new Error("bottom error"), new Error("bottom suppressed"))
+      )
     );
 
     it(".original() should return original error", () => {
@@ -208,7 +208,7 @@ describe("disposable extensions", () => {
       expect(() =>
         SuppressedError.suppress(new Error("test error"), () => {
           throw new Error("dispose error");
-        }),
+        })
       ).toThrow(new SuppressedError(new Error("dispose error"), new Error("test error")));
     });
   });

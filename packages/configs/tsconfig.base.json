@@ -10,7 +10,6 @@
 
     // Bundler mode
     "moduleResolution": "bundler",
-    "declaration": true,
 
     // Best practices
     "strict": true,

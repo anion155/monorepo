@@ -17,8 +17,8 @@ describe("react-dom render utils", () => {
       baseRender(
         <ProviderB>
           <TestComponent />
-        </ProviderB>,
-      ).container,
+        </ProviderB>
+      ).container
     );
   });
 

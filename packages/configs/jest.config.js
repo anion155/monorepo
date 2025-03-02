@@ -1,15 +1,13 @@
-import fs from "node:fs";
+import { createJiti } from "jiti";
+import { createDefaultPreset } from "ts-jest";
 
-import { pathsToModuleNameMapper } from "ts-jest";
+const jiti = createJiti(import.meta.url);
+/** @type {typeof import('./utils')} */
+const { createObjectMerger, createOrderedMapMerger, createSchemeMerger, mergeArrays } = await jiti.import("./utils.ts");
 
-import { createObjectMerger, createOrderedMapMerger, createSchemeMerger, mergeArrays } from "./utils.js";
+/** @typedef {import('@jest/types').Config.InitialOptions} Config */
 
-/**
- * For a detailed explanation regarding each configuration property, visit:
- * https://jestjs.io/docs/configuration
- */
-
-/** @type {import("./utils").Merger<import('jest').Config>} */
+/** @type {import("./utils").Merger<Config>} */
 const jestConfigMerger = createSchemeMerger({
   coveragePathIgnorePatterns: mergeArrays,
   coverageReporters: createOrderedMapMerger(),
@@ -38,21 +36,25 @@ const jestConfigMerger = createSchemeMerger({
   watchPathIgnorePatterns: mergeArrays,
 });
 /**
- * @param {...import('jest').Config} configs
- * @returns {import('jest').Config}
+ * @param {...Config} configs
+ * @returns {Config}
  */
 export function jestConfig(...configs) {
-  const config = configs.filter(Boolean).reduce(jestConfigMerger);
-  return config;
+  return configs.filter(Boolean).reduce(jestConfigMerger);
 }
 
 /**
- * @param {Record<string, [RequiredSome<import('jest').Config, 'testMatch'>, ...import('jest').Config[]]>} scheme
- * @returns {import('jest').Config}
+ * @param {(displayName: string) => Config | Config[]} baseFabric
+ * @param {Record<string, [Config, ...Config[]]>} scheme
+ * @returns {Config}
  */
-export function jestProjects(scheme) {
+export function jestProjects(baseFabric, scheme) {
   return {
-    projects: Object.keys(scheme).map((displayName) => jestConfig({ displayName }, ...scheme[displayName])),
+    projects: Object.keys(scheme).map((displayName) => {
+      let base = baseFabric(displayName);
+      if (!Array.isArray(base)) base = [base];
+      return jestConfig({ displayName }, ...base, ...scheme[displayName]);
+    }),
   };
 }
 
@@ -64,25 +66,18 @@ export const base = jestConfig({
  * @param {string} [configPath]
  * @param {string} [baseConfigPath]
  */
-export const typescript = (configPath = "./tsconfig.jest.json", baseConfigPath = "./tsconfig.json") => {
-  const { compilerOptions } = JSON.parse(fs.readFileSync(baseConfigPath, "utf-8"));
-  return jestConfig(
-    {
-      preset: "ts-jest",
-      transform: {
-        "^.+.tsx?$": ["ts-jest", { tsconfig: configPath }],
-      },
-      setupFiles: ["../proposal-explicit-resource-management/global.ts", "../proposal-promise-with-resolvers/global.ts"],
-    },
-    compilerOptions?.paths && {
-      roots: ["<rootDir>"],
-      modulePaths: [compilerOptions.baseUrl],
-      moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, { prefix: "<rootDir>/" }),
-    },
-  );
+export const typescript = (configPath = "./tsconfig.jest.json") => {
+  return jestConfig(createDefaultPreset({ tsconfig: configPath }), {
+    setupFiles: [
+      "@anion155/proposal-iterator-helpers/global",
+      "@anion155/proposal-async-iterator-helpers/global",
+      "@anion155/proposal-explicit-resource-management/global",
+      "@anion155/proposal-promise-with-resolvers/global",
+    ],
+  });
 };
 
 export const reactDOM = jestConfig({
   testEnvironment: "jsdom",
-  setupFilesAfterEnv: ["../configs/jest-setup.ts"],
+  setupFilesAfterEnv: ["../configs/jest.react.ts"],
 });

@@ -1,6 +1,9 @@
 {
-  "extends": "@anion155/configs/tsconfig.base.json",
-  "compilerOptions": {
-    "lib": ["ESNext.AsyncIterable"]
-  }
+  "extends": "./tsconfig.base.json",
+  "exclude": ["dist", "coverage", "eslint.config.ts", "jest.config.js", "src/**/*.spec.ts", "src/**/*.spec.tsx"],
+  "references": [
+    {
+      "path": "./tsconfig.jest.json"
+    }
+  ]
 }

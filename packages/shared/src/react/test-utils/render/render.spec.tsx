@@ -36,8 +36,8 @@ describe("render test utils", () => {
         baseRender(
           <ProviderB>
             <TestComponent />
-          </ProviderB>,
-        ).container,
+          </ProviderB>
+        ).container
       );
     });
 
@@ -52,8 +52,8 @@ describe("render test utils", () => {
             <ProviderC>
               <TestComponent />
             </ProviderC>
-          </ProviderB>,
-        ).container,
+          </ProviderB>
+        ).container
       );
     });
 
@@ -65,8 +65,8 @@ describe("render test utils", () => {
         baseRender(
           <ProviderA>
             <TestComponent />
-          </ProviderA>,
-        ).container,
+          </ProviderA>
+        ).container
       );
     });
 
@@ -83,8 +83,8 @@ describe("render test utils", () => {
                 <TestComponent />
               </ProviderC>
             </ProviderA>
-          </ProviderB>,
-        ).container,
+          </ProviderB>
+        ).container
       );
     });
 
@@ -99,8 +99,8 @@ describe("render test utils", () => {
             <ProviderC>
               <TestComponent />
             </ProviderC>
-          </ProviderB>,
-        ).container,
+          </ProviderB>
+        ).container
       );
     });
 
@@ -117,7 +117,7 @@ describe("render test utils", () => {
       // eslint-disable-next-line react/jsx-key
       const wrapper = globalWrappers.createWrapper([globalWrappersPlaceholder, <ProviderC />, globalWrappersPlaceholder], undefined);
       expect(() => baseRender(<TestComponent />, { wrapper })).toThrow(
-        new DeveloperError("globalWrappers.placeholder was used twice in wrappers array"),
+        new DeveloperError("globalWrappers.placeholder was used twice in wrappers array")
       );
     });
   });
@@ -132,8 +132,8 @@ describe("render test utils", () => {
         baseRender(
           <ProviderA>
             <TestComponent />
-          </ProviderA>,
-        ).container,
+          </ProviderA>
+        ).container
       );
     });
 
@@ -143,8 +143,8 @@ describe("render test utils", () => {
         baseRender(
           <ProviderB>
             <TestComponent />
-          </ProviderB>,
-        ).container,
+          </ProviderB>
+        ).container
       );
     });
 

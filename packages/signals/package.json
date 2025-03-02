@@ -3,41 +3,24 @@
   "version": "0000.1.0",
   "type": "module",
   "exports": {
-    ".": {
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      },
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      }
-    },
-    "./react": {
-      "require": {
-        "types": "./dist/cjs/react/index.d.ts",
-        "default": "./dist/cjs/react/index.js"
-      },
-      "import": {
-        "types": "./dist/esm/react/index.d.ts",
-        "default": "./dist/esm/react/index.js"
-      }
-    }
+    ".": "./src/index.ts",
+    "./react": "./src/react/index.ts"
   },
   "scripts": {
-    "test": "jest",
-    "lint": "eslint .",
-    "build": "bun ../configs/builder.ts"
+    "test": "jest src",
+    "lint": "eslint src"
   },
-  "devDependencies": {
-    "@jest/globals": "^29.7.0",
-    "@types/bun": "latest",
-    "eslint": "^9.21.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.5.2"
+  "dependencies": {
+    "@anion155/shared": "workspace:*"
   },
   "optionalDependencies": {
     "@types/react": "^19.0.10",
     "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@anion155/configs": "workspace:*",
+    "@jest/globals": "^29.7.0",
+    "@testing-library/react": "^16.2.0",
+    "eslint": "^9.21.0"
   }
 }

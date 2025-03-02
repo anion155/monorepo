@@ -32,7 +32,7 @@ describe("functional utils", () => {
       Object.defineProperty(orig, "name", { value: "test", configurable: true });
       const wrapped = wrapFunctor(
         orig,
-        Object.assign((...params: unknown[]) => orig(...params), { test: "test" }),
+        Object.assign((...params: unknown[]) => orig(...params), { test: "test" })
       );
       expect(wrapped.name).toBe("test");
       expect(wrapped()).toBe("test");
@@ -90,7 +90,7 @@ describe("functional utils", () => {
           if (index === 2) reduce(acc);
           return `${acc}-${value}`;
         },
-        "",
+        ""
       );
       expect(result).toBe("-1-2");
     });
@@ -103,8 +103,8 @@ describe("functional utils", () => {
             if (index === 2) throw new Error("test error");
             return `${acc}-${value}`;
           },
-          "",
-        ),
+          ""
+        )
       ).toThrow(new Error("test error"));
     });
   });

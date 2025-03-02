@@ -1,4 +1,3 @@
-import { Equal, Expect } from "../type-tests";
 import {
   appendMethod,
   appendProperties,
@@ -10,6 +9,7 @@ import {
   PropertyDescriptorReadonly,
   PropertyDescriptorWritable,
 } from "./object";
+import { Equal, Expect } from "./type-tests";
 
 const value = new (class {
   valueWritable = 1;
@@ -39,7 +39,7 @@ const value = new (class {
         PropertyDescriptorReadonly<number> | undefined,
         PropertyDescriptorWritable<number> | undefined,
         PropertyDescriptorReadonly<number> | undefined,
-        undefined,
+        undefined
       ]
     >
   >;
@@ -61,7 +61,7 @@ const value = new (class {
         PropertyDescriptorReadonly<number>,
         PropertyDescriptorWritable<number>,
         PropertyDescriptorReadonly<number>,
-        undefined,
+        undefined
       ]
     >
   >;
