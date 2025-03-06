@@ -38,7 +38,7 @@ export class Stamper<Object extends object, Value> {
    * Get's value stamped into {@link object}.
    * Throws TypeError if {@link object} wasn't stamped.
    */
-  get(object: object): Value {
+  get(object: Object): Value {
     if (!this.has(object)) throw new TypeError("passed object wasn't stamped");
     return this.storage.get(object)!;
   }
@@ -52,7 +52,7 @@ export class Stamper<Object extends object, Value> {
    * Set value into stamped object.
    * Throws TypeError if {@link object} wasn't stamped.
    */
-  set(object: object, value: Value) {
+  set(object: Object, value: Value) {
     if (!this.has(object)) throw new TypeError("passed object wasn't stamped");
     this.storage.set(object, value);
   }
@@ -66,7 +66,7 @@ export class Stamper<Object extends object, Value> {
    * {@link modifier} called with stored value and result is stored as new value.
    * Throws TypeError if {@link object} wasn't stamped.
    */
-  modify(object: object, modifier: (value: Value) => Value) {
+  modify(object: Object, modifier: (value: Value) => Value) {
     if (!this.has(object)) throw new TypeError("passed object wasn't stamped");
     this.storage.set(object, modifier(this.storage.get(object)!));
   }

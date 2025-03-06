@@ -1,9 +1,4 @@
 {
   "name": "@anion155/monorepo",
-  "private": true,
-  "pnpm": {
-    "patchedDependencies": {
-      "@typescript-eslint/typescript-estree": "patches/@typescript-eslint__typescript-estree.patch"
-    }
-  }
+  "private": true
 }
