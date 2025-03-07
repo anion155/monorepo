@@ -1,7 +1,7 @@
 import { useConst } from "@anion155/shared/react";
 import { useSyncExternalStore } from "react";
 
-import { internals } from "../internals";
+import { context } from "../internals/internals";
 import { createSignalsStore } from "./utils";
 
 /**
@@ -23,6 +23,6 @@ import { createSignalsStore } from "./utils";
 export function useSignalsReactive(sync: boolean = true) {
   const store = useConst(() => createSignalsStore(sync));
   useSyncExternalStore(store.subscribe, store.getVersion, store.getVersion);
-  const { [Symbol.dispose]: dispose } = internals.setupSubscriptionContext(store.effect);
+  const { [Symbol.dispose]: dispose } = context.setupSubscriptionContext(store.effect);
   return { effect: store.effect, [Symbol.dispose]: dispose };
 }

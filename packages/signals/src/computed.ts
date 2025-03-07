@@ -1,40 +1,51 @@
+import "./internals/symbol";
+
 import { DependentDependency } from "@anion155/shared";
 
-import { internals, SignalListener, SignalReadonlyValue } from "./internals";
+import { context, depends } from "./internals/internals";
+import { SignalListener, SignalReadonlyValue, SignalWritableValue } from "./internals/types";
 import { Signal } from "./signal";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface SignalComputed<Value> extends DependentDependency {}
-export class SignalComputed<Value> extends Signal implements SignalListener, SignalReadonlyValue<Value> {
+export interface SignalReadonlyComputed<Value> extends DependentDependency {}
+export class SignalReadonlyComputed<Value> extends Signal implements SignalListener, SignalReadonlyValue<Value> {
   #current!: Value;
   #getter: () => Value;
-  #setter?: (value: Value) => void;
 
-  constructor(getter: () => Value, setter?: (value: Value) => void) {
+  constructor(getter: () => Value) {
     super();
-    internals.dependencies.stamp(this);
-    internals.dependents.stamp(this);
+    depends.dependencies.stamp(this);
+    depends.listeners.stamp(this);
     this.#getter = getter;
-    this.#setter = setter;
-    this[internals.invalidate]();
+    this[Symbol.invalidate]();
   }
 
   peak() {
     return this.#current;
   }
   get() {
-    internals.handleSubscriptionContext(this);
+    context.handleSubscriptionContext(this);
     return this.#current;
   }
-  set(value: Value) {
-    if (!this.#setter) throw new TypeError("this computed signal is readonly");
-    this.#setter(value);
-    this.#current = value;
-    internals.dependents.get(this).forEach((dependent) => dependent[internals.invalidate]());
-  }
-  [internals.invalidate]() {
-    using _subscription = internals.setupSubscriptionContext(this);
+  [Symbol.invalidate]() {
+    using _subscription = context.setupSubscriptionContext(this);
     this.#current = this.#getter();
-    internals.dependents.get(this).forEach((dependent) => dependent[internals.invalidate]());
+    this.#current = this.#getter();
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface SignalWritableComputed<Value> extends DependentDependency {}
+export class SignalWritableComputed<Value> extends SignalReadonlyComputed<Value> implements SignalWritableValue<Value> {
+  #setter: (value: Value) => void;
+
+  constructor(getter: () => Value, setter: (value: Value) => void) {
+    super(getter);
+    this.#setter = setter;
+  }
+
+  set(value: Value) {
+    using _batching = context.setupBatchingContext();
+    this.#setter(value);
   }
 }

@@ -1,4 +1,4 @@
-export { SignalComputed } from "./computed";
+export { SignalReadonlyComputed, SignalWritableComputed } from "./computed";
 export { type EffectCallback, SignalEffect } from "./effect";
 export { Signal } from "./signal";
 export { SignalState } from "./state";

@@ -26,44 +26,61 @@ import { create } from "./object";
  * handleValue(5); // store => []
  */
 export function createContextStack<Context extends object>(initial: Context) {
-  let stack: Context[] = [];
+  type Cleanup = { (): void } | void;
+  let stack: [Context, Cleanup][] = [];
+
+  function clean(item: [Context, Cleanup] | undefined) {
+    item?.[1]?.();
+    return item?.[0];
+  }
 
   /** Returns last value put in context stack */
   function current() {
-    return stack.length === 0 ? initial : stack[0];
+    return stack.length === 0 ? initial : stack[0][0];
   }
   /** Returns immutable iterator that goes through all stored values in context */
   function* iterator() {
-    yield* stack.slice();
+    for (const item of stack.slice()) {
+      yield item[0];
+    }
     yield initial;
+  }
+  /** Finds first item in stack that fits predicator */
+  function find<Fn extends Predicate<Context, Context>>(predicate: Fn): InferPredicate<Fn>["Result"] | undefined {
+    for (const item of stack.slice()) {
+      if (predicate(item[0])) return item[0];
+    }
+    return undefined;
+  }
+  /** Pushes new value to stack, and return {@link pop} function */
+  function push(next: Context, cleanup?: Cleanup) {
+    const index = stack.unshift([next, cleanup]) - 1;
+    return () => pop(index);
   }
   /** Remove last value pushed to stack, and returns it */
   function pop(): Context;
   function pop(toIndex?: number): Context[];
   function pop(toIndex?: number) {
-    if (toIndex === undefined) return stack.shift();
+    if (toIndex === undefined) return clean(stack.shift());
     if (toIndex <= 0) {
-      let deleted: Context[] = [];
+      let deleted: [Context, Cleanup][] = [];
       [stack, deleted] = [deleted, stack];
-      return deleted;
+      return deleted.map(clean);
     }
-    let deleted: Context[];
+    let deleted: [Context, Cleanup][];
     [stack, deleted] = [stack.splice(-toIndex), stack];
-    return deleted;
-  }
-  /** Pushes new value to stack, and return {@link pop} function */
-  function push(next: Context) {
-    const index = stack.unshift(next) - 1;
-    return () => pop(index);
+    return deleted.map(clean);
   }
   /** Pushes new value to stack, and returns {@link Disposable} that calls {@link pop} on dispose */
-  function setup<Specific extends Context>(next: Specific) {
-    const cleanup = push(next);
+  function setup<Specific extends Context>(next: Specific, cleanup?: Cleanup) {
+    const popToCurrent = push(next, cleanup);
     const dispose = () => {
-      cleanup();
+      popToCurrent();
     };
-    return create(stack[0] as Specific, { [Symbol.dispose]: dispose });
+    return create(next, { [Symbol.dispose]: dispose });
   }
 
-  return { current, iterator, [Symbol.iterator]: iterator, push, pop, setup };
+  return { current, iterator, [Symbol.iterator]: iterator, find, push, pop, setup };
 }
+export type ContextStack<Context extends object> = ReturnType<typeof createContextStack<Context>>;
+export type InferContextStack<_ContextStack> = _ContextStack extends ContextStack<infer Context> ? Context : never;

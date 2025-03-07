@@ -2,17 +2,17 @@ import "@anion155/shared/global";
 
 import { updateProperty } from "@anion155/shared";
 
-import { internals } from "./internals";
+import { depends } from "./internals/internals";
 
 export interface Signal extends Disposable {}
 export class Signal {
   constructor() {
     DisposableStack.stamper.stamp(this).append(() => {
-      if (internals.dependencies.is(this)) {
-        internals.dependencies.get(this).forEach((dependency) => internals.unbind(this, dependency));
+      if (depends.dependencies.has(this)) {
+        depends.dependencies.get(this).forEach((dependency) => depends.unbind(this, dependency));
       }
-      if (internals.dependents.is(this)) {
-        internals.dependents.get(this).forEach((dependent) => dependent[Symbol.dispose]());
+      if (depends.listeners.has(this)) {
+        depends.listeners.get(this).forEach((listener) => listener[Symbol.dispose]());
       }
     });
   }

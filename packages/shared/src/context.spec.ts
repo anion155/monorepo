@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 
-import { createContextStack } from "./context";
+import { createContextStack, InferContextStack } from "./context";
 
 describe("context utils", () => {
   describe("createContextStack()", () => {
@@ -46,6 +46,41 @@ describe("context utils", () => {
       context.push({ type: "remove" });
       clean();
       expect(context.current()).toStrictEqual({ type: "remove" });
+    });
+
+    it("should cleanup on pop", () => {
+      const context = createContextStack({ type: "none" });
+      const cleanup = jest.fn();
+      const pushWithCleanup = (next: InferContextStack<typeof context>) => context.push(next, () => cleanup(next));
+
+      pushWithCleanup({ type: "store" });
+      pushWithCleanup({ type: "remove" });
+      context.pop();
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(cleanup).toHaveBeenCalledWith({ type: "remove" });
+      cleanup.mockClear();
+
+      pushWithCleanup({ type: "remove" });
+      context.pop(2);
+      expect(cleanup).toHaveBeenCalledTimes(0);
+      context.pop(1);
+      expect(cleanup).toHaveBeenCalledTimes(1);
+      expect(cleanup).toHaveBeenCalledWith({ type: "remove" });
+      cleanup.mockClear();
+      pushWithCleanup({ type: "remove" });
+      context.pop(0);
+      expect(cleanup).toHaveBeenCalledTimes(2);
+      expect(cleanup).toHaveBeenNthCalledWith(1, { type: "remove" });
+      expect(cleanup).toHaveBeenNthCalledWith(2, { type: "store" });
+      cleanup.mockClear();
+
+      const pop = pushWithCleanup({ type: "store" });
+      pushWithCleanup({ type: "remove" });
+      pop();
+      expect(cleanup).toHaveBeenCalledTimes(2);
+      expect(cleanup).toHaveBeenNthCalledWith(1, { type: "remove" });
+      expect(cleanup).toHaveBeenNthCalledWith(2, { type: "store" });
+      cleanup.mockClear();
     });
 
     it("should iterate over values in context in reverse order", () => {

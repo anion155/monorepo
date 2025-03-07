@@ -1,6 +1,10 @@
+import "./internals/symbol";
+
 import { Dependent } from "@anion155/shared";
 
-import { internals, SignalListener } from "./internals";
+import { asynchronizeInvalidate } from "./internals/asynchronize-invalidate";
+import { context, depends } from "./internals/internals";
+import { SignalListener } from "./internals/types";
 import { Signal } from "./signal";
 
 export type EffectCleanup = { (): void } | void;
@@ -16,22 +20,22 @@ export class SignalEffect extends Signal implements SignalListener {
     readonly sync: boolean = false,
   ) {
     super();
-    internals.dependencies.stamp(this);
+    depends.dependencies.stamp(this);
     DisposableStack.stamper.get(this).append(() => this.#cleanup?.());
     this.#callback = cb;
 
     if (!sync) {
-      const asyncInvalidate = internals.asynchronizeInvalidate(this);
+      const asyncInvalidate = asynchronizeInvalidate(this);
       DisposableStack.stamper.get(this).append(() => asyncInvalidate.cancel());
       asyncInvalidate.sync();
     } else {
-      this[internals.invalidate]();
+      this[Symbol.invalidate]();
     }
   }
 
-  [internals.invalidate]() {
+  [Symbol.invalidate]() {
     this.#cleanup?.();
-    using _subscription = internals.setupSubscriptionContext(this);
+    using _subscription = context.setupSubscriptionContext(this);
     this.#cleanup = this.#callback();
   }
 }

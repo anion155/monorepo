@@ -1,6 +1,7 @@
 import { Dependency } from "@anion155/shared";
 
-import { internals, SignalWritableValue } from "./internals";
+import { context, depends } from "./internals/internals";
+import { SignalWritableValue } from "./internals/types";
 import { Signal } from "./signal";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -10,7 +11,7 @@ export class SignalState<Value> extends Signal implements SignalWritableValue<Va
 
   constructor(initialValue: Value) {
     super();
-    internals.dependents.stamp(this);
+    depends.listeners.stamp(this);
     this.#current = initialValue;
   }
 
@@ -18,11 +19,12 @@ export class SignalState<Value> extends Signal implements SignalWritableValue<Va
     return this.#current;
   }
   get() {
-    internals.handleSubscriptionContext(this);
+    context.handleSubscriptionContext(this);
     return this.#current;
   }
   set(value: Value) {
     this.#current = value;
-    internals.dependents.get(this).forEach((dependent) => dependent[internals.invalidate]());
+    using batching = context.setupBatchingContext();
+    batching.invalidate(this);
   }
 }

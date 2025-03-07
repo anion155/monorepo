@@ -1,10 +1,7 @@
 import { is } from "@anion155/shared";
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { SignalComputed } from "./computed";
-import { SignalEffect } from "./effect";
-import { Signal } from "./signal";
-import { SignalState } from "./state";
+import { Signal, SignalEffect, SignalReadonlyComputed, SignalState, SignalWritableComputed } from "./index";
 
 describe("signals tests", () => {
   describe("Signal", () => {
@@ -15,7 +12,7 @@ describe("signals tests", () => {
     });
   });
 
-  describe("signals.state()", () => {
+  describe("new SignalState()", () => {
     it("should instantiate properly", () => {
       using stateA = new SignalState(1);
       expect(stateA).toBeInstanceOf(Signal);
@@ -30,7 +27,7 @@ describe("signals tests", () => {
     });
   });
 
-  describe("signals.effect()", () => {
+  describe("new SignalEffect()", () => {
     it("should instantiate properly", () => {
       using effect = new SignalEffect(() => {});
       expect(effect).toBeInstanceOf(Signal);
@@ -113,16 +110,16 @@ describe("signals tests", () => {
     });
   });
 
-  describe("signals.computed()", () => {
+  describe("new SignalReadonlyComputed()", () => {
     it("should instantiate properly", () => {
-      using computed = new SignalComputed(() => {});
+      using computed = new SignalReadonlyComputed(() => {});
       expect(computed).toBeInstanceOf(Signal);
       expect(is(computed, Signal)).toBe(true);
     });
 
     it("should update value on state change", () => {
       using stateA = new SignalState(1);
-      using computed = new SignalComputed(() => stateA.get() * 2);
+      using computed = new SignalReadonlyComputed(() => stateA.get() * 2);
       expect(computed.get()).toBe(2);
 
       const effectSpy = jest.fn((_n: number) => undefined);
@@ -136,7 +133,52 @@ describe("signals tests", () => {
 
     it("should ignore .peak() call", () => {
       using stateA = new SignalState(1);
-      using computed = new SignalComputed(() => stateA.get() * 2);
+      using computed = new SignalReadonlyComputed(() => stateA.get() * 2);
+      expect(computed.get()).toBe(2);
+
+      const effectSpy = jest.fn((_n: number) => undefined);
+      using _effect = new SignalEffect(() => effectSpy(computed.peak()), true);
+      effectSpy.mockClear();
+
+      stateA.set(2);
+      expect(computed.get()).toBe(4);
+      expect(effectSpy).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe("new SignalWritableComputed()", () => {
+    it("should instantiate properly", () => {
+      using computed = new SignalWritableComputed(
+        () => {},
+        () => {},
+      );
+      expect(computed).toBeInstanceOf(Signal);
+      expect(is(computed, Signal)).toBe(true);
+    });
+
+    it("should update value on state change", () => {
+      using stateA = new SignalState(1);
+      using computed = new SignalWritableComputed(
+        () => stateA.get() * 2,
+        (value) => stateA.set(value / 2),
+      );
+      expect(computed.get()).toBe(2);
+
+      const effectSpy = jest.fn((_n: number) => undefined);
+      using _effect = new SignalEffect(() => effectSpy(computed.get()), true);
+      effectSpy.mockClear();
+
+      stateA.set(2);
+      expect(computed.get()).toBe(4);
+      expect(effectSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("should ignore .peak() call", () => {
+      using stateA = new SignalState(1);
+      using computed = new SignalWritableComputed(
+        () => stateA.get() * 2,
+        (value) => stateA.set(value / 2),
+      );
       expect(computed.get()).toBe(2);
 
       const effectSpy = jest.fn((_n: number) => undefined);
@@ -148,16 +190,9 @@ describe("signals tests", () => {
       expect(effectSpy).toHaveBeenCalledTimes(0);
     });
 
-    it("without setter .set() should throw TypeError", () => {
-      using stateA = new SignalState(1);
-      using computed = new SignalComputed(() => stateA.get() * 2);
-
-      expect(() => computed.set(2)).toThrow(new TypeError("this computed signal is readonly"));
-    });
-
     it("should update state", () => {
       using stateA = new SignalState(1);
-      using computed = new SignalComputed(
+      using computed = new SignalWritableComputed(
         () => stateA.get() * 2,
         (value) => stateA.set(value / 2),
       );
