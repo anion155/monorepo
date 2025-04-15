@@ -1,7 +1,15 @@
 import { is } from "@anion155/shared";
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { Signal, SignalEffect, SignalEffectAsync, SignalReadonlyComputed, SignalState, SignalWritableComputed } from "./index";
+import {
+  CircularDependencyError,
+  Signal,
+  SignalEffect,
+  SignalEffectAsync,
+  SignalReadonlyComputed,
+  SignalState,
+  SignalWritableComputed,
+} from "./index";
 
 describe("signals tests", () => {
   describe("Signal", () => {
@@ -9,6 +17,67 @@ describe("signals tests", () => {
       const stateA = new Signal();
       stateA.dispose();
       expect(stateA.disposed).toBe(true);
+    });
+
+    it("should throw CircularDependencyError", () => {
+      const state = new SignalState(5);
+      // eslint-disable-next-line prefer-const
+      let compC: SignalReadonlyComputed<number>;
+      const compA = new SignalReadonlyComputed(() => compC?.value);
+      const compB = new SignalReadonlyComputed(() => (state.value > 6 ? compA.value : 6));
+      compC = new SignalReadonlyComputed(() => compB.value);
+      compA[Symbol.invalidate]();
+      expect(() => {
+        state.value = 7;
+      }).toThrow(new CircularDependencyError());
+    });
+
+    it("disposed signal should dispose it's listeners", () => {
+      const state = new SignalState(5);
+      const computed = new SignalReadonlyComputed(() => state.get() + 1);
+      const effect = new SignalEffect(() => {
+        void state.get();
+      });
+
+      expect(state.disposed).toBe(false);
+      expect(computed.disposed).toBe(false);
+      expect(effect.disposed).toBe(false);
+
+      state.dispose();
+
+      expect(state.disposed).toBe(true);
+      expect(computed.disposed).toBe(true);
+      expect(effect.disposed).toBe(true);
+    });
+
+    it("value field should serve as wrapper to get/set methods", () => {
+      const state = new SignalState(5);
+      const computed = new SignalReadonlyComputed(() => String(state.value));
+
+      expect(computed.value).toBe("5");
+      state.value = 6;
+      expect(computed.value).toBe("6");
+    });
+
+    it(".toJSON() should return underlying value", () => {
+      const state = new SignalState(5);
+      expect(JSON.stringify(state)).toBe("5");
+    });
+
+    it(".valueOf() should return underlying value", () => {
+      const state = new SignalState(5);
+      expect(10 + (state as unknown as number)).toBe(15);
+    });
+
+    it(".toString() should convert underlying value to string", () => {
+      const state = new SignalState(5);
+      expect(`gg-${state as unknown as string}`).toBe("gg-5");
+    });
+
+    it(".update() should pass current value to modifier and set result", () => {
+      const state = new SignalState(5);
+      state.update((current) => 10 + current);
+      expect(state.get()).toBe(15);
     });
   });
 
@@ -210,23 +279,5 @@ describe("signals tests", () => {
       computed.set(4);
       expect(stateA.get()).toBe(2);
     });
-  });
-
-  it("disposed signal should dispose it's listeners", () => {
-    const state = new SignalState(5);
-    const computed = new SignalReadonlyComputed(() => state.value + 1);
-    const effect = new SignalEffect(() => {
-      void computed.value;
-    });
-
-    expect(state.disposed).toBe(false);
-    expect(computed.disposed).toBe(false);
-    expect(effect.disposed).toBe(false);
-
-    state.dispose();
-
-    expect(state.disposed).toBe(true);
-    expect(computed.disposed).toBe(true);
-    expect(effect.disposed).toBe(true);
   });
 });

@@ -19,6 +19,10 @@ export abstract class SignalReadonly<Value> extends Signal {
     return this.peak();
   }
 
+  valueOf(): Value {
+    return this.peak();
+  }
+
   toString(): string {
     return String(this.peak());
   }
