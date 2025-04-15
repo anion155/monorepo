@@ -1,12 +1,11 @@
-import { Dependency } from "@anion155/shared";
+import { defineToStringTag } from "@anion155/shared";
 
-import { context, depends } from "./internals/internals";
-import { SignalWritableValue } from "./internals/types";
-import { Signal } from "./signal";
+import { context, depends, SignalDependency } from "./internals/internals";
+import { SignalWritable } from "./signal-writable";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface SignalState<Value> extends Dependency {}
-export class SignalState<Value> extends Signal implements SignalWritableValue<Value> {
+export interface SignalState<Value> extends SignalDependency {}
+export class SignalState<Value> extends SignalWritable<Value> {
   #current: Value;
 
   constructor(initialValue: Value) {
@@ -18,13 +17,10 @@ export class SignalState<Value> extends Signal implements SignalWritableValue<Va
   peak() {
     return this.#current;
   }
-  get() {
-    context.handleSubscriptionContext(this);
-    return this.#current;
-  }
   set(value: Value) {
     this.#current = value;
     using batching = context.setupBatchingContext();
     batching.invalidate(this);
   }
 }
+defineToStringTag(SignalState);

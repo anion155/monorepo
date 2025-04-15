@@ -1,7 +1,7 @@
 import { is } from "@anion155/shared";
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { Signal, SignalEffect, SignalReadonlyComputed, SignalState, SignalWritableComputed } from "./index";
+import { Signal, SignalEffect, SignalEffectAsync, SignalReadonlyComputed, SignalState, SignalWritableComputed } from "./index";
 
 describe("signals tests", () => {
   describe("Signal", () => {
@@ -34,7 +34,7 @@ describe("signals tests", () => {
       expect(is(effect, Signal)).toBe(true);
     });
 
-    it("should run effect on state change", async () => {
+    it("should run effect on state change", () => {
       using stateA = new SignalState(1);
       const cleanupSpy = jest.fn();
       const effectSpy = jest.fn(() => {
@@ -42,19 +42,14 @@ describe("signals tests", () => {
         return cleanupSpy;
       });
       using effect = new SignalEffect(effectSpy);
-      await Promise.resolve();
       expect(cleanupSpy).toHaveBeenCalledTimes(0);
       expect(effectSpy).toHaveBeenCalledTimes(1);
 
       stateA.set(2);
-      await Promise.resolve();
       expect(cleanupSpy).toHaveBeenCalledTimes(1);
       expect(effectSpy).toHaveBeenCalledTimes(2);
 
       stateA.set(3);
-      stateA.set(4);
-      stateA.set(5);
-      await Promise.resolve();
       expect(cleanupSpy).toHaveBeenCalledTimes(2);
       expect(effectSpy).toHaveBeenCalledTimes(3);
 
@@ -64,7 +59,7 @@ describe("signals tests", () => {
       expect(effectSpy).toHaveBeenCalledTimes(3);
     });
 
-    it("should not call effect after dispose", async () => {
+    it("should not call effect after dispose", () => {
       using stateA = new SignalState(1);
       const cleanupSpy = jest.fn();
       const effectSpy = jest.fn(() => {
@@ -72,41 +67,53 @@ describe("signals tests", () => {
         return cleanupSpy;
       });
       using effect = new SignalEffect(effectSpy);
-      await Promise.resolve();
 
-      stateA.set(2);
       effect.dispose();
-      await Promise.resolve();
+      stateA.set(2);
       expect(cleanupSpy).toHaveBeenCalledTimes(1);
       expect(effectSpy).toHaveBeenCalledTimes(1);
     });
+  });
 
-    it("should run effect synchronously", () => {
+  describe("new SignalEffectAsync()", () => {
+    it("should instantiate properly", () => {
+      using effect = new SignalEffectAsync(() => {});
+      expect(effect).toBeInstanceOf(Signal);
+      expect(is(effect, Signal)).toBe(true);
+    });
+
+    it("should run effect on state change", async () => {
       using stateA = new SignalState(1);
       const cleanupSpy = jest.fn();
       const effectSpy = jest.fn(() => {
         stateA.get();
         return cleanupSpy;
       });
-      using _effect = new SignalEffect(effectSpy, true);
+      using effect = new SignalEffectAsync(effectSpy);
       expect(cleanupSpy).toHaveBeenCalledTimes(0);
       expect(effectSpy).toHaveBeenCalledTimes(1);
 
       stateA.set(2);
+      expect(cleanupSpy).toHaveBeenCalledTimes(0);
+      expect(effectSpy).toHaveBeenCalledTimes(1);
+      await Promise.resolve();
       expect(cleanupSpy).toHaveBeenCalledTimes(1);
       expect(effectSpy).toHaveBeenCalledTimes(2);
-    });
 
-    it(".peak() should not subscribe to state", () => {
-      using stateA = new SignalState(1);
-      const effectSpy = jest.fn(() => {
-        stateA.peak();
-      });
-      using _effect = new SignalEffect(effectSpy, true);
-      expect(effectSpy).toHaveBeenCalledTimes(1);
+      stateA.set(3);
+      stateA.set(4);
+      stateA.set(5);
+      expect(cleanupSpy).toHaveBeenCalledTimes(1);
+      expect(effectSpy).toHaveBeenCalledTimes(2);
+      await Promise.resolve();
+      expect(cleanupSpy).toHaveBeenCalledTimes(2);
+      expect(effectSpy).toHaveBeenCalledTimes(3);
 
-      stateA.set(2);
-      expect(effectSpy).toHaveBeenCalledTimes(1);
+      stateA.set(6);
+      effect.dispose();
+      stateA.set(7);
+      expect(cleanupSpy).toHaveBeenCalledTimes(3);
+      expect(effectSpy).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -123,7 +130,7 @@ describe("signals tests", () => {
       expect(computed.get()).toBe(2);
 
       const effectSpy = jest.fn((_n: number) => undefined);
-      using _effect = new SignalEffect(() => effectSpy(computed.get()), true);
+      using _effect = new SignalEffect(() => effectSpy(computed.get()));
       effectSpy.mockClear();
 
       stateA.set(2);
@@ -137,7 +144,7 @@ describe("signals tests", () => {
       expect(computed.get()).toBe(2);
 
       const effectSpy = jest.fn((_n: number) => undefined);
-      using _effect = new SignalEffect(() => effectSpy(computed.peak()), true);
+      using _effect = new SignalEffect(() => effectSpy(computed.peak()));
       effectSpy.mockClear();
 
       stateA.set(2);
@@ -165,7 +172,7 @@ describe("signals tests", () => {
       expect(computed.get()).toBe(2);
 
       const effectSpy = jest.fn((_n: number) => undefined);
-      using _effect = new SignalEffect(() => effectSpy(computed.get()), true);
+      using _effect = new SignalEffect(() => effectSpy(computed.get()));
       effectSpy.mockClear();
 
       stateA.set(2);
@@ -182,7 +189,7 @@ describe("signals tests", () => {
       expect(computed.get()).toBe(2);
 
       const effectSpy = jest.fn((_n: number) => undefined);
-      using _effect = new SignalEffect(() => effectSpy(computed.peak()), true);
+      using _effect = new SignalEffect(() => effectSpy(computed.peak()));
       effectSpy.mockClear();
 
       stateA.set(2);
@@ -198,10 +205,28 @@ describe("signals tests", () => {
       );
 
       const effectSpy = jest.fn((_n: number) => undefined);
-      using _effect = new SignalEffect(() => effectSpy(computed.get()), true);
+      using _effect = new SignalEffect(() => effectSpy(computed.get()));
 
       computed.set(4);
       expect(stateA.get()).toBe(2);
     });
+  });
+
+  it("disposed signal should dispose it's listeners", () => {
+    const state = new SignalState(5);
+    const computed = new SignalReadonlyComputed(() => state.value + 1);
+    const effect = new SignalEffect(() => {
+      void computed.value;
+    });
+
+    expect(state.disposed).toBe(false);
+    expect(computed.disposed).toBe(false);
+    expect(effect.disposed).toBe(false);
+
+    state.dispose();
+
+    expect(state.disposed).toBe(true);
+    expect(computed.disposed).toBe(true);
+    expect(effect.disposed).toBe(true);
   });
 });

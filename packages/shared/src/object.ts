@@ -38,7 +38,7 @@ export type PropertyDescriptorReadonly<Value> = PropertyDescriptorAccessorReadon
 export type PropertyDescriptorWritable<Value> = PropertyDescriptorAccessorWritable<Value> | PropertyDescriptorValueWritable<Value>;
 export type StronglyTypedPropertyDescriptor<Value> = PropertyDescriptorReadonly<Value> | PropertyDescriptorWritable<Value>;
 
-type DefineProperty<Target extends object, Key extends keyof Target> =
+export type DefineProperty<Target extends object, Key extends keyof Target> =
   Key extends ReadonlyKeys<Target> ? PropertyDescriptorReadonly<Target[Key]> : PropertyDescriptorWritable<Target[Key]>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,6 +94,13 @@ export function defineProperty<Target extends object, Key extends keyof Target>(
     const { value, writable = true, enumerable = true, configurable = true } = descriptor;
     Object.defineProperty(target, key, { value, writable, enumerable, configurable });
   }
+}
+
+export type WithToStringTag = { readonly [Symbol.toStringTag]: string };
+
+/** Define standard to string tag prototype property. */
+export function defineToStringTag(Class: { prototype: WithToStringTag; name: string }) {
+  defineProperty(Class.prototype, Symbol.toStringTag, { value: Class.name, writable: false });
 }
 
 /**

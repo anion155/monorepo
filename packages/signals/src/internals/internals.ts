@@ -1,16 +1,25 @@
-import { createContextStack, createDependTools } from "@anion155/shared";
+import "./symbol";
 
-import { SignalListener, SignalValue } from "./types";
+import { createContextStack, createDependTools, Dependency, Dependent } from "@anion155/shared";
+
+import { Signal } from "../signal";
+
+export interface SignalDependent extends Signal, Dependent {}
+export interface SignalListener extends SignalDependent {
+  [Symbol.invalidate](): void;
+}
+export interface SignalDependency extends Signal, Dependency {}
+export type SignalDependentDependency = Signal & Dependent & Dependency;
 
 const stack = createContextStack<
-  { type: "empty" } | { type: "subscription"; listener: SignalListener } | { type: "batching"; invalidate: (value: SignalValue<unknown>) => void }
+  { type: "empty" } | { type: "subscription"; listener: SignalListener } | { type: "batching"; invalidate: (value: SignalDependency) => void }
 >({ type: "empty" });
 
 function setupSubscriptionContext(listener: SignalListener) {
   return stack.setup({ type: "subscription", listener });
 }
 
-function handleSubscriptionContext(dependency: SignalValue<unknown>) {
+function handleSubscriptionContext(dependency: SignalDependency) {
   const current = stack.current();
   if (current.type === "subscription") {
     bind(current.listener, dependency);
@@ -21,7 +30,7 @@ function setupBatchingContext() {
   const parent = stack.find((current) => current.type === "batching");
   if (parent) return stack.setup({ type: "batching", invalidate: parent.invalidate });
   const batched = new Set<SignalListener>();
-  const invalidate = (value: SignalValue<unknown>) => {
+  const invalidate = (value: SignalDependency) => {
     const queue = [] as SignalListener[];
     queue.push(...listeners.get(value));
     while (queue.length) {
@@ -41,7 +50,7 @@ export const context = {
   setupBatchingContext,
 } as const;
 
-const { dependents: listeners, dependencies, bind, unbind } = createDependTools<SignalListener, SignalValue<unknown>>();
+const { dependents: listeners, dependencies, bind, unbind } = createDependTools<SignalListener, SignalDependency>();
 
 export const depends = {
   listeners,

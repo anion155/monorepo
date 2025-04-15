@@ -1,36 +1,22 @@
-import "./internals/symbol";
+import { defineToStringTag } from "@anion155/shared";
 
-import { Dependent } from "@anion155/shared";
-
-import { asynchronizeInvalidate } from "./internals/asynchronize-invalidate";
-import { context, depends } from "./internals/internals";
-import { SignalListener } from "./internals/types";
+import { context, depends, SignalDependent, SignalListener } from "./internals/internals";
 import { Signal } from "./signal";
 
 export type EffectCleanup = { (): void } | void;
 export type EffectCallback = { (): EffectCleanup };
 
-export interface SignalEffect extends Dependent {}
+export interface SignalEffect extends SignalDependent {}
 export class SignalEffect extends Signal implements SignalListener {
   #callback: EffectCallback;
   #cleanup: EffectCleanup = undefined;
 
-  constructor(
-    cb: EffectCallback,
-    readonly sync: boolean = false,
-  ) {
+  constructor(cb: EffectCallback) {
     super();
     depends.dependencies.stamp(this);
     DisposableStack.stamper.get(this).append(() => this.#cleanup?.());
     this.#callback = cb;
-
-    if (!sync) {
-      const asyncInvalidate = asynchronizeInvalidate(this);
-      DisposableStack.stamper.get(this).append(() => asyncInvalidate.cancel());
-      asyncInvalidate.sync();
-    } else {
-      this[Symbol.invalidate]();
-    }
+    this[Symbol.invalidate]();
   }
 
   [Symbol.invalidate]() {
@@ -39,3 +25,4 @@ export class SignalEffect extends Signal implements SignalListener {
     this.#cleanup = this.#callback();
   }
 }
+defineToStringTag(SignalEffect);

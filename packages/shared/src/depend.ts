@@ -8,7 +8,7 @@ export type Dependent = Branded<unknown, "Dependent">;
 /** Brand type to differentiate values that can be dependent on */
 export type Dependency = Branded<unknown, "Dependency">;
 /** Brand type to differentiate values that can be both depended on and be depended from */
-export type DependentDependency = Branded<unknown, "Dependent" | "Dependency">;
+export type DependentDependency = Dependent & Dependency;
 
 /** Indicates circular error in dependencies */
 export class CircularDependencyError extends createErrorClass("CircularDependencyError", "trying to create circular dependency") {}

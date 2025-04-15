@@ -1,10 +1,10 @@
 import "@anion155/shared/global";
 
-import { updateProperty } from "@anion155/shared";
+import { defineToStringTag, updateProperty, WithToStringTag } from "@anion155/shared";
 
 import { depends } from "./internals/internals";
 
-export interface Signal extends Disposable {}
+export interface Signal extends Disposable, WithToStringTag {}
 export class Signal {
   constructor() {
     DisposableStack.stamper.stamp(this).append(() => {
@@ -24,3 +24,4 @@ export class Signal {
   }
 }
 updateProperty(Signal.prototype, "disposed", { enumerable: false });
+defineToStringTag(Signal);
