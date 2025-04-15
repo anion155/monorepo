@@ -2,12 +2,12 @@ import "./internals/symbol";
 
 import { defineToStringTag } from "@anion155/shared";
 
-import { context, depends, SignalDependentDependency } from "./internals/internals";
+import { context, depends, SignalDependentDependency, SignalListener, SignalValue } from "./internals/internals";
 import { SignalReadonly } from "./signal-readonly";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface SignalReadonlyComputed<Value> extends SignalDependentDependency {}
-export class SignalReadonlyComputed<Value> extends SignalReadonly<Value> {
+export class SignalReadonlyComputed<Value> extends SignalReadonly<Value> implements SignalValue<Value>, SignalListener {
   #current!: Value;
   #getter: () => Value;
 

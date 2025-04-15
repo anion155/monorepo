@@ -2,14 +2,14 @@ import "./internals/symbol";
 
 import { createErrorClass, defineToStringTag } from "@anion155/shared";
 
-import { context, depends, SignalDependentDependency } from "./internals/internals";
+import { context, depends, SignalDependentDependency, SignalListener, SignalValue } from "./internals/internals";
 import { SignalWritable } from "./signal-writable";
 
 export class SignalReadonlyError extends createErrorClass("SignalReadonlyError") {}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface SignalWritableComputed<Value> extends SignalDependentDependency {}
-export class SignalWritableComputed<Value> extends SignalWritable<Value> {
+export class SignalWritableComputed<Value> extends SignalWritable<Value> implements SignalValue<Value>, SignalListener {
   #current!: Value;
   #getter: () => Value;
   #setter: (value: Value) => void;

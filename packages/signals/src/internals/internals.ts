@@ -9,6 +9,9 @@ export interface SignalListener extends SignalDependent {
   [Symbol.invalidate](): void;
 }
 export interface SignalDependency extends Signal, Dependency {}
+export interface SignalValue<Value> extends SignalDependency {
+  peak(): Value;
+}
 export type SignalDependentDependency = Signal & Dependent & Dependency;
 
 const stack = createContextStack<

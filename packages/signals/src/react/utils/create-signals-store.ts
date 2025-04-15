@@ -1,6 +1,7 @@
 import { incrementGenerator } from "@anion155/shared";
 
 import { SignalEffect } from "../../effect";
+import { SignalEffectAsync } from "../../effect-async";
 
 export type SignalsStore = {
   effect: SignalEffect;
@@ -15,13 +16,14 @@ export type SignalsStore = {
  * const store = createSignalsStore();
  * internals.bind(store.effect, dependency);
  */
-export function createSignalsStore(sync?: boolean): SignalsStore {
+export function createSignalsStore(sync: boolean = true): SignalsStore {
   let scheduleRender: { (): void } | undefined;
   const version = incrementGenerator();
-  const effect = new SignalEffect(() => {
+  const effectCb = () => {
     version.next();
     scheduleRender?.();
-  }, sync);
+  };
+  const effect = sync ? new SignalEffect(effectCb) : new SignalEffectAsync(effectCb);
   return {
     effect,
     subscribe(onStoreChange) {

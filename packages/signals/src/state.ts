@@ -1,11 +1,11 @@
 import { defineToStringTag } from "@anion155/shared";
 
-import { context, depends, SignalDependency } from "./internals/internals";
+import { context, depends, SignalDependency, SignalValue } from "./internals/internals";
 import { SignalWritable } from "./signal-writable";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface SignalState<Value> extends SignalDependency {}
-export class SignalState<Value> extends SignalWritable<Value> {
+export class SignalState<Value> extends SignalWritable<Value> implements SignalValue<Value> {
   #current: Value;
 
   constructor(initialValue: Value) {
