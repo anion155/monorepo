@@ -1,7 +1,7 @@
 import expect from "expect";
 import { diff } from "jest-diff";
 
-function compareErrors(left: Error, right: Error) {
+function compareErrorsDeep(left: Error, right: Error) {
   if (!(left instanceof Error) || !(right instanceof Error)) return left === right;
   if (left.constructor !== right.constructor) return false;
   if (String(left) !== String(right)) return false;
@@ -12,7 +12,7 @@ function compareErrors(left: Error, right: Error) {
   rightKeys.sort();
   for (let index = 0; index < leftKeys.length; index += 1) {
     if (leftKeys[index] !== rightKeys[index]) return false;
-    if (!compareErrors(left[leftKeys[index] as never], right[rightKeys[index] as never])) return false;
+    if (!compareErrorsDeep(left[leftKeys[index] as never], right[rightKeys[index] as never])) return false;
   }
   return true;
 }
@@ -32,7 +32,7 @@ expect.extend({
     }
     if (this.promise === "resolves") throw new TypeError("should be called with rejected promise only");
     if (!(actual instanceof Error)) throw new TypeError("should be called with Error instance");
-    const pass = compareErrors(actual, expected);
+    const pass = compareErrorsDeep(actual, expected);
     const options = {
       comment: "deep error compare",
       isNot: this.isNot,
@@ -64,6 +64,7 @@ expect.extend({
 declare module "expect" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Matchers<R> {
+    /**  */
     toStrictThrow(expected: Error): void;
   }
 }

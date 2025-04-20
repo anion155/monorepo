@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
+import { DeveloperError } from "../errors";
 import { compare } from "./compare";
 
 describe("compare()", () => {
@@ -17,6 +18,11 @@ describe("compare()", () => {
     expect(compare(null, null, false)).toBe(true);
     expect(compare(null, {}, false)).toBe(false);
     expect(compare({}, null, false)).toBe(false);
+  });
+
+  it("should check objects prototypes", () => {
+    expect(compare({}, {}, false)).toBe(true);
+    expect(compare({}, Object.create({}), false)).toBe(false);
   });
 
   it("should compare object by keys", () => {
@@ -80,5 +86,66 @@ describe("compare()", () => {
     expect(compare([[["d"]]], [[["d"]]], -1)).toBe(true);
     expect(compare([[["d"]]], [[["d"]]], Infinity)).toBe(true);
     expect(compare([[["d"]]], [[["d"]]])).toBe(true);
+  });
+
+  it("should handle Map", () => {
+    expect(compare(new Map(), new Map(), false)).toBe(true);
+    expect(compare(new Map([["a", 1]]), new Map([["a", 1]]), false)).toBe(true);
+    expect(compare(new Map([["a", 1]]), new Map([["b", 1]]), false)).toBe(false);
+    expect(compare(new Map([["a", 1]]), new Map([["a", 2]]), false)).toBe(false);
+    expect(compare(new Map([["a", { b: 2 }]]), new Map([["a", { b: 2 }]]), false)).toBe(false);
+    expect(compare(new Map([["a", { b: 2 }]]), new Map([["a", { b: 2 }]]), true)).toBe(true);
+    expect(
+      compare(
+        new Map([
+          ["a", 1],
+          ["b", 2],
+        ]),
+        new Map([
+          ["b", 2],
+          ["a", 1],
+        ]),
+        true,
+      ),
+    ).toBe(true);
+  });
+
+  it("should handle Set", () => {
+    expect(compare(new Set(), new Set(), false)).toBe(true);
+    expect(compare(new Set(["a"]), new Set(["a"]), false)).toBe(true);
+    expect(compare(new Set(["a"]), new Set(["a", "b"]), false)).toBe(false);
+    expect(compare(new Set(["a"]), new Set(["b"]), false)).toBe(false);
+    expect(compare(new Set(["a", 1]), new Set(["a", 1]), false)).toBe(true);
+    expect(compare(new Set(["b", "a", 1]), new Set(["a", 1, "b"]), false)).toBe(true);
+    expect(compare(new Set(["a", { b: 1 }]), new Set(["a", { b: 1 }]), false)).toBe(false);
+    expect(compare(new Set(["a", { b: 1 }]), new Set(["a", { b: 1 }]), true)).toBe(true);
+    expect(compare(new Set([{ a: 1 }, { b: 2 }]), new Set([{ b: 2 }, { a: 2 }]), true)).toBe(false);
+  });
+
+  it("should throw when trying to compare Weak storages", () => {
+    expect(() => compare(new WeakMap(), new WeakMap(), false)).toStrictThrow(new DeveloperError("can't compare weak storages"));
+    expect(() => compare(new WeakSet(), new WeakSet(), false)).toStrictThrow(new DeveloperError("can't compare weak storages"));
+  });
+
+  it("should detect different types", () => {
+    const i = (...v: Array<unknown>) => v[Symbol.iterator]();
+    expect(compare(i(1, 2), i(["a", 1], ["b", 2]), false)).toBe(false);
+    expect(compare(i(["a", 1], ["b", 2]), i(1, 2), false)).toBe(false);
+  });
+
+  it("should handle entries iterables", () => {
+    const i = (...v: Array<unknown>) => v[Symbol.iterator]();
+    expect(compare(i(["a", 1], ["b", 2]), i(["a", 1], ["b", 2]), false)).toBe(true);
+    expect(compare(i(["a", 1], ["b", 2]), i(["b", 2], ["a", 1]), false)).toBe(false);
+    expect(compare(i(["a", 1]), i(["a", 1], ["b", 2]), false)).toBe(false);
+    expect(compare(i(["a", { b: 1 }]), i(["a", { b: 2 }]), false)).toBe(false);
+  });
+
+  it("should handle iterables", () => {
+    const i = (...v: Array<unknown>) => v[Symbol.iterator]();
+    expect(compare(i(1, 2), i(1, 2), false)).toBe(true);
+    expect(compare(i(1, 2), i(2, 1), false)).toBe(false);
+    expect(compare(i(1, 2), i(1), false)).toBe(false);
+    expect(compare(i(1), i(1, 2), false)).toBe(false);
   });
 });
