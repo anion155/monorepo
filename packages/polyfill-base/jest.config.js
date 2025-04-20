@@ -11,6 +11,6 @@ export const polyfillConfig = jestConfig({
  * @returns {Config}
  */
 export const excludeProposals = (config) => {
-  config.setupFiles = config.setupFiles?.filter((module) => !module.includes("proposal"));
+  config.setupFiles = config.setupFiles?.filter((module) => !module.includes("proposal") && module !== "@anion155/shared/jest");
   return config;
 };

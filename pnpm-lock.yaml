@@ -198,6 +198,12 @@ importers:
       '@types/react':
         specifier: ^19.0.10
         version: 19.0.10
+      expect:
+        specifier: ^29.7.0
+        version: 29.7.0
+      jest-diff:
+        specifier: ^29.7.0
+        version: 29.7.0
       react:
         specifier: ^19.0.0
         version: 19.0.0

@@ -5,7 +5,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./global": "./src/global/index.ts",
-    "./react": "./src/react/index.ts"
+    "./react": "./src/react/index.ts",
+    "./jest": "./src/jest/index.ts",
+    "./shared.tsconfig.jest.json": "./shared.tsconfig.jest.json"
   },
   "scripts": {
     "test": "jest src",
@@ -13,6 +15,8 @@
   },
   "optionalDependencies": {
     "@types/react": "^19.0.10",
+    "expect": "^29.7.0",
+    "jest-diff": "^29.7.0",
     "react": "^19.0.0"
   },
   "devDependencies": {
