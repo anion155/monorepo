@@ -1,7 +1,7 @@
 import "./global/constants";
 
-import { DeveloperError } from "./errors";
-import { curryHelper } from "./functional";
+import { DeveloperError } from "./errors/errors";
+import { curryHelper, nameCallable } from "./functional";
 
 export interface TypeOfMap {
   string: string;
@@ -30,7 +30,7 @@ export function hasField<Key extends string | symbol | number>(value: object, ke
 }
 /** Creates predicate that tests if value has field */
 hasField.create = function createHasField<Key extends string | symbol | number>(key: Key) {
-  return curryHelper((value: object): value is { [k in Key]: unknown } => hasField(value, key));
+  return curryHelper(nameCallable(`hasField(${String(key)})`, (value: object): value is { [k in Key]: unknown } => hasField(value, key)));
 };
 /** Tests if value has own field */
 function hasOwnField<Key extends string | symbol | number>(value: object, key: Key): value is { [k in Key]: unknown } {
@@ -38,7 +38,7 @@ function hasOwnField<Key extends string | symbol | number>(value: object, key: K
 }
 /** Creates predicate that tests if value has own field */
 hasOwnField.create = function createHasOwnField<Key extends string | symbol | number>(key: Key) {
-  return curryHelper((value: object): value is { [k in Key]: unknown } => hasOwnField(value, key));
+  return curryHelper(nameCallable(`hasOwnField(${String(key)})`, (value: object): value is { [k in Key]: unknown } => hasOwnField(value, key)));
 };
 hasField.own = hasOwnField;
 
@@ -74,7 +74,7 @@ isTypeOf.register = function registerTypeOf<Type extends keyof TypeOfMap>(type: 
 };
 /** Creates predicate that tests if value is of type */
 isTypeOf.create = function createIsTypeOf<Type extends keyof TypeOfMap>(type: Type) {
-  return curryHelper((value: unknown): value is TypeOfMap[Type] => isTypeOf(value, type));
+  return curryHelper(nameCallable(`isTypeOf(${type})`, (value: unknown): value is TypeOfMap[Type] => isTypeOf(value, type)));
 };
 
 /** Tests if value is an error */
@@ -96,7 +96,11 @@ export function isError<ErrorClass extends Constructable<never, Error>>(
 }
 /** Creates predicate that tests if value is an error */
 isError.create = function createIsError<ErrorClass extends Constructable<never, Error>>(ErrorClass: ErrorClass) {
-  return curryHelper((value: unknown): value is InferConstructable<ErrorClass>["Instance"] => isError(value, ErrorClass));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+  const name = ErrorClass.prototype?.[Symbol.toStringTag] || ErrorClass.prototype?.name || ErrorClass.name;
+  return curryHelper(
+    nameCallable(`isError(${name})`, (value: unknown): value is InferConstructable<ErrorClass>["Instance"] => isError(value, ErrorClass)),
+  );
 };
 
 type IsType = Constructable<never, unknown> | keyof TypeOfMap;
@@ -116,6 +120,9 @@ export function is<Type extends IsType>(value: unknown, constrOrType: Type): val
 }
 /** Creates predicate that tests if value is of specified type */
 is.create = function createIs<Type extends IsType>(constrOrType: Type) {
+  if (typeof constrOrType === "string") return isTypeOf.create(constrOrType);
+  const constr = constrOrType as Constructable<unknown[], unknown>;
+  if (Object.is(constr, Object)) return isObject;
   return curryHelper((value: unknown): value is IsInferInstance<Type> => is(value, constrOrType));
 };
 
@@ -132,5 +139,9 @@ export function hasTypedField<Key extends string | symbol | number, _IsType exte
 }
 /** Creates predicate that tests if value has typed field */
 hasTypedField.create = function createHasTypedField<Key extends string | symbol | number, _IsType extends IsType>(key: Key, isType: _IsType) {
-  return curryHelper((value: unknown): value is { [k in Key]: IsInferInstance<_IsType> } => hasTypedField(value, key, isType));
+  return curryHelper(
+    nameCallable(`hasTypedField(${String(key)})`, (value: unknown): value is { [k in Key]: IsInferInstance<_IsType> } => {
+      return hasTypedField(value, key, isType);
+    }),
+  );
 };
