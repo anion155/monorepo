@@ -1,7 +1,7 @@
 import expect from "expect";
 import { diff } from "jest-diff";
 
-function compareErrorsDeep(left: Error, right: Error) {
+export function compareErrorsDeep(left: unknown, right: unknown) {
   if (!(left instanceof Error) || !(right instanceof Error)) return left === right;
   if (left.constructor !== right.constructor) return false;
   if (String(left) !== String(right)) return false;
@@ -12,7 +12,9 @@ function compareErrorsDeep(left: Error, right: Error) {
   rightKeys.sort();
   for (let index = 0; index < leftKeys.length; index += 1) {
     if (leftKeys[index] !== rightKeys[index]) return false;
-    if (!compareErrorsDeep(left[leftKeys[index] as never], right[rightKeys[index] as never])) return false;
+    const leftValue = left[leftKeys[index] as never];
+    const rightValue = right[rightKeys[index] as never];
+    if (leftValue !== rightValue && !compareErrorsDeep(leftValue, rightValue)) return false;
   }
   return true;
 }
@@ -22,13 +24,15 @@ expect.extend({
     if (!(expected instanceof Error)) throw new TypeError("should be called with Error instance");
     if (this.promise === "") {
       if (typeof actual !== "function") throw new TypeError("should be called with function");
+      let didThrow = false;
       try {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         actual();
-        throw new TypeError("function did not throw");
       } catch (error) {
+        didThrow = true;
         actual = error as never;
       }
+      if (!didThrow) throw new TypeError("function did not throw");
     }
     if (this.promise === "resolves") throw new TypeError("should be called with rejected promise only");
     if (!(actual instanceof Error)) throw new TypeError("should be called with Error instance");
@@ -52,7 +56,7 @@ expect.extend({
             return (
               this.utils.matcherHint("toBe", undefined, undefined, options) +
               "\n\n" +
-              (diffString && diffString.includes("- Expect")
+              (diffString?.includes("- Expect")
                 ? `Difference:\n\n${diffString}`
                 : `Expected: ${this.utils.printExpected(expected)}\n` + `Received: ${this.utils.printReceived(actual)}`)
             );
@@ -62,10 +66,9 @@ expect.extend({
 });
 
 declare module "expect" {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface Matchers<R> {
-    /**  */
-    toStrictThrow(expected: Error): void;
+    /** Used to test error thrown by actual value, test using deep comparison. */
+    toStrictThrow(expected: Error): R;
   }
 }
 
