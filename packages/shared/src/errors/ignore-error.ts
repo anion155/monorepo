@@ -1,4 +1,4 @@
-import { curryHelper, identity, wrapCallable } from "../functional";
+import { curryHelper, wrapCallable } from "../functional";
 import { isError } from "../is";
 import { isPromise } from "../promise";
 
@@ -14,7 +14,7 @@ import { isPromise } from "../promise";
  * main([]); // 0
  * main(5); // -1
  */
-export function ignoreError<SubError extends Error, Result>(Class: { new (...params: never): SubError }, result: Result) {
+export function ignoreError<SubError extends Error, Result>(Class: { new (...params: never): SubError }, failsafe: Result) {
   const isIgnoredError = isError.create(Class);
   return curryHelper(<Fn extends Method<never, never, unknown>>(fn: Fn) =>
     wrapCallable<Fn, Fn>(
@@ -24,14 +24,14 @@ export function ignoreError<SubError extends Error, Result>(Class: { new (...par
           try {
             const result = call();
             if (isPromise(result)) {
-              return result.then(identity, (error) => {
-                if (isIgnoredError(error)) return result;
+              return result.catch((error) => {
+                if (isIgnoredError(error)) return failsafe;
                 throw error;
               });
             }
             return result;
           } catch (error) {
-            if (isIgnoredError(error)) return result;
+            if (isIgnoredError(error)) return failsafe;
             throw error;
           }
         } as Fn,
