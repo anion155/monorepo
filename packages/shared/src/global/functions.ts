@@ -13,8 +13,7 @@ declare global {
   /** Infers functor's params and result */
   type InferFunctor<_Functor> = _Functor extends Functor<infer Params, infer Result> ? { Params: Params; Result: Result } : never;
   /** Infers functor's call signature */
-  type InferFunctorSign<_Functor extends Functor<never, unknown>> =
-    _Functor extends Functor<infer Params, infer Result> ? Functor<Params, Result> : never;
+  type InferFunctorSign<_Functor> = _Functor extends Functor<infer Params, infer Result> ? Functor<Params, Result> : never;
 
   /**
    * Generic method type, any type that can be called with context like in example
@@ -30,8 +29,7 @@ declare global {
   type InferMethod<_Method> =
     _Method extends Method<infer Context, infer Params, infer Result> ? { Context: Context; Params: Params; Result: Result } : never;
   /** Infers method's call signature */
-  type InferMethodSign<_Method extends Method<never, never, unknown>> =
-    _Method extends Method<infer Context, infer Params, infer Result> ? Method<Context, Params, Result> : never;
+  type InferMethodSign<_Method> = _Method extends Method<infer Context, infer Params, infer Result> ? Method<Context, Params, Result> : never;
 
   /**
    * Generic constructor type, any typeof class
@@ -46,6 +44,8 @@ declare global {
   /** Infers constructor's params and instance */
   type InferConstructor<_Constructor> =
     _Constructor extends Constructor<infer Params, infer Instance> ? { Params: Params; Instance: Instance } : never;
+  /** Infers constructor's call signature */
+  type InferConstructorSign<_Constructor> = _Constructor extends Constructor<infer Params, infer Instance> ? Constructor<Params, Instance> : never;
 
   /**
    * Generic abstract constructor type, any typeof abstract class
@@ -61,6 +61,9 @@ declare global {
   /** Infers abstract constructor's params and instance */
   type InferAbstractConstructor<_AbstractConstructor> =
     _AbstractConstructor extends AbstractConstructor<infer Params, infer Instance> ? { Params: Params; Instance: Instance } : never;
+  /** Infers abstract constructor's call signature */
+  type InferAbstractConstructorSign<_Constructor> =
+    _Constructor extends AbstractConstructor<infer Params, infer Instance> ? AbstractConstructor<Params, Instance> : never;
 
   /**
    * Generic constructable type
@@ -77,6 +80,13 @@ declare global {
       ? { Params: Params; Instance: Instance }
       : _Constructable extends AbstractConstructor<infer Params, infer Instance>
         ? { Params: Params; Instance: Instance }
+        : never;
+  /** Infers constructable's call signature */
+  type InferConstructableSign<_Constructable> =
+    _Constructable extends Constructor<infer Params, infer Instance>
+      ? Constructor<Params, Instance>
+      : _Constructable extends AbstractConstructor<infer Params, infer Instance>
+        ? AbstractConstructor<Params, Instance>
         : never;
 
   /**
@@ -98,6 +108,17 @@ declare global {
         : _Callable extends Functor<infer Params, infer Result>
           ? { Params: Params; Result: Result }
           : never;
+  /** Infers callable's call signature */
+  type InferCallableSign<_Callable> =
+    _Callable extends Constructor<infer Params, infer Instance>
+      ? Constructor<Params, Instance>
+      : _Callable extends AbstractConstructor<infer Params, infer Instance>
+        ? AbstractConstructor<Params, Instance>
+        : _Callable extends Method<infer Context, infer Params, infer Result>
+          ? Method<Context, Params, Result>
+          : _Callable extends Functor<infer Params, infer Result>
+            ? Functor<Params, Result>
+            : never;
 
   /** Typed Predicate function type */
   type TypedPredicate<Param, Result extends Param> = { (value: Param): value is Result };

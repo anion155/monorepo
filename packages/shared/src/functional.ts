@@ -6,15 +6,71 @@ export function identity<Value>(value: Value) {
   return value;
 }
 
+/** Change callable's name. */
+export function nameCallable<Fn extends Callable<never, unknown>>(name: string, fn: Fn): Fn {
+  Object.defineProperty(fn, "name", { value: name, writable: false, enumerable: false, configurable: true });
+  return fn;
+}
+
+type CallableProxyFabricCall<Fn extends Callable<never, unknown>> = (
+  fn: Fn,
+  params: InferCallable<Fn>["Params"],
+  context: InferMethod<Fn>["Context"],
+  newTarget: Fn | undefined,
+) => InferCallable<Fn>["Result"];
+type CallableProxyFabricGetTarget<Fn extends Callable<never, unknown>> = (fn: Fn, newTarget: Fn | undefined) => Fn | undefined;
+export type CallableProxyFabric<Fn extends Callable<never, unknown>> = (
+  call: CallableProxyFabricCall<Fn>,
+  getTarget: CallableProxyFabricGetTarget<Fn>,
+) => Fn;
 /**
- * Creates clone of the function.
- * WARNING: Does not hoists function fields or name, but due to limitation of type system ts won't show this.
+ * Helper function to proxy callables. Can be used to create clones of some other functions.
+ * {@link fabric} accepts {@link call} as it's first argument. Let's you call other functions or construct values.
+ *
+ * @example
+ * const spy = (fn) => proxyCallable(call => function (this, ...params) {
+ *   if (!spy.calls) spy.calls = [params]
+ *   else spy.calls.push(params)
+ *   try {
+ *     const result = call(fn, params, this, new.target);
+ *     if (!spy.results) spy.results = [{ status: 'returned', result }];
+ *     else spy.results.push({ status: 'returned', result });
+ *     return result;
+ *   } catch (error) {
+ *     if (!spy.results) spy.results = [{ status: 'thrown', error }];
+ *     else spy.results.push({ status: 'thrown', error });
+ *     throw error;
+ *   }
+ * });
  */
-export function clone<Fn extends Functor<never, unknown>>(fn: Fn): Fn {
-  // @ts-expect-error(2322): types are intentionally broken
-  return function (this, ...params) {
-    return fn.call(this, ...params);
+export function proxyCallable<Fn extends Callable<never, unknown>>(fabric: CallableProxyFabric<Fn>): Fn {
+  // eslint-disable-next-line prefer-const
+  let cloned: Fn;
+  const getTarget = (fn: Fn, newTarget: Fn | undefined) => (newTarget === cloned ? fn : newTarget);
+  const call: CallableProxyFabricCall<Fn> = (fn, params, context, newTarget) => {
+    newTarget = getTarget(fn, newTarget);
+    if (newTarget) return Reflect.construct(fn, params, newTarget) as never;
+    return Reflect.apply(fn, context, params) as never;
   };
+  cloned = fabric(call, getTarget);
+  return cloned;
+}
+
+/**
+ * WARNING: does not hoist passed callable's fields
+ * Clones any callable passed. Cloned function is anonymous.
+ *
+ * @example
+ * declare fn: (...params: unknown[]) => unknown
+ * const cloned = cloneCallable(fn);
+ */
+export function cloneCallable<Fn extends Callable<never, unknown>>(fn: Fn): InferCallableSign<Fn> {
+  return proxyCallable(
+    (call) =>
+      function (this: unknown, ...params: unknown[]) {
+        return call(fn as never, params as never, this, new.target as never);
+      } as never,
+  );
 }
 
 /**
@@ -22,24 +78,84 @@ export function clone<Fn extends Functor<never, unknown>>(fn: Fn): Fn {
  * but provides own implementation.
  *
  * @example
- * const logWrapper = <Fn extends AnyFunctor>(fn: Fn) => wrapFunctor<Fn>(fn, (...params) => {
+ * declare fn: {
+ *   (...params: unknown[]): unknown;
+ *   blah: 5;
+ * };
+ * const hoisted = hoistCallable(fn, (...params) => {
  *   log('called with:', ...params);
  *   const result = fn(...params);
  *   log('call result:', result);
  *   return result
  * })
- * const wrapped = logWrapper((a: number, b: string) => `test-${a}-${b}`)
- * wrapped(1, '2') // called with: 1 2
+ */
+export function hoistCallable<Source extends Callable<never, unknown>, Hoisted extends Callable<never, unknown>>(
+  source: Source,
+  hoisted: Hoisted,
+): Extend<Omit<Source, "">, Hoisted> {
+  Object.setPrototypeOf(hoisted, source);
+  if (Object.getOwnPropertyDescriptor(hoisted, "name")) {
+    // @ts-expect-error(2704): there is name in fn
+    delete hoisted.name;
+  }
+  return hoisted as never;
+}
+
+export type CallableWrapperFabric<Source extends Callable<never, unknown>, Wrapped extends Callable<never, unknown>> = (
+  callSource: IfEquals<
+    InferCallableSign<Source>,
+    InferCallableSign<Wrapped>,
+    (() => InferCallable<Source>["Result"]) &
+      ((params: InferCallable<Source>["Params"], context: InferMethod<Source>["Context"]) => InferCallable<Source>["Result"]),
+    (params: InferCallable<Source>["Params"], context: InferMethod<Source>["Context"]) => InferCallable<Source>["Result"]
+  >,
+  getTarget: () => Wrapped | undefined,
+  getContext: () => InferMethod<Source>["Context"],
+) => Wrapped;
+/**
+ * Wraps any callable, hoists {@link source} fields.
+ *
+ * @example
+ * const logWrapper = <Fn extends Callable<never, unknown>>(fn: Fn) => wrapCallable(fn, callFn => function (this, ...params) => {
+ *   log('called with:', ...params);
+ *   const result = callFn();
+ *   log('call result:', result);
+ *   return result;
+ * });
+ * const wrapped = logWrapper((a: number, b: string) => `test-${a}-${b}`);
+ * wrapped(1, '2');
+ * // called with: 1 2
  * // call result: test-1-2
  */
-export function wrapFunctor<Fn extends Functor<never, unknown>, Wrapped = InferFunctorSign<Fn>>(fn: Fn, wrapped: Wrapped): Omit<Fn, ""> & Wrapped {
-  type _ = InferFunctor<Fn>;
-  Object.setPrototypeOf(wrapped, fn);
-  if (Object.getOwnPropertyDescriptor(wrapped, "name")) {
-    // @ts-expect-error(2704): there is name in fn
-    delete wrapped.name;
-  }
-  return wrapped as never;
+export function wrapCallable<Source extends Callable<never, unknown>, Wrapped extends Callable<never, unknown>>(
+  source: Source,
+  wrappedFabric: CallableWrapperFabric<Source, Wrapped>,
+  name?: string,
+): Extend<Omit<Source, "">, Wrapped> {
+  return nameCallable(
+    name ?? source.name,
+    proxyCallable((call, getTarget) => {
+      let current: { params: InferCallable<Wrapped>["Params"]; context: InferMethod<Wrapped>["Context"]; target: Wrapped | undefined } | undefined;
+      const wrapped = hoistCallable(
+        source,
+        wrappedFabric(
+          // @ts-expect-error - too complicated types
+          (params, context) => call(source, params ?? current!.params, context ?? current!.context, current!.target),
+          () => getTarget(source as never, current!.target as never) as never,
+          () => current!.context,
+        ),
+      );
+      return hoistCallable(wrapped, function (this: unknown, ...params: unknown[]) {
+        const prev = current;
+        current = { params: params as never, context: this, target: new.target as never };
+        try {
+          return call(wrapped, params as never, this, new.target as never);
+        } finally {
+          current = prev;
+        }
+      }) as never;
+    }),
+  );
 }
 
 /**
@@ -51,12 +167,11 @@ export function wrapFunctor<Fn extends Functor<never, unknown>, Wrapped = InferF
  * }) }
  * context.method()
  */
-export function liftContext<Fn extends Functor<[unknown, ...never], unknown>>(fn: Fn) {
+export function liftContext<Fn extends Functor<[never, ...never], unknown>>(fn: Fn) {
   type FnInferred = InferFunctor<Fn>;
   type Params = TupleUnshift<FnInferred["Params"]>;
-  return wrapFunctor<Fn, Method<Params[0], Params[1], FnInferred["Result"]>>(fn, function (this, ...params) {
-    // @ts-expect-error(2345): types are intentionally broken
-    return fn(this, ...params);
+  return wrapCallable<Fn, Method<Params[0], Params[1], FnInferred["Result"]>>(fn, (callFn, _, getContext) => (...params) => {
+    return callFn([getContext(), ...params] as never, null);
   });
 }
 
@@ -74,7 +189,7 @@ export type Curried<C extends Functor<never, unknown>> = C & { curried: C };
  * fn<number>().curry('test') // you could see inferred types in second layer function
  */
 export function curryHelper<Fn extends Functor<never, unknown>>(fn: Fn): Curried<Fn> {
-  return Object.assign(clone(fn), { curried: fn });
+  return Object.assign(hoistCallable(fn, cloneCallable(fn)), { curried: fn }) as never;
 }
 
 export type PipeFunctor<Params extends unknown[], Result> = {
@@ -154,23 +269,23 @@ const reducedSymbol = Symbol.for("reduced");
  */
 export function reduce<Value, Result>(
   values: Iterable<Value>,
-  reducer: (reduced: Result, value: Value, index: number, reduce: (result: Result) => never) => Result,
+  reducer: (accumulated: Result, value: Value, index: number, reduced: (result: Result) => never) => Result,
   initial: Result,
 ): Result {
   try {
     const iterator = values[Symbol.iterator]();
     let results = iterator.next();
-    let reduced: Result = initial;
+    let accumulated: Result = initial;
     let index = 0;
     while (!results.done) {
-      reduced = reducer(reduced, results.value, index, (result) => {
+      accumulated = reducer(accumulated, results.value, index, (result) => {
         // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw { [reducedSymbol]: result };
       });
       index += 1;
       results = iterator.next();
     }
-    return reduced;
+    return accumulated;
   } catch (error) {
     if (typeof error === "object" && error !== null && reducedSymbol in error) {
       return error[reducedSymbol] as Result;
