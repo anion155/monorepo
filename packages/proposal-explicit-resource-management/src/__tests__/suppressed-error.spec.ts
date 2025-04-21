@@ -15,16 +15,16 @@ describe("Explicit resource management proposal", () => {
 
     it("should be able to detect by tests", () => {
       expect(new SuppressedError(new Error("Test 1"), new Error("Test 2"), "c")).toStrictEqual(
-        new SuppressedError(new Error("Test 1"), new Error("Test 2"), "c")
+        new SuppressedError(new Error("Test 1"), new Error("Test 2"), "c"),
       );
       expect(new SuppressedError(new Error("Test 1"), new Error("Test 2"), "c")).not.toStrictEqual(
-        new SuppressedError(new Error("Test 1"), new Error("Test 2"), "b")
+        new SuppressedError(new Error("Test 1"), new Error("Test 2"), "b"),
       );
       expect(new SuppressedError(new Error("Test 1"), new Error("Test 2"), "c")).not.toStrictEqual(
-        new SuppressedError(new Error("Test 1"), new Error("Test 3"), "c")
+        new SuppressedError(new Error("Test 1"), new Error("Test 3"), "c"),
       );
       expect(new SuppressedError(new Error("Test 1"), new Error("Test 2"), "c")).not.toStrictEqual(
-        new SuppressedError(new Error("Test 2"), new Error("Test 2"), "c")
+        new SuppressedError(new Error("Test 2"), new Error("Test 2"), "c"),
       );
     });
   });

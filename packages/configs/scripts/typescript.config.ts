@@ -40,8 +40,12 @@ const jestProject: TSConfig = {
 
 const tsConfigMerger = createSchemeMerger<Scheme<Partial<TSConfig>>>({
   compilerOptions: createObjectMerger() as never,
+  extends: (left, right) => {
+    const bases = mergeArraysUnique(left, right);
+    if (!bases) return bases;
+    return bases.length === 1 ? bases[0] : bases;
+  },
   exclude: mergeArraysUnique,
-  extends: mergeArraysUnique,
   files: mergeArraysUnique,
   include: mergeArraysUnique,
   typeAcquisition: createObjectMerger() as never,

@@ -1,4 +1,4 @@
-#!/usr/bin/env ts-node
+#!/usr/bin/env jiti
 import { styleText } from "node:util";
 import { $ } from "zx";
 
@@ -12,5 +12,8 @@ try {
 
   console.log(styleText("green", "Compilation successful"));
 } catch (error) {
-  console.error(styleText("red", "Compilation failed:"), styleText("red", error.message));
+  console.error(
+    styleText("red", "Compilation failed:"),
+    typeof error === "object" && error !== null && "message" in error ? styleText("red", error.message as string) : (error as never),
+  );
 }

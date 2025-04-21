@@ -1,6 +1,6 @@
 {
-  "extends": ["@anion155/configs/tsconfig.base.json"],
+  "extends": "@anion155/configs/tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ESNext.Iterator"]
+    "lib": ["ESNext", "ESNext.Iterator"]
   }
 }
