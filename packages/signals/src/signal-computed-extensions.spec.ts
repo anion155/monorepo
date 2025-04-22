@@ -1,11 +1,10 @@
 import "./signal-computed-extensions";
 
-import { DeveloperError } from "@anion155/shared";
 import { describe, expect, it } from "@jest/globals";
 
 import { SignalReadonlyComputed } from "./computed-readonly";
 import { SignalWritableComputed } from "./computed-writable";
-import { context, depends } from "./internals";
+import { depends } from "./internals";
 import { SignalReadonly } from "./signal-readonly";
 import type { SignalDependentDependency, SignalListener, SignalValue } from "./types";
 
@@ -41,6 +40,8 @@ describe("SignalReadonly extensions", () => {
     const source = new TestSignal({ value: 5 });
     const target = source.view("value");
     expect(target).toBeInstanceOf(SignalReadonlyComputed);
+    expect(target).toBe(source.view("value"));
+
     expect(target.get()).toBe(5);
     source.set({ value: 6 });
     target.invalidate();
@@ -51,6 +52,8 @@ describe("SignalReadonly extensions", () => {
     const source = new TestSignal({ value: 5 });
     const target = source.field("value");
     expect(target).toBeInstanceOf(SignalWritableComputed);
+    expect(target).toBe(source.field("value"));
+
     expect(target.get()).toBe(5);
     source.set({ value: 6 });
     target.invalidate();
@@ -59,97 +62,36 @@ describe("SignalReadonly extensions", () => {
     expect(source.get()).toStrictEqual({ value: 7 });
   });
 
-  it(".proxy() should create Proxy object from inner value", () => {
-    const source = new TestSignal({ value: 5 });
-    expect(source.proxy()).toStrictEqual({ value: 5 });
-  });
-
-  it(".proxy() should subscribe listener to fields", () => {
-    const source = new TestSignal({ value: 5 });
-    const listener = new TestSignal(0);
-    const proxy = source.proxy(listener);
-    expect(proxy.value).toBe(5);
-    expect(depends.rank(listener, source.field("value"))).toBe(1);
-  });
-
-  it(".proxy() should return nested proxy", () => {
-    const source = new TestSignal({ box: { value: 5 } });
-    const listener = new TestSignal(0);
-    const proxy = source.proxy(listener);
-    expect(proxy.box.value).toBe(5);
-    expect(depends.rank(listener, source.field("box").field("value"))).toBe(1);
-  });
-
-  it(".proxy() should subscribe listener from context", () => {
-    const source = new TestSignal({ value: 5 });
-    const listener = new TestSignal(0);
-    using _subsription = context.setupSubscriptionContext(listener);
-    const proxy = source.proxy();
-    expect(proxy.value).toBe(5);
-    expect(depends.rank(listener, source.field("value"))).toBe(1);
-  });
-
-  it(".proxy() should fail on non dependency signal", () => {
-    const source = new TestSignal(5, false);
-    expect(() => source.proxy()).toStrictThrow(new DeveloperError("this signal does not support proxy call"));
-  });
-
-  it(".proxy() should bew able to set field value", () => {
-    const source = new TestSignal({ value: 5 });
-    source.proxy().value = 6;
-    expect(source.get()).toStrictEqual({ value: 6 });
-  });
-
-  it(".proxy() should implement all traps with current value", () => {
-    /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
-    const source = new TestSignal({ value: 5 } as any);
-
-    expect("value" in source.proxy()).toBe(true);
-    expect("unknown" in source.proxy()).toBe(false);
-    source.set({ unknown: 5 });
-    expect("value" in source.proxy()).toBe(false);
-    expect("unknown" in source.proxy()).toBe(true);
-    source.set({ value: 5 });
-
-    Object.defineProperty(source.proxy(), "unknown", { value: 1, enumerable: true, configurable: true });
-    expect("unknown" in source.proxy()).toBe(true);
-    delete source.proxy().unknown;
-
-    expect(Object.getOwnPropertyDescriptor(source.proxy(), "value")).toStrictEqual({
-      value: 5,
-      writable: true,
-      enumerable: true,
-      configurable: true,
+  describe(".snapshot()", () => {
+    it("should create snapshot from stored value", () => {
+      const source = new TestSignal({ a: 1, b: 1 });
+      expect(source.snapshot()).toStrictEqual({ a: 1, b: 1 });
     });
 
-    expect(Object.isExtensible(source.proxy())).toBe(true);
-    Object.preventExtensions(source.proxy());
-    expect(Object.isExtensible(source.get())).toBe(false);
-    source.set({ value: 5 });
+    it("should cache snapshot", () => {
+      const source = new TestSignal({ a: 1 });
+      const snapshot = source.snapshot();
 
-    expect(Object.getPrototypeOf(source.proxy())).toBe(Object.prototype);
-    Object.setPrototypeOf(source.proxy(), null);
-    expect(Object.getPrototypeOf(source.get())).toBe(null);
+      expect(snapshot).toBe(source.snapshot());
+      source.set({ a: 2 });
+      expect(snapshot).not.toBe(source.snapshot());
 
-    source.set((a: number) => `test-${a}`);
-    expect(source.proxy()(1)).toBe("test-1");
-    source.set(function (this: number, a: number) {
-      return `test-${a}-${this}`;
+      expect(source.snapshot()).not.toBe(source.snapshot(new TestSignal(0)));
     });
-    expect(source.proxy().call(1, 2)).toBe("test-2-1");
 
-    class Test {}
-    source.set(Test);
-    expect(new (source.proxy())()).toBeInstanceOf(Test);
-    /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call */
-  });
+    it("should subscribe to listener", () => {
+      const source = new TestSignal({ a: 1, b: 1 });
+      const listener = new TestSignal(0);
+      const snapshot = source.snapshot(listener);
 
-  it(".proxy() should handle signal not having #fields on delete property", () => {
-    expect(() => {
-      /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access */
-      const source = new TestSignal({ value: 5 } as any);
-      delete source.proxy().unknown;
-      /* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access */
-    }).not.toThrow();
+      expect(depends.rank(listener, source)).toBe(1);
+      expect(depends.rank(listener, source.view("a"))).toBe(-1);
+      expect(depends.rank(listener, source.view("b"))).toBe(-1);
+
+      void snapshot.a;
+      expect(depends.rank(listener, source)).toBe(1);
+      expect(depends.rank(listener, source.view("a"))).toBe(1);
+      expect(depends.rank(listener, source.view("b"))).toBe(-1);
+    });
   });
 });

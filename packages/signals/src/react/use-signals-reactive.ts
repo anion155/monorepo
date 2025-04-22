@@ -1,7 +1,7 @@
 import { useConst } from "@anion155/shared/react";
 import { useSyncExternalStore } from "react";
 
-import { context } from "../internals/internals";
+import { context } from "../internals";
 import { createSignalsStore } from "./utils";
 
 /**

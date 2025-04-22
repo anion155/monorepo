@@ -1,13 +1,15 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
-import { SignalEffect } from "../effect";
+import type { SignalEffect } from "../effect";
 import { useSignalsReactive } from "./use-signals-reactive";
 
 /**
  * Functional HOC that allows you to subscribe to values that was used during render call.
  *
  * @example
+ * ``` ts
  * const state = signalState(5);
+ * @signalsReactive
  * const Counter = () => (
  *   <div>
  *     <div>{state.get()}</div> // on first render will subscribe to state changes
@@ -15,8 +17,9 @@ import { useSignalsReactive } from "./use-signals-reactive";
  *     <button onPress={() => state.set(state.get() + 1)}>+</button>
  *   </div>
  * );
- * const _Counter = signalsReactive(Counter); // sets up signals context, that would be cleaned up on render finish
+ * const _Counter = ; // sets up signals context, that would be cleaned up on render finish
  * export { _Counter as Counter };
+ * ```
  */
 export function signalsReactive<Render extends Functor<[props: never, effect: SignalEffect], ReactNode>>(
   render: Render,
