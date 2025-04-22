@@ -1,4 +1,4 @@
-import { defineMethod, defineToStringTag, Stamper } from "@anion155/shared";
+import { defineToStringTag } from "@anion155/shared";
 
 import { context, depends } from "./internals";
 import { SignalReadonly } from "./signal-readonly";
@@ -35,27 +35,3 @@ export class SignalReadonlyComputed<Value> extends SignalReadonly<Value> impleme
   }
 }
 defineToStringTag(SignalReadonlyComputed);
-
-declare module "./signal-readonly" {
-  interface SignalReadonly<Value> {
-    /** Creates {@link SignalReadonlyComputed} that projects from current signal. */
-    map<Computed>(project: (value: Value) => Computed): SignalReadonlyComputed<Computed>;
-    /** Creates {@link SignalReadonlyComputed} that get value from current value on {@link field} */
-    view<Field extends Value extends object ? keyof Value : never>(field: Field): SignalReadonlyComputed<Value[Field]>;
-  }
-}
-defineMethod(SignalReadonly.prototype, "map", function map<Value, Computed>(this: SignalReadonly<Value>, project: (value: Value) => Computed) {
-  return new SignalReadonlyComputed<Computed>(() => project(this.get()));
-});
-const views = new Stamper((signal: SignalReadonly<unknown>) => {
-  return Map.withFabric((field) => {
-    return new SignalReadonlyComputed(() => {
-      const value = signal.get();
-      return Reflect.get(value as never, field as never, value);
-    });
-  });
-});
-defineMethod(SignalReadonly.prototype, "view", function view<Value, Field extends keyof Value>(this: SignalReadonly<Value>, field: Field) {
-  if (!views.has(this)) views.stamp(this);
-  return views.get(this as never).emplace(field);
-});

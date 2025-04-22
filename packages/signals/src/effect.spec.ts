@@ -1,3 +1,5 @@
+import "./signal-computed-extensions";
+
 import { describe, expect, it, jest } from "@jest/globals";
 
 import { SignalEffect } from "./effect";

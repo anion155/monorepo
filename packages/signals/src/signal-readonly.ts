@@ -7,6 +7,16 @@ import { Signal } from "./signal";
 export abstract class SignalReadonly<Value> extends Signal {
   abstract peak(): Value;
 
+  /**
+   * Subscribes current signal to listener in context
+   *
+   * @example
+   * const state = new SignalState(5);
+   * const effect = new SignalEffect(() => {
+   *   state.subscribe();
+   *   console.log('state changed');
+   * });
+   */
   subscribe() {
     if (depends.dependents.has(this)) context.handleSubscriptionContext(this);
   }

@@ -1,3 +1,5 @@
+import "./signal-computed-extensions";
+
 export { SignalReadonlyComputed } from "./computed-readonly";
 export { SignalWritableComputed } from "./computed-writable";
 export { SignalEffect } from "./effect";

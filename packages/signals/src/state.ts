@@ -1,5 +1,3 @@
-import "./computed-writable";
-
 import { defineToStringTag } from "@anion155/shared";
 
 import { context, depends } from "./internals";
