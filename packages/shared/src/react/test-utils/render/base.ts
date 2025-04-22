@@ -1,4 +1,5 @@
-import { cloneElement, createElement, isValidElement, JSXElementConstructor, ReactElement, ReactNode, RefObject, useEffect } from "react";
+import type { JSXElementConstructor, ReactElement, ReactNode } from "react";
+import { cloneElement, createElement, isValidElement, useEffect } from "react";
 
 import { doThrow } from "../../../do";
 import { DeveloperError } from "../../../errors";
@@ -73,7 +74,7 @@ export class GlobalWrappers {
 
 export type AnyRender = (
   ui: ReactNode,
-  options: { wrapper: JSXElementConstructor<{ children: ReactNode }> }
+  options: { wrapper: JSXElementConstructor<{ children: ReactNode }> },
 ) => {
   rerender: (ui: ReactNode) => void;
   unmount: () => void;
@@ -120,7 +121,7 @@ export function createRender<BaseRender extends AnyRender>(
   baseRender: BaseRender,
   baseOptions: Parameters<BaseRender>[1],
   globalWrappers: GlobalWrappers,
-  wrappers: WrapperArgP[] | undefined
+  wrappers: WrapperArgP[] | undefined,
 ): WrappedRender<BaseRender> {
   const render: WrappedRenderFunction<BaseRender> = (ui, options) => {
     const wrapper = globalWrappers.createWrapper(options?.wrapper, wrappers);
@@ -136,7 +137,7 @@ export function createRender<BaseRender extends AnyRender>(
 }
 
 export type RenderHookResult<Hook extends Functor<never, unknown>> = {
-  result: RefObject<InferFunctor<Hook>["Result"]>;
+  result: { current: InferFunctor<Hook>["Result"]; times: number };
   rerender: (...next: InferFunctor<Hook>["Params"]) => void;
   unmount: () => void;
 };
@@ -181,14 +182,16 @@ export function createRenderHook<BaseRender extends AnyRender>(
   baseRender: BaseRender,
   options: Omit<InferFunctor<BaseRender>["Params"][1], "wrapper">,
   globalWrappers: GlobalWrappers,
-  wrappers: WrapperArgP[] | undefined
+  wrappers: WrapperArgP[] | undefined,
 ): WrappedRenderHook<BaseRender> {
   const renderHook: RenderHookFunction = (useHook, ...initialParams) => {
-    const result: RefObject<unknown> = { current: undefined };
+    const result = { current: undefined as unknown, times: 0 };
     function TestComponent({ params }: { params: never }) {
       const pendingResult = useHook(...params);
       useEffect(() => {
         result.current = pendingResult;
+        if (!Number.isSafeInteger(result.times)) result.times = 0;
+        result.times += 1;
       });
       return null;
     }
