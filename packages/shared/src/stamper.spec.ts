@@ -36,6 +36,19 @@ describe("Stamper utils", () => {
     expect(() => stamper.modify(value, (v) => v + 1)).toThrow(new TypeError("passed object wasn't stamped"));
   });
 
+  it(".emplace() should stamp object if it wasn't already", () => {
+    const stamper = new Stamper(() => 0);
+    const s_value = Object.freeze({});
+    const e_value = Object.freeze({});
+
+    expect(stamper.has(e_value)).toBe(false);
+    expect(stamper.emplace(e_value)).toBe(0);
+    expect(stamper.has(e_value)).toBe(true);
+
+    stamper.stamp(s_value, 1);
+    expect(stamper.emplace(s_value)).toBe(1);
+  });
+
   it(".getSafe(), .setSafe(), .modifySafe() should get value from stamped object and undefined from non stamped", () => {
     const stamper = new Stamper(() => 0);
     const s_value = Object.freeze({});

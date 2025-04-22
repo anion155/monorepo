@@ -29,7 +29,7 @@ export class Stamper<Object extends object, Value> {
     return value;
   }
 
-  /** Checks if {@link object} was stamped  */
+  /** Checks if {@link object} was stamped */
   has(object: object): object is Object {
     return this.storage.has(object as never);
   }
@@ -40,6 +40,12 @@ export class Stamper<Object extends object, Value> {
    */
   get(object: Object): Value {
     if (!this.has(object)) throw new TypeError("passed object wasn't stamped");
+    return this.storage.get(object)!;
+  }
+
+  /** Emplaces stored value. */
+  emplace(object: Object): Value {
+    if (!this.has(object)) this.storage.set(object, this.init(object));
     return this.storage.get(object)!;
   }
 
