@@ -1,13 +1,18 @@
 import { defineToStringTag } from "@anion155/shared";
 
-import { context, depends } from "./internals/internals";
+import { context, depends } from "./internals";
 import { Signal } from "./signal";
 
+/** Value Signal implementation of read methods. */
 export abstract class SignalReadonly<Value> extends Signal {
   abstract peak(): Value;
 
+  subscribe() {
+    if (depends.dependents.has(this)) context.handleSubscriptionContext(this);
+  }
+
   get(): Value {
-    if (depends.listeners.has(this)) context.handleSubscriptionContext(this);
+    this.subscribe();
     return this.peak();
   }
 

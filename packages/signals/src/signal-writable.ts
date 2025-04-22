@@ -2,6 +2,7 @@ import { defineToStringTag } from "@anion155/shared";
 
 import { SignalReadonly } from "./signal-readonly";
 
+/** Value Signal implementation of write methods. */
 export abstract class SignalWritable<Value> extends SignalReadonly<Value> {
   abstract set(next: Value): void;
 
