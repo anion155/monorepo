@@ -2,6 +2,9 @@ import "./emplace";
 
 import { describe, expect, it } from "@jest/globals";
 
+import { Waiter } from "../jest/waiter";
+import { SmartWeakRef } from "./emplace";
+
 describe("Map emplace extensions", () => {
   const fabric = ({ id }: { id: number }) => ({ value: `fabric-${id}` });
   const first = { id: 1 };
@@ -45,5 +48,20 @@ describe("Map emplace extensions", () => {
     map = source.withFabric(fabric, [first]);
     expect(map.emplace(first)).toStrictEqual({ value: "manual-1" });
     expect(map.emplace(second)).toStrictEqual({ value: "fabric-2" });
+  });
+
+  it("class SmartWeakRef should wrap WeakRef and restore value if .emplace() is called", async () => {
+    class Test {}
+    let ref: SmartWeakRef<Test>;
+    const waiter = new Waiter(() => {
+      ref = new SmartWeakRef(() => new Test());
+      const value = ref.deref()!;
+      expect(value).toBeInstanceOf(Test);
+      return value;
+    });
+    expect(ref!.emplace()).toBeInstanceOf(Test);
+    await waiter.await();
+    expect(ref!.deref()).toBeUndefined();
+    expect(ref!.emplace()).toBeInstanceOf(Test);
   });
 });

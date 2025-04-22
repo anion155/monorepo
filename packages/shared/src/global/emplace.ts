@@ -7,7 +7,7 @@ declare global {
      * the existing value if it exists, or otherwise insert the returned value
      * of the callback function, and return that value.
      */
-    emplace(key: K, fabric: (key: K) => V): void;
+    emplace(key: K, fabric: (key: K) => V): V;
     /**
      * Creates new Map, with same entries and default fabric for emplace method.
      */
@@ -37,6 +37,7 @@ defineMethod(Map, "withFabric", function withFabric(fabric, iterable) {
   return Object.assign(new Map(iterable), {
     withFabric: undefined,
     emplace: function emplace(this: Map<unknown, unknown>, key: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return Map.prototype.emplace.call(this, key, fabric);
     },
   });
@@ -52,7 +53,7 @@ declare global {
      * the existing value if it exists, or otherwise insert the returned value
      * of the callback function, and return that value.
      */
-    emplace(key: K, fabric: (key: K) => V): void;
+    emplace(key: K, fabric: (key: K) => V): V;
     /**
      * Creates new WeakMap without entries and emplace method with known fabric.
      */
@@ -65,7 +66,7 @@ declare global {
   }
   interface WeakMapConstructor {
     /**
-     * Creates Map with default fabric for emplace method.
+     * Creates WeakMap with default fabric for emplace method.
      */
     withFabric<K extends WeakKey, V>(
       fabric: (key: K) => V,
@@ -85,6 +86,7 @@ defineMethod(WeakMap, "withFabric", function withFabric(fabric, iterable) {
   return Object.assign(new WeakMap(iterable as never), {
     withFabric: undefined,
     emplace: function emplace(this: WeakMap<WeakKey, unknown>, key: WeakKey) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return WeakMap.prototype.emplace.call(this, key, fabric);
     },
   });
@@ -101,10 +103,28 @@ defineMethod(WeakMap.prototype, "withFabric", function withFabric(fabric: (key: 
     {
       withFabric: undefined,
       emplace: function emplace(this: Map<unknown, unknown>, key: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
         return Map.prototype.emplace.call(this, key, fabric);
       },
     },
   );
 });
+
+export class SmartWeakRef<V extends WeakKey> {
+  #ref: WeakRef<{ value: V }>;
+  constructor(readonly fabric: () => V) {
+    this.#ref = new WeakRef({ value: fabric() });
+  }
+
+  deref() {
+    return this.#ref.deref()?.value;
+  }
+  emplace() {
+    const stored = this.#ref.deref();
+    if (stored) return stored.value;
+    this.#ref = new WeakRef({ value: this.fabric() });
+    return this.#ref.deref()!.value;
+  }
+}
 
 export {};
