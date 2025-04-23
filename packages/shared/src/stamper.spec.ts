@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 
+import { DeveloperError } from "./errors";
 import { Stamper } from "./stamper";
 
 describe("Stamper utils", () => {
@@ -12,6 +13,17 @@ describe("Stamper utils", () => {
     expect(stamper.get(value)).toBe(6);
     stamper.modify(value, (v) => v * 2);
     expect(stamper.get(value)).toBe(12);
+  });
+
+  it("should instantiate without init function", () => {
+    const stamper = new Stamper();
+    const f_value = Object.freeze({});
+    const e_value = Object.freeze({});
+
+    stamper.stamp(f_value, 5);
+    expect(stamper.get(f_value)).toBe(5);
+
+    expect(() => stamper.stamp(e_value)).toStrictThrow(new DeveloperError("init isn't declares in this Stamper"));
   });
 
   it(".stamp() should not change value", () => {
@@ -71,5 +83,17 @@ describe("Stamper utils", () => {
     modify.mockClear();
     stamper.modifySafe(e_value, modify);
     expect(modify).not.toHaveBeenCalled();
+  });
+
+  it(".remove() should remove stored value", () => {
+    const stamper = new Stamper(() => 0);
+    const s_value = Object.freeze({});
+    const e_value = Object.freeze({});
+    stamper.stamp(s_value, 5);
+
+    stamper.remove(s_value);
+    expect(stamper.has(s_value)).toBe(false);
+
+    stamper.remove(e_value);
   });
 });

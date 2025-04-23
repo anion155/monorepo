@@ -1,11 +1,11 @@
-import { defineMethod, DeveloperError, isObject, Stamper } from "@anion155/shared";
+import { compare, defineMethod, DeveloperError, isObject, Stamper } from "@anion155/shared";
 
 import { SmartWeakRef } from "../../shared/src/global/emplace";
 import { SignalReadonlyComputed } from "./computed-readonly";
 import { SignalWritableComputed } from "./computed-writable";
 import { depends } from "./internals";
 import { SignalReadonly } from "./signal-readonly";
-import type { SignalDependency, SignalListener } from "./types";
+import type { SignalListener } from "./types";
 
 declare module "./signal-readonly" {
   interface SignalReadonly<Value> {
@@ -81,30 +81,37 @@ declare module "./signal-readonly" {
     snapshot(listener?: SignalListener): DeepReadonly<Value>;
   }
 }
-const empty: unique symbol = {} as never;
-const snapshots = new Stamper((signal: SignalDependency & SignalReadonly<object>) => {
-  return WeakMap.withFabric((value: object) =>
-    WeakMap.withFabric((listener: SignalListener | typeof empty) => {
-      // TODO: clone object
-      const target = { ...value } as object;
-      Object.setPrototypeOf(target, Object.getPrototypeOf(value) as never);
-      Object.preventExtensions(target);
-      Object.freeze(target);
-      if (listener !== empty) depends.bind(listener, signal);
-      return new Proxy(target, {
-        get(target, p) {
-          if (listener !== empty) depends.bind(listener, signal.view(p as never));
-          return target[p as never];
-        },
-      });
-    }),
-  );
-});
+const emptyListener: unique symbol = {} as never;
+const snapshots = new Stamper<SignalReadonly<unknown>, [object, WeakMap<SignalListener | typeof emptyListener, object>]>();
 defineMethod(SignalReadonly.prototype, "snapshot", function snapshot<Value>(this: SignalReadonly<Value>, listener?: SignalListener) {
-  if (!isObject(this.peak())) return this.peak();
   if (!depends.dependents.has(this)) throw new DeveloperError("this signal does not support proxy call");
-  return snapshots
-    .emplace(this as never)
-    .emplace(this.peak() as never)
-    .emplace(listener ?? empty);
+  if (!isObject(this.peak())) return this.peak();
+  const value = this.peak();
+  const target = { ...value } as object;
+  Object.setPrototypeOf(target, Object.getPrototypeOf(value) as never);
+  Object.preventExtensions(target);
+  Object.freeze(target);
+  if (snapshots.has(this)) {
+    const stored = snapshots.get(this);
+    if (!compare(target, stored[0], 1)) {
+      snapshots.remove(this);
+    } else if (stored[1].has(listener ?? emptyListener)) {
+      return stored[1].get(listener ?? emptyListener)!;
+    }
+  }
+  if (listener) depends.bind(listener, this);
+  // eslint-disable-next-line @typescript-eslint/no-this-alias
+  const signal = this;
+  const proxy = new Proxy(target, {
+    get(target, p) {
+      if (listener) depends.bind(listener, signal.field(p as never));
+      return target[p as never];
+    },
+  });
+  if (snapshots.has(this)) {
+    snapshots.get(this as never)[1].set(listener ?? emptyListener, proxy);
+  } else {
+    snapshots.stamp(this as never, [target, new WeakMap([[listener ?? emptyListener, proxy]])]);
+  }
+  return proxy;
 });

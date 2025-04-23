@@ -1,3 +1,9 @@
+import { DeveloperError } from "./errors";
+
+const emptyInit = () => {
+  throw new DeveloperError("init isn't declares in this Stamper");
+};
+
 /**
  * Creates Stamper object. Let's you store some value without changing object.
  *
@@ -14,8 +20,8 @@
 export class Stamper<Object extends object, Value> {
   protected init: (object: Object) => Value;
   protected storage = new WeakMap<Object, Value>();
-  constructor(init: (object: Object) => Value) {
-    this.init = init;
+  constructor(init?: (object: Object) => Value) {
+    this.init = init ?? emptyInit;
   }
 
   /** Stamps {@link object} with value */
@@ -83,5 +89,11 @@ export class Stamper<Object extends object, Value> {
    */
   modifySafe(obj: object, modifier: (value: Value) => Value) {
     if (this.has(obj)) this.storage.set(obj, modifier(this.storage.get(obj)!));
+  }
+
+  /** Removes stored value */
+  remove(object: Object) {
+    if (!this.storage.has(object)) return false;
+    return this.storage.delete(object);
   }
 }
