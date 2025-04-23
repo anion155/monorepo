@@ -23,6 +23,6 @@ import { createSignalsStore } from "./utils";
 export function useSignalsReactive(sync?: boolean) {
   const store = useConst(() => createSignalsStore(sync));
   useSyncExternalStore(store.subscribe, store.getVersion, store.getVersion);
-  const { [Symbol.dispose]: dispose } = context.setupSubscriptionContext(store.effect);
+  const { [Symbol.dispose]: dispose } = context.setup({ type: "subscription", render: true, listener: store.effect });
   return { effect: store.effect, [Symbol.dispose]: dispose };
 }

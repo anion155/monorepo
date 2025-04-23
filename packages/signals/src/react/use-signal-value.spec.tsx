@@ -14,19 +14,4 @@ describe("useSignalValue()", () => {
     act(() => state.set(6));
     expect(hook.result.current).toBe(6);
   });
-
-  it("should subscribe to fields", () => {
-    const state = new SignalState({ a: 1, b: 1 });
-    const hook = renderHook(() => useSignalValue(state).a);
-    expect(hook.result.current).toBe(1);
-    expect(hook.result.times).toBe(1);
-
-    act(() => state.field("b").set(2));
-    expect(hook.result.current).toBe(1);
-    expect(hook.result.times).toBe(1);
-
-    act(() => state.field("a").set(2));
-    expect(hook.result.current).toBe(2);
-    expect(hook.result.times).toBe(2);
-  });
 });

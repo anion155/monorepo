@@ -9,5 +9,5 @@ import { createSignalsStore } from "./utils";
 export function useSignalValue<Value>(signal: SignalDependency & SignalReadonly<Value>) {
   const store = useConst(createSignalsStore);
   useRenderEffect(() => depends.bind(store.effect, signal), [signal, store.effect]);
-  return useSyncExternalStore(store.subscribe, () => signal.snapshot(store.effect));
+  return useSyncExternalStore(store.subscribe, () => signal.peak());
 }

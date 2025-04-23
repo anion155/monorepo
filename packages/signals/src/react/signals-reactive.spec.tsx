@@ -9,8 +9,8 @@ describe("signalsReactive()", () => {
   it("should create component from render function", () => {
     const state = new SignalState(5);
     const logger = jest.fn<Functor<unknown[], unknown>>();
-    const renderComponent = ({ value }: { value: number }, effect: SignalEffect) => {
-      logger(effect);
+    const renderComponent = ({ value }: { value: number }) => {
+      logger(signalsReactive.getEffect());
       return (
         <>
           <div data-testid="value">value: {value}</div>

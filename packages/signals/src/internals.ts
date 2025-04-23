@@ -4,7 +4,7 @@ import type { SignalDependency, SignalListener } from "./types";
 
 export type SignalsContext =
   | { type: "empty" }
-  | { type: "subscription"; listener: SignalListener }
+  | { type: "subscription"; listener: SignalListener; render?: boolean }
   | { type: "batching"; invalidate: (value: SignalDependency) => void };
 const stack = createContextStack<SignalsContext>({ type: "empty" });
 

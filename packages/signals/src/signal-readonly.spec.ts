@@ -19,17 +19,21 @@ describe("class SignalReadonly", () => {
     invalidate(): void {}
   }
 
-  it(".get() should subscribe listener in context to current signal", () => {
+  it(".subscribe() should subscribe listener in context to current signal", () => {
     const signalA = new TestSignal(0);
     const signalB = new TestSignal(1);
     const signalC = new TestSignal(2, false);
     using _subscription = context.setupSubscriptionContext(signalA);
 
-    expect(signalB.get()).toBe(1);
+    signalB.subscribe();
     expect(depends.rank(signalA, signalB)).toBe(1);
 
-    expect(signalC.get()).toBe(2);
+    signalC.subscribe();
     expect(depends.rank(signalA, signalC)).toBe(-1);
+  });
+
+  it(".get() should return current value", () => {
+    expect(new TestSignal(0).get()).toBe(0);
   });
 
   it(".value should wrap .get() method", () => {
