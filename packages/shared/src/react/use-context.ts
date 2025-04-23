@@ -1,4 +1,5 @@
-import { Context, useContext as useContextOrig } from "react";
+import type { Context } from "react";
+import { useContext as useContextOrig } from "react";
 
 import { DeveloperError } from "../errors";
 
