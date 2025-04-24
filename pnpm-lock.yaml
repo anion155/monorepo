@@ -65,6 +65,28 @@ importers:
         specifier: ^8.3.2
         version: 8.3.2
 
+  packages/logger:
+    dependencies:
+      '@anion155/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      '@anion155/configs':
+        specifier: workspace:*
+        version: link:../configs
+      '@jest/globals':
+        specifier: ^29.7.0
+        version: 29.7.0
+      eslint:
+        specifier: ^9.21.0
+        version: 9.21.0(jiti@2.4.2)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.13.8)
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.2
+
   packages/polyfill-base:
     devDependencies:
       '@anion155/configs':
