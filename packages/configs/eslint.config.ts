@@ -94,7 +94,7 @@ export const react: Linter.Config[] = [
       ...reactPlugin.configs.recommended.rules,
       ...reactPlugin.configs["jsx-runtime"].rules,
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": ["warn", { additionalHooks: "(useRenderEffect)" }],
+      "react-hooks/exhaustive-deps": ["warn", { additionalHooks: "(useRenderEffect|useFabric)" }],
     },
   },
 ];

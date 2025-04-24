@@ -1,4 +1,5 @@
-import { DependencyList, EffectCallback, useEffect } from "react";
+import type { DependencyList, EffectCallback } from "react";
+import { useEffect } from "react";
 
 import { useStableCallback } from "./use-stable-callback";
 import { useRenderDispatcher } from "./utils/use-render-dispatcher";

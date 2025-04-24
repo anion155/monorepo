@@ -15,7 +15,7 @@ import { DeveloperError } from "../errors";
  * ...
  * useSpecificContext(); // => SpecificValue
  */
-export const createUseContext = <T>(context: Context<T>, name: string = context.displayName ?? "") => {
+export function createUseContext<T>(context: Context<T>, name: string = context.displayName ?? "") {
   /** Resolves context value for {@link context} */
   function useContext(optional: true): Exclude<T, undefined> | undefined;
   function useContext(optional?: false): Exclude<T, undefined>;
@@ -26,4 +26,4 @@ export const createUseContext = <T>(context: Context<T>, name: string = context.
     return value as unknown;
   }
   return useContext;
-};
+}

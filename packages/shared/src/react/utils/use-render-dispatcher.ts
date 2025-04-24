@@ -1,4 +1,5 @@
-import { DependencyList, useRef } from "react";
+import type { DependencyList } from "react";
+import { useRef } from "react";
 
 import { compare } from "../../misc";
 
