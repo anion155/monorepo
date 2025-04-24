@@ -1,3 +1,5 @@
+import "./signal-computed-extensions";
+
 import { ignoreError } from "@anion155/shared";
 import { describe, expect, it, jest } from "@jest/globals";
 

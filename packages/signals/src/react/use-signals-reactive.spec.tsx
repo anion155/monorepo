@@ -1,7 +1,7 @@
 import { act, render, screen } from "@anion155/shared/react";
 import { describe, expect, it } from "@jest/globals";
 
-import { SignalState } from "../state";
+import { SignalState } from "../index";
 import { useSignalsReactive } from "./use-signals-reactive";
 
 describe("useSignalsReactive()", () => {

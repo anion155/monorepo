@@ -13,8 +13,7 @@ describe("class SignalEffect", () => {
     const effectSpy = jest.fn();
     const cleanupSpy = jest.fn();
     const effect = new SignalEffect(() => {
-      const { c, d } = stateB.snapshot();
-      effectSpy(stateA.value + c + d);
+      effectSpy(stateA.value + stateB.get("c") + stateB.get("d"));
       return cleanupSpy;
     });
 

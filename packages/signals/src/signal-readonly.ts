@@ -4,6 +4,9 @@ import { context, depends } from "./internals";
 import { Signal } from "./signal";
 
 /** Value Signal implementation of read methods. */
+export interface SignalReadonly<Value> {
+  get(): Value; // implemented in signal-computed-extensions
+}
 export abstract class SignalReadonly<Value> extends Signal {
   abstract peak(): Value;
 
@@ -21,13 +24,9 @@ export abstract class SignalReadonly<Value> extends Signal {
     if (depends.dependents.has(this)) context.handleSubscriptionContext(this);
   }
 
-  get(): Value {
+  get value(): Value {
     this.subscribe();
     return this.peak();
-  }
-
-  get value(): Value {
-    return this.get();
   }
 
   toJSON(): Value {

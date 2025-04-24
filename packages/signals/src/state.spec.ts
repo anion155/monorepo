@@ -1,3 +1,5 @@
+import "./signal-computed-extensions";
+
 import { describe, expect, it, jest } from "@jest/globals";
 
 import { context, depends } from "./internals";

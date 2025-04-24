@@ -4,17 +4,18 @@ import { SignalReadonly } from "./signal-readonly";
 
 /** Value Signal implementation of write methods. */
 export abstract class SignalWritable<Value> extends SignalReadonly<Value> {
-  abstract set(next: Value): void;
+  protected abstract _set(next: Value): void;
 
   get value() {
-    return this.get();
+    this.subscribe();
+    return this.peak();
   }
   set value(next: Value) {
-    this.set(next);
+    this._set(next);
   }
 
   update(modifier: (current: Value) => Value) {
-    this.set(modifier(this.peak()));
+    this._set(modifier(this.peak()));
   }
 }
 defineToStringTag(SignalWritable);

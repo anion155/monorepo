@@ -3,7 +3,7 @@ import "../signal-computed-extensions";
 import { act, renderHook } from "@anion155/shared/react";
 import { describe, expect, it } from "@jest/globals";
 
-import { SignalState } from "../state";
+import { SignalState } from "../index";
 import { useSignalValue } from "./use-signal-value";
 
 describe("useSignalValue()", () => {

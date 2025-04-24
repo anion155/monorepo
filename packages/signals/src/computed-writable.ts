@@ -35,7 +35,7 @@ export class SignalWritableComputed<Value> extends SignalWritable<Value> impleme
   peak() {
     return this.#current;
   }
-  set(value: Value) {
+  protected _set(value: Value) {
     if (value === this.#current) return;
     this.#current = value;
     using batching = context.setupBatchingContext();

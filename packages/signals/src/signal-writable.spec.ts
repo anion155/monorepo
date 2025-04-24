@@ -17,7 +17,7 @@ describe("class SignalWritable", () => {
     #current: Value;
     peak = () => this.#current;
     invalidate = jest.fn();
-    set = (next: Value) => {
+    _set = (next: Value) => {
       this.#current = next;
     };
   }

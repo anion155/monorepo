@@ -1,3 +1,5 @@
+import "./signal-computed-extensions";
+
 import { describe, expect, it } from "@jest/globals";
 
 import { context, depends } from "./internals";
@@ -32,11 +34,7 @@ describe("class SignalReadonly", () => {
     expect(depends.rank(signalA, signalC)).toBe(-1);
   });
 
-  it(".get() should return current value", () => {
-    expect(new TestSignal(0).get()).toBe(0);
-  });
-
-  it(".value should wrap .get() method", () => {
+  it(".value should subscribe and return value", () => {
     const signalA = new TestSignal(0);
     const signalB = new TestSignal(1);
     using _subscription = context.setupSubscriptionContext(signalA);

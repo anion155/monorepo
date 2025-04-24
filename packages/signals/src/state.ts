@@ -19,7 +19,7 @@ export class SignalState<Value> extends SignalWritable<Value> implements SignalV
   peak() {
     return this.#current;
   }
-  set(value: Value) {
+  protected _set(value: Value) {
     if (value === this.#current) return;
     this.#current = value;
     using batching = context.setupBatchingContext();

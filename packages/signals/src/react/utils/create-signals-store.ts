@@ -1,7 +1,6 @@
 import { incrementGenerator } from "@anion155/shared";
 
-import { SignalEffect } from "../../effect";
-import { SignalEffectAsync } from "../../effect-async";
+import { SignalEffect, SignalEffectAsync } from "../../index";
 
 export type SignalsStore = {
   effect: SignalEffect;
