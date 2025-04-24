@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { assert, AssertionError, AssertPredicate, assertPredicate } from "./asserts";
+import type { AssertPredicate } from "./asserts";
+import { assert, AssertionError, assertPredicate } from "./asserts";
 
 describe("asserts utils", () => {
   describe("class AssertionError", () => {
