@@ -2,7 +2,6 @@
   "folders": [
     { "path": "packages/react-selectable-context" },
     { "path": "packages/signals" },
-    { "path": "packages/logger" },
     { "path": "packages/shared" },
     { "path": "packages/proposal-promise-with-resolvers" },
     { "path": "packages/proposal-explicit-resource-management" },
@@ -15,6 +14,6 @@
   "settings": {
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
-    "jest.disabledWorkspaceFolders": ["monorepo-bun"]
+    "jest.disabledWorkspaceFolders": ["monorepo", "configs", "polyfill-base"]
   }
 }

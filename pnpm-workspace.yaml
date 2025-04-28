@@ -1,6 +1,2 @@
 packages:
   - packages/*
-
-filter:
-  - '!configs'
-  - '!polyfill-base'
