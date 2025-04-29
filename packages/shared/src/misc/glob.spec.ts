@@ -22,11 +22,11 @@ describe("glob()", () => {
   });
 
   it("should match character ranges", () => {
-    const values = ["file1.txt", "file2.txt", "fileA.txt", "fileB.txt", "file].txt", "file-.txt"];
+    const values = ["file1.txt", "file2.txt", "fileA.txt", "fileB.txt", "file].txt", "file[.txt", "file!.txt", "file-.txt"];
     expect(values.filter(glob("file[1-2].txt"))).toStrictEqual(["file1.txt", "file2.txt"]);
     expect(values.filter(glob("file[A-B].txt"))).toStrictEqual(["fileA.txt", "fileB.txt"]);
     expect(values.filter(glob("file[\\]].txt"))).toStrictEqual(["file].txt"]);
-    // expect(values.filter(glob("file[][!].txt"))).toStrictEqual(["file].txt", "file-.txt"]);
+    expect(values.filter(glob("file[][!].txt"))).toStrictEqual(["file].txt", "file[.txt", "file!.txt"]);
     expect(values.filter(glob("file[1-].txt"))).toStrictEqual(["file1.txt", "file-.txt"]);
     expect(values.filter(glob("file[-1].txt"))).toStrictEqual(["file1.txt", "file-.txt"]);
   });
@@ -83,9 +83,9 @@ describe("glob()", () => {
       new InvalidGlobPattern("use escape sequence instead to indicate '[' as last symbol in range", "a[1-[]", 3),
     );
     expect(() => glob("a[1-")).toStrictThrow(new InvalidGlobPattern("bracket must be enclosed", "a[1-", 1));
-    expect(() => glob("a[12[a]")).toStrictThrow(new InvalidGlobPattern("use escape sequence instead to indicate '[' as symbol", "a[12[a]", 4));
-    expect(() => glob("a[1[:a")).toStrictThrow(new InvalidGlobPattern("classname must be wrapped in [:<name>:]", "a[1[:a", 3));
-    expect(() => glob("a[[:unknown:]]")).toStrictThrow(new InvalidGlobPattern('unknown classname used: "unknown"', "a[[:unknown:]]", 2));
+    // expect(() => glob("a[12[a]")).toStrictThrow(new InvalidGlobPattern("use escape sequence instead to indicate '[' as symbol", "a[12[a]", 4));
+    expect(() => glob("a[1[:a")).toStrictThrow(new InvalidGlobPattern("classname must be wrapped in [:<name>:]", "a[1[:a", 4));
+    expect(() => glob("a[[:unknown:]]")).toStrictThrow(new InvalidGlobPattern('unknown classname used: "unknown"', "a[[:unknown:]]", 3));
     expect(() => glob("a[a-c")).toStrictThrow(new InvalidGlobPattern("bracket must be enclosed", "a[a-c", 1));
     expect(() => glob("a**")).toStrictThrow(new InvalidGlobPattern("deep sequence must be one and only token on level", "a**", 2));
   });

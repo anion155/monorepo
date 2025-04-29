@@ -44,26 +44,22 @@ const classnames = (() => {
     xdigit: digit + createRange("a", "f") + createRange("A", "F"),
   };
 })();
-function tokenizeGlobClassname(pattern: string, index: number) {
-  const classnameStart = index;
+function tokenizeGlobSymbols(debugName: string, symbolsMap: Record<string, string>, wrapper: string, pattern: string, index: number) {
+  const start = index;
   index += 1;
-  if (pattern[index] !== ":") {
-    throw new InvalidGlobPattern("use escape sequence instead to indicate '[' as symbol", pattern, classnameStart);
-  }
-  index += 1;
-  let classname = "";
+  let value = "";
   while (index < pattern.length) {
-    if (pattern[index] === ":") {
+    if (pattern[index] === wrapper) {
       index += 1;
-      if (pattern[index] !== "]") throw new InvalidGlobPattern("classname must be wrapped in [:<name>:]", pattern, classnameStart);
+      if (pattern[index] !== "]") throw new InvalidGlobPattern(`${debugName} must be wrapped in [${wrapper}<name>${wrapper}]`, pattern, start);
       break;
     }
-    classname += pattern[index];
+    value += pattern[index];
     index += 1;
   }
-  if (pattern[index] === undefined) throw new InvalidGlobPattern("classname must be wrapped in [:<name>:]", pattern, classnameStart);
-  const symbols = classnames[classname as never] as string | undefined;
-  if (symbols === undefined) throw new InvalidGlobPattern(`unknown classname used: "${classname}"`, pattern, classnameStart);
+  if (pattern[index] === undefined) throw new InvalidGlobPattern(`${debugName} must be wrapped in [${wrapper}<name>${wrapper}]`, pattern, start);
+  const symbols = symbolsMap[value as never] as string | undefined;
+  if (symbols === undefined) throw new InvalidGlobPattern(`unknown ${debugName} used: "${value}"`, pattern, start);
   index += 1;
 
   return { symbols, index };
@@ -110,14 +106,35 @@ function tokenizeGlobBrackets(pattern: string, index: number) {
       index += 1;
       handleRange(code);
     } else if (pattern[index] === "[") {
-      let symbols: string;
-      ({ symbols, index } = tokenizeGlobClassname(pattern, index));
-      for (let symbolIndex = 0; symbolIndex < symbols.length; symbolIndex += 1) {
-        codes.add(symbols.charCodeAt(symbolIndex));
+      if (pattern[index + 1] === ":") {
+        let symbols: string;
+        index += 1;
+        ({ symbols, index } = tokenizeGlobSymbols("classname", classnames, ":", pattern, index));
+        for (let symbolIndex = 0; symbolIndex < symbols.length; symbolIndex += 1) {
+          codes.add(symbols.charCodeAt(symbolIndex));
+        }
+        // } else if (pattern[index + 1] === ".") {
+        //   let symbols: string;
+        //   index += 1;
+        //   ({ symbols, index } = tokenizeGlobSymbols("collating", {}, ".", pattern, index));
+        //   for (let symbolIndex = 0; symbolIndex < symbols.length; symbolIndex += 1) {
+        //     codes.add(symbols.charCodeAt(symbolIndex));
+        //   }
+        // } else if (pattern[index + 1] === "=") {
+        //   let symbols: string;
+        //   index += 1;
+        //   ({ symbols, index } = tokenizeGlobSymbols("equivalence", {}, "=", pattern, index));
+        //   for (let symbolIndex = 0; symbolIndex < symbols.length; symbolIndex += 1) {
+        //     codes.add(symbols.charCodeAt(symbolIndex));
+        //   }
+      } else {
+        codes.add("[".charCodeAt(0));
+        index += 1;
       }
     } else if (pattern[index] === "]") {
       if (index - bracketsStart <= 1) {
         codes.add(pattern.charCodeAt(index));
+        index += 1;
       } else {
         index += 1;
         break;
