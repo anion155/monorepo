@@ -8,6 +8,174 @@ export class InvalidGlobPattern extends createErrorClass("InvalidGlobPattern", "
   ) {
     super(message);
   }
+
+  toString(tab: string = "") {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    return `${super.toString()}:\n${tab}${this.pattern}\n${tab}${Array.from({ length: this.index }, () => " ").join("")}^`;
+  }
+}
+
+type GlobToken =
+  | { type: "character"; code: number }
+  | { type: "sequence" }
+  | { type: "deep" }
+  | { type: "include"; codes: Set<number> }
+  | { type: "exclude"; codes: Set<number> };
+
+const classnames = (() => {
+  function createRange(from: string, to: string) {
+    let result = "";
+    for (let code = from.charCodeAt(0), end = to.charCodeAt(0); code <= end; code += 1) {
+      result += String.fromCharCode(code);
+    }
+    return result;
+  }
+  const digit = createRange("0", "9");
+  const lower = createRange("a", "z");
+  const upper = createRange("A", "Z");
+  return {
+    alnum: digit + lower + upper,
+    alpha: lower + upper,
+    digit,
+    lower,
+    upper,
+    space: " \t\n\v\f\r",
+    punct: "!\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~",
+    xdigit: digit + createRange("a", "f") + createRange("A", "F"),
+  };
+})();
+function tokenizeGlobClassname(pattern: string, index: number) {
+  const classnameStart = index;
+  index += 1;
+  if (pattern[index] !== ":") {
+    throw new InvalidGlobPattern("use escape sequence instead to indicate '[' as symbol", pattern, classnameStart);
+  }
+  index += 1;
+  let classname = "";
+  while (index < pattern.length) {
+    if (pattern[index] === ":") {
+      index += 1;
+      if (pattern[index] !== "]") throw new InvalidGlobPattern("classname must be wrapped in [:<name>:]", pattern, classnameStart);
+      break;
+    }
+    classname += pattern[index];
+    index += 1;
+  }
+  if (pattern[index] === undefined) throw new InvalidGlobPattern("classname must be wrapped in [:<name>:]", pattern, classnameStart);
+  const symbols = classnames[classname as never] as string | undefined;
+  if (symbols === undefined) throw new InvalidGlobPattern(`unknown classname used: "${classname}"`, pattern, classnameStart);
+  index += 1;
+
+  return { symbols, index };
+}
+
+function tokenizeGlobBrackets(pattern: string, index: number) {
+  const bracketsStart = index;
+  index += 1;
+  let type: "include" | "exclude" = "include";
+  if (pattern[index] === "!") {
+    type = "exclude";
+    index += 1;
+  }
+  if (pattern[index] === undefined) {
+    throw new InvalidGlobPattern("bracket must be enclosed", pattern, bracketsStart);
+  }
+  const codes = new Set<number>();
+  function handleRange(from: number) {
+    const rangePos = index;
+    if (pattern[index] !== "-") return;
+    index += 1;
+    if (pattern[index] === "]") {
+      codes.add("-".charCodeAt(0));
+      return;
+    }
+    if (pattern[index] === "[") {
+      throw new InvalidGlobPattern("use escape sequence instead to indicate '[' as last symbol in range", pattern, rangePos);
+    }
+    if (pattern[index] === "\\") {
+      index += 1;
+    }
+    if (pattern[index] === undefined) {
+      throw new InvalidGlobPattern("bracket must be enclosed", pattern, bracketsStart);
+    }
+    const to = pattern.charCodeAt(index);
+    for (let code = from + 1; code <= to; code += 1) codes.add(code);
+  }
+  while (index < pattern.length) {
+    if (pattern[index] === "\\") {
+      index += 1;
+      if (pattern[index] === undefined) throw new InvalidGlobPattern("escape can not be finishing character", pattern, index - 1);
+      const code = pattern.charCodeAt(index);
+      codes.add(code);
+      index += 1;
+      handleRange(code);
+    } else if (pattern[index] === "[") {
+      let symbols: string;
+      ({ symbols, index } = tokenizeGlobClassname(pattern, index));
+      for (let symbolIndex = 0; symbolIndex < symbols.length; symbolIndex += 1) {
+        codes.add(symbols.charCodeAt(symbolIndex));
+      }
+    } else if (pattern[index] === "]") {
+      if (index - bracketsStart <= 1) {
+        codes.add(pattern.charCodeAt(index));
+      } else {
+        index += 1;
+        break;
+      }
+    } else {
+      const code = pattern.charCodeAt(index);
+      codes.add(code);
+      index += 1;
+      handleRange(code);
+    }
+  }
+  if (pattern[index] === undefined) throw new InvalidGlobPattern("bracket must be enclosed", pattern, bracketsStart);
+  return { token: { type, codes } as Extract<GlobToken, { type: "include" | "exclude" }>, index };
+}
+
+function tokenizeGlob(pattern: string, separator: string): ReadonlyArray<ReadonlyArray<Readonly<GlobToken>>> {
+  const tokens = [[]] as GlobToken[][];
+  let tokensIndex = 0;
+  let index = 0;
+  while (index < pattern.length) {
+    if (pattern[index] === separator) {
+      tokensIndex += 1;
+      tokens[tokensIndex] = [];
+      index += 1;
+    } else if (pattern[index] === "\\") {
+      index += 1;
+      if (pattern[index] === undefined) throw new InvalidGlobPattern("escape can not be finishing character", pattern, index - 1);
+      tokens[tokensIndex].push({ type: "character", code: pattern.charCodeAt(index) });
+      index += 1;
+    } else if (pattern[index] === "?") {
+      tokens[tokensIndex].push({ type: "exclude", codes: new Set() });
+      index += 1;
+    } else if (pattern[index] === "[") {
+      let token: GlobToken;
+      ({ token, index } = tokenizeGlobBrackets(pattern, index));
+      tokens[tokensIndex].push(token);
+    } else if (pattern[index] === "*") {
+      index += 1;
+      if (pattern[index] === "*") {
+        tokens[tokensIndex].push({ type: "deep" });
+        index += 1;
+      } else {
+        tokens[tokensIndex].push({ type: "sequence" });
+      }
+    } else {
+      tokens[tokensIndex].push({ type: "character", code: pattern.charCodeAt(index) });
+      index += 1;
+    }
+  }
+  if (!tokens.every((tokens) => tokens.every((token) => token.type !== "deep") || tokens.length === 1)) {
+    throw new InvalidGlobPattern("deep sequence must be one and only token on level", pattern, index - 1);
+  }
+  tokens.reduce((prev, tokens, index) => {
+    const curr = tokens.length === 1 && tokens[0].type === "deep";
+    if (prev && curr) throw new InvalidGlobPattern("deep sequence can not follow after another deep sequence", pattern, index - 1);
+    return curr;
+  }, false);
+  return tokens;
 }
 
 /**
@@ -35,164 +203,73 @@ export class InvalidGlobPattern extends createErrorClass("InvalidGlobPattern", "
  * \\     Matches the character following it verbatim. This is useful to quote the special
  *        characters ‘?’, ‘*’, ‘[’, and ‘\’ such that they lose their special meaning. For example,
  *        the pattern “\\\*\[x]\?” matches the string “\*[x]?”.
+ *
+ * @example
+ * // Match all `.js` files
+ * ["index.js", "style.css", "app.ts"].filter(glob("*.js")) // Output: ["index.js"]
+ * // Match files with exactly one character before `.txt`
+ * ["a.txt", "ab.txt", "c.txt"].filter(glob("?.txt")) // Output: ["a.txt", "c.txt"]
+ * // Match files starting with "file" and ending with any extension
+ * ["file.txt", "file.js", "test.txt"].filter(glob("file.*")) // Output: ["file.txt", "file.js"]
+ * // Match files with numbers in their names
+ * ["file1.txt", "fileA.txt", "file2.js"].filter(glob("file[0-9].*")) // Output: ["file1.txt", "file2.js"]
+ * // Match files that do NOT have numbers in their names
+ * ["file1.txt", "fileA.txt", "fileB.js"].filter(glob("file[!0-9].*")) // Output: ["fileA.txt", "fileB.js"]
+ * // Match files with specific character classes
+ * ["file1.txt", "fileA.txt", "file2.js"].filter(glob("file[:digit:].*")) // Output: ["file1.txt", "file2.js"]
+ * // Match files with escaped special characters
+ * ["file?.txt", "fileA.txt"].filter(glob("file\\?.txt")) // Output: ["file?.txt"]
  */
-export function glob(wildcard: string, values: Iterable<string>) {
-  let states = Iterator.from(values)
-    .map((value) => [value, 0 as number] as [string, number])
-    .toArray();
-  let index = 0;
-  function symbolsController() {
-    let exclude = false;
-    const symbols = new Set<number>();
-    const addString = (characters: string) => {
-      characters.split("").forEach((character) => symbols.add(character.charCodeAt(0)));
-    };
-    const addRange = (startCharacter: string, endCharacter: string) => {
-      for (let code = startCharacter.charCodeAt(0), end = endCharacter.charCodeAt(0); code <= end; code += 1) {
-        symbols.add(code);
+export function glob(pattern: string, separator: string = "/") {
+  const tokens = tokenizeGlob(pattern, separator);
+  Object.freeze(tokens);
+  Object.preventExtensions(tokens);
+  function execLevel(value: string, tokens: ReadonlyArray<Readonly<Exclude<GlobToken, { type: "deep" }>>>) {
+    let tokenIndex = 0;
+    let valueIndex = 0;
+    while (tokenIndex < tokens.length) {
+      if (value[valueIndex] === undefined) return false;
+      const token = tokens[tokenIndex];
+      if (token.type === "character") {
+        if (value.charCodeAt(valueIndex) !== token.code) return false;
+      } else if (token.type === "include") {
+        if (!token.codes.has(value.charCodeAt(valueIndex))) return false;
+      } else if (token.type === "exclude") {
+        if (token.codes.has(value.charCodeAt(valueIndex))) return false;
+      } else if (token.type === "sequence") {
+        while (valueIndex < value.length) {
+          if (execLevel(value.substring(valueIndex), tokens.slice(tokenIndex + 1))) return true;
+          valueIndex += 1;
+        }
+        return false;
       }
-    };
-    const merge = (controller: { exclude: boolean; symbols: Set<number> }) => {
-      exclude ||= controller.exclude;
-      controller.symbols.forEach((code) => symbols.add(code));
-    };
-    const run = () => {
-      if (exclude) states = states.filter((state) => !symbols.has(state[0].charCodeAt(state[1])));
-      else states = states.filter((state) => symbols.has(state[0].charCodeAt(state[1])));
-    };
-    return {
-      get exclude() {
-        return exclude;
-      },
-      set exclude(next: boolean) {
-        exclude = next;
-      },
-      symbols,
-      addString,
-      addRange,
-      merge,
-      run,
-    };
-  }
-  type SymbolsController = ReturnType<typeof symbolsController>;
-  function globBrackets() {
-    let bracketsStart = index;
-    index += 1;
-
-    const controller = symbolsController();
-    if (wildcard[index] === "!") {
-      controller.exclude = true;
-      index += 1;
-      bracketsStart += 1;
+      tokenIndex += 1;
+      valueIndex += 1;
     }
-    for (; index < wildcard.length; index += 1) {
-      if (wildcard[index] === "\\") {
-        controller.merge(globEscape());
-      } else if (wildcard[index] === "[" && wildcard[index + 1] === ":") {
-        index += 2;
-        const classnameStart = index;
-        let classname: string | undefined;
-        for (; index < wildcard.length; index += 1) {
-          if (wildcard[index] === "\\") index += 1;
-          else if (wildcard[index] === ":") {
-            index += 1;
-            if (wildcard[index] !== "]") {
-              throw new InvalidGlobPattern('classname must be enclosed with ":]" pattern', wildcard, classnameStart);
-            }
-            classname = wildcard.substring(classnameStart, index - 1);
-            break;
-          }
+    return true;
+  }
+  function execLevels(levels: string[], tokens: ReadonlyArray<ReadonlyArray<GlobToken>>) {
+    let levelIndex = 0;
+    let tokenIndex = 0;
+    while (levelIndex < levels.length) {
+      if (tokens[tokenIndex] === undefined) return false;
+      if (tokens[tokenIndex].length === 1 && tokens[tokenIndex][0].type === "deep") {
+        while (levelIndex < levels.length) {
+          if (execLevels(levels.slice(levelIndex), tokens.slice(tokenIndex + 1))) return true;
+          levelIndex += 1;
         }
-        if (classname === undefined) throw new InvalidGlobPattern("classname isn't found", wildcard, classnameStart);
-        else if (classname === "alnum") {
-          controller.addRange("0", "9");
-          controller.addRange("a", "z");
-          controller.addRange("A", "Z");
-        } else if (classname === "alpha") {
-          controller.addRange("a", "z");
-          controller.addRange("A", "Z");
-        } else if (classname === "digit") {
-          controller.addRange("0", "9");
-        } else if (classname === "lower") {
-          controller.addRange("a", "z");
-        } else if (classname === "upper") {
-          controller.addRange("A", "Z");
-        } else if (classname === "space") {
-          controller.addString(" \t\n\v\f\r");
-        } else if (classname === "punct") {
-          controller.addString("!\"#$%&'()*+,-./:;<=>?@[\\]^_{|}~");
-        } else if (classname === "xdigit") {
-          controller.addRange("0", "9");
-          controller.addRange("a", "f");
-          controller.addRange("A", "F");
-        } else throw new InvalidGlobPattern(`unknown classname used: "${classname}"`, wildcard, classnameStart);
-      } else if (wildcard[index] === "-") {
-        index += 1;
-        if (wildcard[index] === undefined) throw new InvalidGlobPattern("bracket must be enclosed", wildcard, bracketsStart);
-        if (wildcard[index] === "]") {
-          controller.symbols.add(wildcard.charCodeAt(index - 2));
-          controller.symbols.add("-".charCodeAt(0));
-          index -= 1;
-          continue;
-        }
-        if (index - bracketsStart === 2) {
-          controller.symbols.add("-".charCodeAt(0));
-          controller.symbols.add(wildcard.charCodeAt(index));
-          continue;
-        }
-        controller.addRange(wildcard[index - 2], wildcard[index]);
-      } else if (wildcard[index] === "]") {
-        break;
-      } else {
-        controller.symbols.add(wildcard.charCodeAt(index));
+        return false;
       }
+      if (!execLevel(levels[levelIndex], tokens[tokenIndex] as never)) return false;
+      levelIndex += 1;
+      tokenIndex += 1;
     }
-    if (index + 1 >= wildcard.length) throw new InvalidGlobPattern("bracket must be enclosed", wildcard, bracketsStart);
-    return controller;
+    return true;
   }
-  function globEscape() {
-    index += 1;
-    const controller = symbolsController();
-    if (wildcard[index] === undefined) throw new InvalidGlobPattern("escape can't be finishing character", wildcard, index - 1);
-    controller.symbols.add(wildcard.charCodeAt(index));
-    return controller;
+  function execGlob(value: string) {
+    return execLevels(value.split(separator), tokens);
   }
-  function globSymbol() {
-    const controller = symbolsController();
-    controller.symbols.add(wildcard.charCodeAt(index));
-    return controller;
-  }
-  for (; index < wildcard.length; index += 1) {
-    if (wildcard[index] === "\\") {
-      globEscape().run();
-    } else if (wildcard[index] === "*") {
-      index += 1;
-      if (wildcard[index] === "*") throw new InvalidGlobPattern("only nested glob supports double asterisks", wildcard, index);
-      if (wildcard[index] === undefined) return states.map(([value]) => value);
-      let controller: SymbolsController;
-      if (wildcard[index] === "\\") controller = globEscape();
-      else if (wildcard[index] === "[") controller = globBrackets();
-      else controller = globSymbol();
-      states = states.reduce(
-        (acc, [value, index]) => {
-          for (; index < value.length; index += 1) {
-            const contains = controller.symbols.has(value.charCodeAt(index));
-            if (controller.exclude ? contains : !contains) continue;
-            acc.push([value, index]);
-          }
-          return acc;
-        },
-        [] as [string, number][],
-      );
-    } else if (wildcard[index] === "?") states = states.filter((state) => state[0][state[1]] !== undefined);
-    else if (wildcard[index] === "[") {
-      globBrackets().run();
-    } else {
-      globSymbol().run();
-    }
-    if (states.length === 0) return [];
-    states.forEach((state) => (state[1] += 1));
-  }
-  states = states.filter((state) => state[0].length === state[1]);
-  return states.map(([value]) => value);
+  execGlob.tokens = tokens;
+  Object.defineProperty(execGlob, "tokens", { writable: false });
+  return execGlob;
 }
