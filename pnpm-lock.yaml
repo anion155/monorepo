@@ -240,6 +240,30 @@ importers:
         specifier: ^19.0.0
         version: 19.1.0
 
+  packages/yapc:
+    devDependencies:
+      '@anion155/configs':
+        specifier: workspace:*
+        version: link:../configs
+      '@anion155/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@jest/globals':
+        specifier: ^29.7.0
+        version: 29.7.0
+      '@testing-library/react':
+        specifier: ^16.2.0
+        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      eslint:
+        specifier: ^9.21.0
+        version: 9.25.1(jiti@2.4.2)
+      jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@types/node@22.15.3)
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.3
+
 packages:
 
   '@adobe/css-tools@4.4.2':
