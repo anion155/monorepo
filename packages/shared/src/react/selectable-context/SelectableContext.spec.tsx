@@ -1,6 +1,6 @@
-import { render } from "@anion155/shared/react";
 import { describe, expect, it, jest } from "@jest/globals";
 
+import { render } from "../test-utils";
 import { createSelectableContext } from "./index";
 
 describe("SelectableContext components group", () => {

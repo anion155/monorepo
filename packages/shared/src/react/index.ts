@@ -1,3 +1,4 @@
+export * from "./selectable-context";
 export * from "./test-utils";
 export * from "./use-const";
 export * from "./use-context";

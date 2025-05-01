@@ -1,7 +1,11 @@
-import { appendProperty, DeveloperError, hasField, identity } from "@anion155/shared";
-import { useConst } from "@anion155/shared/react";
 import type { Context as ReactContext, FC, ReactNode } from "react";
 import { createContext as createReactContext, useContext as useReactContext, useEffect, useSyncExternalStore } from "react";
+
+import { DeveloperError } from "../../errors";
+import { identity } from "../../functional";
+import { hasField } from "../../is";
+import { appendProperty } from "../../object";
+import { useConst } from "../use-const";
 
 export type SelectableContextController<Context> = {
   value: Context;
@@ -18,7 +22,7 @@ export type SelectableContext<Context> = {
   defaultValue: Context;
 };
 
-const InnerContextSymbol = Symbol.for("@anion155/react-selectable-context/inner-context");
+const InnerContextSymbol = Symbol.for("@anion155/shared/react/selectable-context/inner-context");
 
 const invalidController = Object.freeze({
   value: undefined,

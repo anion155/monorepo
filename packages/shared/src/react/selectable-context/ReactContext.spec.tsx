@@ -1,6 +1,7 @@
-import { render } from "@anion155/shared/react";
 import { expect, it, jest } from "@jest/globals";
 import { createContext } from "react";
+
+import { render } from "../test-utils";
 
 it("React.Context components group, Context.Consumer component render count", () => {
   const context = { type: "test-context-value", value: 1, meta: "blah" };
