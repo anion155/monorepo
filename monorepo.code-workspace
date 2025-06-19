@@ -1,6 +1,5 @@
 {
   "folders": [
-    { "path": "packages/yapc" },
     { "path": "packages/signals" },
     { "path": "packages/shared" },
     { "path": "packages/proposal-promise-with-resolvers" },
