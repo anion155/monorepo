@@ -1,15 +1,6 @@
-import {
-  appendMethod,
-  appendProperties,
-  appendProperty,
-  assignProperties,
-  create,
-  getOwnProperty,
-  getProperty,
-  PropertyDescriptorReadonly,
-  PropertyDescriptorWritable,
-} from "./object";
-import { Equal, Expect } from "./type-tests";
+import type { PropertyDescriptorReadonly, PropertyDescriptorWritable } from "./object";
+import { appendMethod, appendProperties, appendProperty, assignProperties, create, getOwnProperty, getProperty } from "./object";
+import type { Equal, Expect } from "./type-tests";
 
 const value = new (class {
   valueWritable = 1;
@@ -39,7 +30,7 @@ const value = new (class {
         PropertyDescriptorReadonly<number> | undefined,
         PropertyDescriptorWritable<number> | undefined,
         PropertyDescriptorReadonly<number> | undefined,
-        undefined
+        undefined,
       ]
     >
   >;
@@ -61,7 +52,7 @@ const value = new (class {
         PropertyDescriptorReadonly<number>,
         PropertyDescriptorWritable<number>,
         PropertyDescriptorReadonly<number>,
-        undefined
+        undefined,
       ]
     >
   >;

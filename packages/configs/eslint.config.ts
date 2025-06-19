@@ -6,6 +6,7 @@ import pluginJest from "eslint-plugin-jest";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import importSort from "eslint-plugin-simple-import-sort";
+import { globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 declare global {
@@ -27,6 +28,7 @@ export const base: Linter.Config[] = [
       "simple-import-sort/exports": "warn",
     },
   },
+  globalIgnores(["coverage/"]),
 ];
 
 export const typescript: Linter.Config[] = [

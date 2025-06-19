@@ -2,7 +2,8 @@ import "./disposable";
 
 import { describe, expect, it } from "@jest/globals";
 
-import { CircularDependencyError, createDependTools, Dependency, DependentDependency } from "./depend";
+import type { Dependency, DependentDependency } from "./depend";
+import { CircularDependencyError, createDependTools } from "./depend";
 
 describe("depend tools", () => {
   const depend = createDependTools();

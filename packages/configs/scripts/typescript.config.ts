@@ -21,7 +21,7 @@ const baseProject: TSConfig = {
 };
 const project: TSConfig = {
   extends: "./tsconfig.base.json",
-  exclude: ["dist", "coverage", "eslint.config.ts", "jest.config.js", "src/**/*.spec.ts", "src/**/*.spec.tsx"],
+  exclude: ["dist", "coverage", "jest.config.js", "src/**/*.spec.ts", "src/**/*.spec.tsx"],
   references: [{ path: "./tsconfig.jest.json" }],
 };
 const buildProject: TSConfig = {
@@ -32,6 +32,7 @@ const jestProject: TSConfig = {
   extends: "./tsconfig.base.json",
   compilerOptions: {
     target: "ES2024" as never,
+    types: ["node", "jest"],
     esModuleInterop: true,
     composite: true,
   },

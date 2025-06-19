@@ -125,7 +125,7 @@ describe("functional utils", () => {
 
   describe("liftContext()", () => {
     it("should provide context and arguments", () => {
-      const mock = jest.fn(() => "test");
+      const mock = jest.fn((..._params: unknown[]) => "test");
       const lifted = liftContext(mock);
       expect(lifted.call({ type: "context" }, 2, "5")).toBe("test");
       expect(mock).toHaveBeenCalledWith({ type: "context" }, 2, "5");

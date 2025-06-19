@@ -56,8 +56,8 @@ describe("Explicit resource management proposal", () => {
     it("adopt should schedule value for dispose with specific dispose method", async () => {
       const stack = new AsyncDisposableStack();
       const value = { type: "test-value" };
-      const disposable = jest.fn(() => {});
-      const asyncDisposable = jest.fn(async () => {});
+      const disposable = jest.fn((_v: unknown) => {});
+      const asyncDisposable = jest.fn(async (_v: unknown) => {});
       expect(stack.adopt(value, disposable)).toBe(value);
       expect(stack.adopt(value, asyncDisposable)).toBe(value);
 

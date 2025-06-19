@@ -119,11 +119,11 @@ export function is<Type extends IsType>(value: unknown, constrOrType: Type): val
   return value.constructor === constr;
 }
 /** Creates predicate that tests if value is of specified type */
-is.create = function createIs<Type extends IsType>(constrOrType: Type) {
-  if (typeof constrOrType === "string") return isTypeOf.create(constrOrType);
+is.create = function createIs<Type extends IsType>(constrOrType: Type): (value: unknown) => value is IsInferInstance<Type> {
+  if (typeof constrOrType === "string") return isTypeOf.create(constrOrType) as never;
   const constr = constrOrType as Constructable<unknown[], unknown>;
-  if (Object.is(constr, Object)) return isObject;
-  return curryHelper((value: unknown): value is IsInferInstance<Type> => is(value, constrOrType));
+  if (Object.is(constr, Object)) return isObject as never;
+  return curryHelper((value) => is(value, constrOrType));
 };
 
 /** Tests if value is truthy */

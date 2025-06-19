@@ -1,9 +1,11 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { render as baseRender } from "@testing-library/react";
-import { ContextType, createContext, FC, useContext, useMemo } from "react";
+import type { ContextType, FC } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 import { DeveloperError } from "../../../errors";
-import { createRender, createRenderHook, GlobalWrappers, globalWrappersPlaceholder, Wrapper } from "./base";
+import type { Wrapper } from "./base";
+import { createRender, createRenderHook, GlobalWrappers, globalWrappersPlaceholder } from "./base";
 
 describe("render test utils", () => {
   const ProviderA = "mock-provider-A" as never as Wrapper;
@@ -36,8 +38,8 @@ describe("render test utils", () => {
         baseRender(
           <ProviderB>
             <TestComponent />
-          </ProviderB>
-        ).container
+          </ProviderB>,
+        ).container,
       );
     });
 
@@ -52,8 +54,8 @@ describe("render test utils", () => {
             <ProviderC>
               <TestComponent />
             </ProviderC>
-          </ProviderB>
-        ).container
+          </ProviderB>,
+        ).container,
       );
     });
 
@@ -65,8 +67,8 @@ describe("render test utils", () => {
         baseRender(
           <ProviderA>
             <TestComponent />
-          </ProviderA>
-        ).container
+          </ProviderA>,
+        ).container,
       );
     });
 
@@ -83,8 +85,8 @@ describe("render test utils", () => {
                 <TestComponent />
               </ProviderC>
             </ProviderA>
-          </ProviderB>
-        ).container
+          </ProviderB>,
+        ).container,
       );
     });
 
@@ -99,8 +101,8 @@ describe("render test utils", () => {
             <ProviderC>
               <TestComponent />
             </ProviderC>
-          </ProviderB>
-        ).container
+          </ProviderB>,
+        ).container,
       );
     });
 
@@ -117,7 +119,7 @@ describe("render test utils", () => {
       // eslint-disable-next-line react/jsx-key
       const wrapper = globalWrappers.createWrapper([globalWrappersPlaceholder, <ProviderC />, globalWrappersPlaceholder], undefined);
       expect(() => baseRender(<TestComponent />, { wrapper })).toThrow(
-        new DeveloperError("globalWrappers.placeholder was used twice in wrappers array")
+        new DeveloperError("globalWrappers.placeholder was used twice in wrappers array"),
       );
     });
   });
@@ -132,8 +134,8 @@ describe("render test utils", () => {
         baseRender(
           <ProviderA>
             <TestComponent />
-          </ProviderA>
-        ).container
+          </ProviderA>,
+        ).container,
       );
     });
 
@@ -143,8 +145,8 @@ describe("render test utils", () => {
         baseRender(
           <ProviderB>
             <TestComponent />
-          </ProviderB>
-        ).container
+          </ProviderB>,
+        ).container,
       );
     });
 

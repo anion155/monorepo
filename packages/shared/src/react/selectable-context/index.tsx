@@ -39,11 +39,7 @@ export const useSelectableContext: {
   <Context>(Context: SelectableContext<Context>): Context;
 } = <Context, Selected>(Context: SelectableContext<Context>, selector: (value: Context) => Selected = identity as never) => {
   const controller = useSelectableContextController(Context);
-  return useSyncExternalStore(controller.subscribe, () => {
-    const result = selector(controller.value);
-    console.log("");
-    return result;
-  });
+  return useSyncExternalStore(controller.subscribe, () => selector(controller.value));
 };
 
 export function createSelectableContext<Context>(defaultValue: Context, displayName?: string): SelectableContext<Context> {

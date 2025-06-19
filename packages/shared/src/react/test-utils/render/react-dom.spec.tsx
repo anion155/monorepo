@@ -1,8 +1,9 @@
 import { describe, expect, it } from "@jest/globals";
 import { render as baseRender } from "@testing-library/react";
-import { ContextType, createContext, FC, useContext } from "react";
+import type { ContextType, FC } from "react";
+import { createContext, useContext } from "react";
 
-import { Wrapper } from "./base";
+import type { Wrapper } from "./base";
 import { globalWrappers, render, renderHook } from "./react-dom";
 
 describe("react-dom render utils", () => {
@@ -17,8 +18,8 @@ describe("react-dom render utils", () => {
       baseRender(
         <ProviderB>
           <TestComponent />
-        </ProviderB>
-      ).container
+        </ProviderB>,
+      ).container,
     );
   });
 

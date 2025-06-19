@@ -65,7 +65,7 @@ describe("do utils", () => {
   describe("doApply()", () => {
     it("should apply function to value", () => {
       const value = { type: "test-value" };
-      const apply = jest.fn(() => "return value");
+      const apply = jest.fn((..._params: unknown[]) => "return value");
       expect(doApply(value, apply)).toBeUndefined();
       expect(apply).toHaveBeenCalledWith(value);
     });
@@ -74,7 +74,7 @@ describe("do utils", () => {
   describe("doApplyAsync()", () => {
     it("should apply function to value", async () => {
       const value = { type: "test-value" };
-      const apply = jest.fn(() => Promise.resolve("return value"));
+      const apply = jest.fn((..._params: unknown[]) => Promise.resolve("return value"));
       await expect(doApply.async(value, apply)).resolves.toBeUndefined();
       expect(apply).toHaveBeenCalledWith(value);
     });

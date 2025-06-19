@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
-  "exclude": ["dist", "coverage", "eslint.config.ts", "jest.config.js", "src/**/*.spec.ts", "src/**/*.spec.tsx"],
+  "exclude": ["dist", "coverage", "jest.config.js", "src/**/*.spec.ts", "src/**/*.spec.tsx", "src/jest/**/*"],
   "references": [
     {
       "path": "./tsconfig.jest.json"

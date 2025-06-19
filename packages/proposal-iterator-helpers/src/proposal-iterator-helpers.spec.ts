@@ -59,7 +59,7 @@ describe("Iterator helpers proposal", () => {
         throw: jest.fn((error) => {
           throw error;
         }),
-      } as Iterator<number, number, undefined> & { "test-shadow-property": string };
+      } as Iterator<number, number, unknown> & { "test-shadow-property": string };
       const iterSimple = {
         next: jest.fn(() => ({ value: 5 })),
       } as Iterator<number>;
@@ -186,13 +186,13 @@ describe("Iterator helpers proposal", () => {
       ["Eiusmod consectetur", "nisi sint dolor"]
         .values()
         .flatMap((v) => v.split(" "))
-        .toArray()
+        .toArray(),
     ).toStrictEqual(["Eiusmod", "consectetur", "nisi", "sint", "dolor"]);
   });
 
   it("reduce should map returned resulted value", () => {
     expect(["Eiusmod", "consectetur", "nisi", "sint", "dolor"].values().reduce((acc, v) => `${acc} ${v}`)).toBe(
-      "Eiusmod consectetur nisi sint dolor"
+      "Eiusmod consectetur nisi sint dolor",
     );
   });
 });

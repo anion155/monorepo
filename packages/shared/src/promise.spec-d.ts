@@ -1,6 +1,6 @@
 import { isTypeOf } from "./is";
 import { isPromise, isPromiseLike } from "./promise";
-import { Equal, Expect } from "./type-tests";
+import type { Equal, Expect } from "./type-tests";
 
 const value = null as unknown;
 

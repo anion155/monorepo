@@ -1,5 +1,5 @@
-import { Equal, Expect } from "../type-tests";
 import { hasField, hasTypedField, is, isError, isObject, isTruthy, isTypeOf, isUndefined } from "./is";
+import type { Equal, Expect } from "./type-tests";
 
 const value = null as unknown;
 

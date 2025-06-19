@@ -5,7 +5,7 @@ import { useRenderDispatcher } from "./use-render-dispatcher";
 
 describe("useRenderDispatcher()", () => {
   const result = Symbol("test-result");
-  const onChange = jest.fn(() => result);
+  const onChange = jest.fn((..._params: unknown[]) => result);
 
   it("should return result and call onChange one time", () => {
     const hook = renderHook(useRenderDispatcher<symbol>, [1], onChange);

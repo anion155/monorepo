@@ -11,7 +11,7 @@ describe("SelectableContext components group", () => {
   };
   const Context = createSelectableContext<{ value: number; meta: string }>(context);
 
-  const renderer = jest.fn(() => null);
+  const renderer = jest.fn((_context: unknown) => null);
   const consumer = <Context.Consumer>{renderer}</Context.Consumer>;
 
   const valueRenderer = jest.fn(() => null);

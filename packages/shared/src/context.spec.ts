@@ -1,6 +1,7 @@
 import { describe, expect, it, jest } from "@jest/globals";
 
-import { createContextStack, InferContextStack } from "./context";
+import type { InferContextStack } from "./context";
+import { createContextStack } from "./context";
 
 describe("context utils", () => {
   describe("createContextStack()", () => {
