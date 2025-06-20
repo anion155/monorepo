@@ -9,7 +9,7 @@ import { useSignalValue } from "./use-signal-value";
 describe("useSignalValue()", () => {
   it("should subscribe component to signals", () => {
     const state = new SignalState(5);
-    const hook = renderHook(useSignalValue, state);
+    const hook = renderHook(useSignalValue<number>, state);
     expect(hook.result.current).toBe(5);
     act(() => state.set(6));
     expect(hook.result.current).toBe(6);
