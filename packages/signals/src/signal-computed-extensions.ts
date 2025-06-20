@@ -16,10 +16,100 @@ defineMethod(SignalReadonly.prototype, "map", function map<Value, Computed>(this
   return new SignalReadonlyComputed<Computed>(() => project(this.get()));
 });
 
+const same = {};
+
 declare module "./signal-readonly" {
   interface SignalReadonly<Value> {
-    /** Creates {@link SignalWritableComputed} that get value from current value on {@link field} */
-    field<Field extends keyof Value>(field: Field): SignalWritableComputed<Value[Field]>;
+    /** Creates {@link SignalReadonlyComputed} from current value */
+    view(): SignalReadonlyComputed<Value>;
+    /** Creates {@link SignalReadonlyComputed} that gets value from {@link field} */
+    view<Field extends keyof Value>(field: Field): SignalReadonlyComputed<Value[Field]>;
+    view<F1 extends keyof Value, F2 extends keyof Value[F1]>(field1: F1, field2: F2): SignalReadonlyComputed<Value[F1][F2]>;
+    view<F1 extends keyof Value, F2 extends keyof Value[F1], F3 extends keyof Value[F1][F2]>(
+      field1: F1,
+      field2: F2,
+      field3: F3,
+    ): SignalReadonlyComputed<Value[F1][F2][F3]>;
+    view<F1 extends keyof Value, F2 extends keyof Value[F1], F3 extends keyof Value[F1][F2], F4 extends keyof Value[F1][F2][F3]>(
+      field1: F1,
+      field2: F2,
+      field3: F3,
+      field4: F4,
+    ): SignalReadonlyComputed<Value[F1][F2][F3][F4]>;
+    view<
+      F1 extends keyof Value,
+      F2 extends keyof Value[F1],
+      F3 extends keyof Value[F1][F2],
+      F4 extends keyof Value[F1][F2][F3],
+      F5 extends keyof Value[F1][F2][F3][F4],
+    >(
+      field1: F1,
+      field2: F2,
+      field3: F3,
+      field4: F4,
+      field5: F5,
+    ): SignalReadonlyComputed<Value[F1][F2][F3][F4][F5]>;
+    view<Value>(...fields: [PropertyKey, PropertyKey, PropertyKey, PropertyKey, PropertyKey, ...PropertyKey[]]): SignalReadonlyComputed<Value>;
+  }
+}
+const views = new Stamper((signal: SignalReadonly<unknown>) => {
+  const map = Map.withFabric(
+    (field) =>
+      new SmartWeakRef(
+        () =>
+          new SignalReadonlyComputed(() => {
+            const value = signal.get();
+            return Reflect.get(value as never, field as never, value);
+          }),
+      ),
+  );
+  map.set(same, new SmartWeakRef(() => new SignalReadonlyComputed(() => signal.get())) as never);
+  return map;
+});
+defineMethod(SignalReadonly.prototype, "view", function view(this: SignalReadonly<unknown>, ...names: PropertyKey[]) {
+  let signal: SignalReadonlyComputed<unknown> = this as never;
+  if (names.length === 0) names = [same as never];
+  while (names.length > 0) {
+    signal = views.emplace(signal).emplace(names.shift()).emplace() as never;
+  }
+  return signal;
+} as never);
+
+declare module "./signal-readonly" {
+  interface SignalReadonly<Value> {
+    /** Creates {@link SignalWritableComputed} that wraps value in {@link field} */
+    field<Field extends WritableKeys<Value>>(field: Field): SignalWritableComputed<Value[Field]>;
+    field<F1 extends WritableKeys<Value>, F2 extends WritableKeys<Value[F1]>>(field1: F1, field2: F2): SignalWritableComputed<Value[F1][F2]>;
+    field<F1 extends WritableKeys<Value>, F2 extends WritableKeys<Value[F1]>, F3 extends WritableKeys<Value[F1][F2]>>(
+      field1: F1,
+      field2: F2,
+      field3: F3,
+    ): SignalWritableComputed<Value[F1][F2][F3]>;
+    field<
+      F1 extends WritableKeys<Value>,
+      F2 extends WritableKeys<Value[F1]>,
+      F3 extends WritableKeys<Value[F1][F2]>,
+      F4 extends WritableKeys<Value[F1][F2][F3]>,
+    >(
+      field1: F1,
+      field2: F2,
+      field3: F3,
+      field4: F4,
+    ): SignalWritableComputed<Value[F1][F2][F3][F4]>;
+    field<
+      F1 extends WritableKeys<Value>,
+      F2 extends WritableKeys<Value[F1]>,
+      F3 extends WritableKeys<Value[F1][F2]>,
+      F4 extends WritableKeys<Value[F1][F2][F3]>,
+      F5 extends WritableKeys<Value[F1][F2][F3][F4]>,
+    >(
+      field1: F1,
+      field2: F2,
+      field3: F3,
+      field4: F4,
+      field5: F5,
+    ): SignalWritableComputed<Value[F1][F2][F3][F4][F5]>;
+    field<Value>(...fields: [PropertyKey, PropertyKey, PropertyKey, PropertyKey, PropertyKey, ...PropertyKey[]]): SignalWritableComputed<Value>;
   }
 }
 const fields = new Stamper((signal: SignalReadonly<unknown>) => {
@@ -39,11 +129,12 @@ const fields = new Stamper((signal: SignalReadonly<unknown>) => {
     );
   });
 });
-defineMethod(SignalReadonly.prototype, "field", function field<Value, Field extends keyof Value>(this: SignalReadonly<Value>, field: Field) {
-  return fields
-    .emplace(this as never)
-    .emplace(field)
-    .emplace();
+defineMethod(SignalReadonly.prototype, "field", function field(this: SignalReadonly<unknown>, ...names: PropertyKey[]) {
+  let signal: SignalWritableComputed<unknown> = fields.emplace(this).emplace(names.shift()).emplace() as never;
+  while (names.length > 0) {
+    signal = fields.emplace(signal).emplace(names.shift()).emplace() as never;
+  }
+  return signal;
 } as never);
 
 declare module "./signal-readonly" {
@@ -71,7 +162,7 @@ declare module "./signal-readonly" {
       field4: F4,
       field5: F5,
     ): Value[F1][F2][F3][F4][F5];
-    get(...fields: PropertyKey[]): unknown;
+    get(...fields: [PropertyKey, PropertyKey, PropertyKey, PropertyKey, PropertyKey, ...PropertyKey[]]): unknown;
   }
 }
 defineMethod(SignalReadonly.prototype, "get", function get<Value>(this: SignalReadonly<Value>, ...fields: PropertyKey[]) {
@@ -86,41 +177,45 @@ defineMethod(SignalReadonly.prototype, "get", function get<Value>(this: SignalRe
 
 declare module "./signal-writable" {
   interface SignalWritable<Value> {
-    set(next: Value): void;
-    set<Field extends keyof Value>(field: Field, next: Value[Field]): void;
-    set<F1 extends keyof Value, F2 extends keyof Value[F1]>(field1: F1, field2: F2, next: Value[F1][F2]): void;
-    set<F1 extends keyof Value, F2 extends keyof Value[F1], F3 extends keyof Value[F1][F2]>(
+    set(next: NoInfer<Value>): void;
+    set<Field extends WritableKeys<Value>>(next: NoInfer<Value[Field]>, field: Field): void;
+    set<F1 extends WritableKeys<Value>, F2 extends WritableKeys<Value[F1]>>(next: NoInfer<Value[F1][F2]>, field1: F1, field2: F2): void;
+    set<F1 extends WritableKeys<Value>, F2 extends WritableKeys<Value[F1]>, F3 extends WritableKeys<Value[F1][F2]>>(
+      next: NoInfer<Value[F1][F2][F3]>,
       field1: F1,
       field2: F2,
       field3: F3,
-      next: Value[F1][F2][F3],
     ): void;
-    set<F1 extends keyof Value, F2 extends keyof Value[F1], F3 extends keyof Value[F1][F2], F4 extends keyof Value[F1][F2][F3]>(
+    set<
+      F1 extends WritableKeys<Value>,
+      F2 extends WritableKeys<Value[F1]>,
+      F3 extends WritableKeys<Value[F1][F2]>,
+      F4 extends WritableKeys<Value[F1][F2][F3]>,
+    >(
+      next: NoInfer<Value[F1][F2][F3][F4]>,
       field1: F1,
       field2: F2,
       field3: F3,
       field4: F4,
-      next: Value[F1][F2][F3][F4],
     ): void;
     set<
-      F1 extends keyof Value,
-      F2 extends keyof Value[F1],
-      F3 extends keyof Value[F1][F2],
-      F4 extends keyof Value[F1][F2][F3],
-      F5 extends keyof Value[F1][F2][F3][F4],
+      F1 extends WritableKeys<Value>,
+      F2 extends WritableKeys<Value[F1]>,
+      F3 extends WritableKeys<Value[F1][F2]>,
+      F4 extends WritableKeys<Value[F1][F2][F3]>,
+      F5 extends WritableKeys<Value[F1][F2][F3][F4]>,
     >(
+      next: NoInfer<Value[F1][F2][F3][F4][F5]>,
       field1: F1,
       field2: F2,
       field3: F3,
       field4: F5,
       field5: F5,
-      next: Value[F1][F2][F3][F4][F5],
     ): void;
+    set(next: unknown, ...params: [PropertyKey, PropertyKey, PropertyKey, PropertyKey, PropertyKey, ...PropertyKey[]]): void;
   }
 }
-defineMethod(SignalWritable.prototype, "set", function set<Value>(this: SignalWritable<Value>, ...params: unknown[]) {
-  const value = params.pop();
-  const fields = params as PropertyKey[];
+defineMethod(SignalWritable.prototype, "set", function set<Value>(this: SignalWritable<Value>, value: unknown, ...fields: PropertyKey[]) {
   let signal: SignalWritable<unknown> = this as never;
   while (fields.length > 0) {
     signal = signal.field(fields.shift() as never);

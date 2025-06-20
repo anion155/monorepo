@@ -35,17 +35,11 @@ declare global {
   type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? A : B;
 
   /** Return union of T writable keys */
-  type WritableKeys<T> = {
-    [P in keyof T]-?: IfEquals<{ [Q in P]: T[Q] }, { -readonly [Q in P]: T[Q] }, P>;
-  }[keyof T];
+  type WritableKeys<T> = Extract<{ [P in keyof T]-?: IfEquals<{ [Q in P]: T[Q] }, { -readonly [Q in P]: T[Q] }, P> }[keyof T], keyof T>;
   /** Return union of T readonly keys */
-  type ReadonlyKeys<T> = {
-    [P in keyof T]-?: IfEquals<{ [Q in P]: T[Q] }, { -readonly [Q in P]: T[Q] }, never, P>;
-  }[keyof T];
+  type ReadonlyKeys<T> = Extract<{ [P in keyof T]-?: IfEquals<{ [Q in P]: T[Q] }, { -readonly [Q in P]: T[Q] }, never, P> }[keyof T], keyof T>;
   /** Return union of T methods keys */
-  type MethodsKeys<T> = {
-    [P in keyof T]: T[P] extends Method<T, never, unknown> ? P : never;
-  }[keyof T];
+  type MethodsKeys<T> = { [P in keyof T]: T[P] extends Method<T, never, unknown> ? P : never }[keyof T];
 
   /** Splits array/tuple into head and rest, and puts it in tuple */
   type TupleUnshift<T extends unknown[]> = T extends []
