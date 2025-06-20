@@ -1,4 +1,9 @@
 {
   "name": "@anion155/monorepo",
-  "private": true
+  "private": true,
+  "scripts": {
+    "_packages": "pnpm -r --filter='!configs' --filter='!polyfill-base'",
+    "lint": "pnpm run _packages run lint",
+    "test": "pnpm run _packages run test"
+  }
 }
