@@ -8,6 +8,38 @@ importers:
 
   .: {}
 
+  packages/actions:
+    dependencies:
+      '@anion155/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      '@anion155/configs':
+        specifier: workspace:*
+        version: link:../configs
+      '@jest/globals':
+        specifier: ^30.0.0
+        version: 30.0.2
+      '@testing-library/react':
+        specifier: ^16.3.0
+        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react@19.1.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      eslint:
+        specifier: ^9.29.0
+        version: 9.29.0(jiti@2.4.2)
+      jest:
+        specifier: ^30.0.2
+        version: 30.0.2(@types/node@24.0.3)
+      prettier:
+        specifier: ^3.5.3
+        version: 3.5.3
+    optionalDependencies:
+      '@types/react':
+        specifier: ^19.1.18
+        version: 19.1.2
+      react:
+        specifier: ^19.1.0
+        version: 19.1.0
+
   packages/configs:
     dependencies:
       '@eslint-community/eslint-plugin-eslint-comments':
