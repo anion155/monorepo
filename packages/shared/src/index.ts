@@ -9,6 +9,7 @@ export * from "./fetch";
 export * from "./functional";
 export * from "./is";
 export * from "./is-iterable";
+export * from "./maybe";
 export * from "./misc";
 export * from "./object";
 export * from "./promise";
