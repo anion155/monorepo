@@ -1,5 +1,6 @@
 {
   "folders": [
+    { "path": "packages/games" },
     { "path": "packages/signals" },
     { "path": "packages/shared" },
     { "path": "packages/proposal-promise-with-resolvers" },

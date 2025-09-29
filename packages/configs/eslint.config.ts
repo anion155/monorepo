@@ -9,12 +9,6 @@ import importSort from "eslint-plugin-simple-import-sort";
 import { globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-declare global {
-  interface ImportMeta {
-    readonly dirname: string;
-  }
-}
-
 export const base: Linter.Config[] = [
   pluginJs.configs.recommended,
   prettier as never,
@@ -97,6 +91,8 @@ export const react: Linter.Config[] = [
       ...reactPlugin.configs["jsx-runtime"].rules,
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": ["warn", { additionalHooks: "(useRenderEffect|useFabric)" }],
+      "react/no-children-prop": "off",
+      "react/no-unknown-property": "off",
     },
   },
 ];
