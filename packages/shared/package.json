@@ -7,7 +7,8 @@
     "./global": "./src/global/index.ts",
     "./react": "./src/react/index.ts",
     "./jest": "./src/jest/index.ts",
-    "./shared.tsconfig.jest.json": "./shared.tsconfig.jest.json"
+    "./shared.tsconfig.jest.json": "./shared.tsconfig.jest.json",
+    "./vectors": "./src/vectors.ts"
   },
   "scripts": {
     "test": "jest src",
