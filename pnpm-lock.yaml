@@ -79,6 +79,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^5.0.3
         version: 5.0.3(vite@7.1.7(@types/node@24.0.3)(jiti@2.4.2)(terser@5.44.0)(yaml@2.8.1))
+      nanoid:
+        specifier: ^5.1.6
+        version: 5.1.6
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -233,7 +236,7 @@ importers:
         version: 30.0.2
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.0))(react@19.1.0)
+        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.9(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.1.1(react@19.1.0))(react@19.1.0)
       eslint:
         specifier: ^9.29.0
         version: 9.29.0(jiti@2.4.2)
@@ -246,7 +249,7 @@ importers:
     optionalDependencies:
       '@types/react':
         specifier: ^19.1.18
-        version: 19.1.13
+        version: 19.2.0
       expect:
         specifier: ^30.0.2
         version: 30.0.2
@@ -271,7 +274,7 @@ importers:
         version: 30.0.2
       '@testing-library/react':
         specifier: ^16.3.0
-        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.0))(react@19.1.0)
+        version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.9(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.1.1(react@19.1.0))(react@19.1.0)
       eslint:
         specifier: ^9.29.0
         version: 9.29.0(jiti@2.4.2)
@@ -284,7 +287,7 @@ importers:
     optionalDependencies:
       '@types/react':
         specifier: ^19.1.18
-        version: 19.1.13
+        version: 19.2.0
       react:
         specifier: ^19.1.0
         version: 19.1.0
@@ -1291,6 +1294,9 @@ packages:
 
   '@types/react@19.1.13':
     resolution: {integrity: sha512-hHkbU/eoO3EG5/MZkuFSKmYqPbSVk5byPFa3e7y/8TybHiLMACgI8seVYlicwk7H5K/rI2px9xrQp/C+AUDTiQ==}
+
+  '@types/react@19.2.0':
+    resolution: {integrity: sha512-1LOH8xovvsKsCBq1wnT4ntDUdCJKmnEakhsuoUSy6ExlHCkGP2hqnatagYTgFk6oeL0VU31u7SNjunPN+GchtA==}
 
   '@types/stack-utils@2.0.3':
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
@@ -2971,6 +2977,11 @@ packages:
   nanoid@3.3.11:
     resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+    hasBin: true
+
+  nanoid@5.1.6:
+    resolution: {integrity: sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg==}
+    engines: {node: ^18 || >=20}
     hasBin: true
 
   napi-postinstall@0.2.4:
@@ -5048,15 +5059,15 @@ snapshots:
       lodash: 4.17.21
       redent: 3.0.0
 
-  '@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.0))(react@19.1.0)':
+  '@testing-library/react@16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@19.1.9(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.1.1(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@babel/runtime': 7.27.1
       '@testing-library/dom': 10.4.0
       react: 19.1.0
       react-dom: 19.1.1(react@19.1.0)
     optionalDependencies:
-      '@types/react': 19.1.13
-      '@types/react-dom': 19.1.9(@types/react@19.1.13)
+      '@types/react': 19.2.0
+      '@types/react-dom': 19.1.9(@types/react@19.2.0)
 
   '@tybys/wasm-util@0.9.0':
     dependencies:
@@ -5120,9 +5131,9 @@ snapshots:
     dependencies:
       undici-types: 7.8.0
 
-  '@types/react-dom@19.1.9(@types/react@19.1.13)':
+  '@types/react-dom@19.1.9(@types/react@19.2.0)':
     dependencies:
-      '@types/react': 19.1.13
+      '@types/react': 19.2.0
     optional: true
 
   '@types/react-native-web@0.19.2(@babel/core@7.28.4)(react@19.1.1)':
@@ -5141,6 +5152,11 @@ snapshots:
   '@types/react@19.1.13':
     dependencies:
       csstype: 3.1.3
+
+  '@types/react@19.2.0':
+    dependencies:
+      csstype: 3.1.3
+    optional: true
 
   '@types/stack-utils@2.0.3': {}
 
@@ -7395,6 +7411,8 @@ snapshots:
   ms@2.1.3: {}
 
   nanoid@3.3.11: {}
+
+  nanoid@5.1.6: {}
 
   napi-postinstall@0.2.4: {}
 

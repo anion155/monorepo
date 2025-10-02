@@ -3,14 +3,16 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./global": "./src/global/index.ts",
     "./react": "./src/react/index.ts",
     "./jest": "./src/jest/index.ts",
     "./shared.tsconfig.jest.json": "./shared.tsconfig.jest.json",
     "./scheduler": "./src/scheduler.ts",
     "./event-emitter": "./src/event-emitter.ts",
-    "./vectors": "./src/vectors.ts"
+    "./vectors": "./src/vectors.ts",
+    "./ordered-map": "./src/ordered-map.ts",
+    "./react/merge-refs": "./src/react/merge-refs.ts",
+    ".": "./src/index.ts"
   },
   "scripts": {
     "test": "jest src",
