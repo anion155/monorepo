@@ -26,4 +26,16 @@ export class EventEmitter<Events extends Record<string, (...params: never) => vo
     if (!listeners) return;
     this.scheduler.schedule(() => listeners.forEach((listener) => listener(...(params as never))));
   }
+
+  events = new Proxy(
+    {},
+    {
+      get: (target, event) => {
+        if (!target[event as never]) {
+          target[event as never] = ((...params: never) => this.emit(event as never, ...params)) as never;
+        }
+        return target[event as never];
+      },
+    },
+  ) as Events;
 }
