@@ -20,20 +20,20 @@ export const immidiateScheduler: Scheduler<unknown> = {
 };
 
 export const microtaskScheduler: typeof globalThis extends { queueMicrotask: unknown } ? ReturnType<typeof createScheduler> : undefined = (
-  "queueMicrotask" in globalThis ? createScheduler(queueMicrotask) : undefined
+  "queueMicrotask" in globalThis ? createScheduler((fn) => globalThis.queueMicrotask(fn)) : undefined
 ) as never;
 
 export const rafScheduler: typeof globalThis extends { requestAnimationFrame: unknown } ? Scheduler<number> : undefined = (
   "requestAnimationFrame" in globalThis
     ? ({
-        schedule: requestAnimationFrame,
+        schedule: (fn) => globalThis.requestAnimationFrame(fn),
         cancel: cancelAnimationFrame,
       } as Scheduler<number>)
     : undefined
 ) as never;
 
 export const timeoutScheduler: Scheduler<ReturnType<typeof setTimeout>> = {
-  schedule: setTimeout,
+  schedule: (fn) => setTimeout(fn, 1),
   cancel: clearTimeout,
 };
 

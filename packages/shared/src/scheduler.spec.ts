@@ -1,7 +1,8 @@
 import "./global/disposable";
 
-import { afterAll, describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 
+import { runIsolated } from "./jest/run-isolated";
 import { immidiateScheduler, promiseScheduler, timeoutScheduler } from "./scheduler";
 
 describe("schedulers", () => {
@@ -21,117 +22,172 @@ describe("schedulers", () => {
   });
 
   describe("microtaskScheduler", () => {
-    jest.isolateModules(() => {
-      const stack = new DisposableStack();
-      if (!("queueMicrotask" in globalThis)) {
-        const queueMicrotask = (fn: () => void) => process.nextTick(fn);
-        Object.defineProperty(globalThis, "queueMicrotask", { value: queueMicrotask, configurable: true, writable: true, enumerable: false });
-        stack.append(() => {
-          delete (globalThis as never as { queueMicrotask?: typeof queueMicrotask }).queueMicrotask;
-        });
-      }
-      const queueMicrotask: (fn: () => void) => void = (globalThis as never as { queueMicrotask: typeof queueMicrotask }).queueMicrotask;
-      const { microtaskScheduler } = require("./scheduler") as typeof import("./scheduler");
-      afterAll(() => stack.dispose());
-
-      it("should run fn after queueMicrotask", async () => {
-        const spy = jest.fn<() => void>();
-        microtaskScheduler.schedule(spy);
-        const deferred = Promise.withResolvers<void>();
-        queueMicrotask(() => {
-          expect(spy).toHaveBeenCalledTimes(1);
-          deferred.resolve();
-        });
-        await deferred.promise;
-        expect.assertions(1);
+    it("should run fn after queueMicrotask", async () => {
+      using module = runIsolated((stack) => {
+        if (!("queueMicrotask" in globalThis)) {
+          const queueMicrotask = (fn: () => void) => process.nextTick(fn);
+          Object.defineProperty(globalThis, "queueMicrotask", { value: queueMicrotask, configurable: true, writable: true, enumerable: false });
+          stack.append(() => {
+            delete (globalThis as never as { queueMicrotask?: typeof queueMicrotask }).queueMicrotask;
+          });
+        }
+        const queueMicrotask: (fn: () => void) => void = (globalThis as never as { queueMicrotask: typeof queueMicrotask }).queueMicrotask;
+        const { microtaskScheduler } = require("./scheduler") as typeof import("./scheduler");
+        return { queueMicrotask, microtaskScheduler };
       });
-
-      it("should cancel", async () => {
-        const spy = jest.fn<() => void>();
-        const id = microtaskScheduler.schedule(spy);
-        microtaskScheduler.cancel(id);
-        const deferred = Promise.withResolvers<void>();
-        queueMicrotask(() => {
-          expect(spy).toHaveBeenCalledTimes(0);
-          deferred.resolve();
-        });
-        await deferred.promise;
-        expect.assertions(1);
+      const { queueMicrotask, microtaskScheduler } = module.value;
+      const spy = jest.fn<() => void>();
+      microtaskScheduler.schedule(spy);
+      const deferred = Promise.withResolvers<void>();
+      queueMicrotask(() => {
+        expect(spy).toHaveBeenCalledTimes(1);
+        deferred.resolve();
       });
+      await deferred.promise;
+      expect.assertions(1);
     });
 
-    jest.isolateModules(() => {
-      const stack = new DisposableStack();
-      if ("queueMicrotask" in globalThis) {
-        const queueMicrotask = Object.getOwnPropertyDescriptor(globalThis, "queueMicrotask")!;
-        delete (globalThis as never as { queueMicrotask?: typeof queueMicrotask }).queueMicrotask;
-        stack.append(() => Object.defineProperty(globalThis, "queueMicrotask", queueMicrotask));
-      }
-      const { microtaskScheduler } = require("./scheduler") as typeof import("./scheduler");
-      afterAll(() => stack.dispose());
-
-      it("should be undefined", () => {
-        expect(microtaskScheduler).toBe(undefined);
+    it("should cancel", async () => {
+      using module = runIsolated((stack) => {
+        if (!("queueMicrotask" in globalThis)) {
+          const queueMicrotask = (fn: () => void) => process.nextTick(fn);
+          Object.defineProperty(globalThis, "queueMicrotask", { value: queueMicrotask, configurable: true, writable: true, enumerable: false });
+          stack.append(() => {
+            delete (globalThis as never as { queueMicrotask?: typeof queueMicrotask }).queueMicrotask;
+          });
+        }
+        const queueMicrotask: (fn: () => void) => void = (globalThis as never as { queueMicrotask: typeof queueMicrotask }).queueMicrotask;
+        const { microtaskScheduler } = require("./scheduler") as typeof import("./scheduler");
+        return { queueMicrotask, microtaskScheduler };
       });
+      const { queueMicrotask, microtaskScheduler } = module.value;
+      const spy = jest.fn<() => void>();
+      const id = microtaskScheduler.schedule(spy);
+      microtaskScheduler.cancel(id);
+      const deferred = Promise.withResolvers<void>();
+      queueMicrotask(() => {
+        expect(spy).toHaveBeenCalledTimes(0);
+        deferred.resolve();
+      });
+      await deferred.promise;
+      expect.assertions(1);
+    });
+
+    it("without queueMicrotask should be undefined", () => {
+      using module = runIsolated((stack) => {
+        if ("queueMicrotask" in globalThis) {
+          const queueMicrotask = Object.getOwnPropertyDescriptor(globalThis, "queueMicrotask")!;
+          delete (globalThis as never as { queueMicrotask?: typeof queueMicrotask }).queueMicrotask;
+          stack.append(() => Object.defineProperty(globalThis, "queueMicrotask", queueMicrotask));
+        }
+        const { microtaskScheduler } = require("./scheduler") as typeof import("./scheduler");
+        return { microtaskScheduler };
+      });
+      const { microtaskScheduler } = module.value;
+      expect(microtaskScheduler).toBe(undefined);
     });
   });
 
   describe("rafScheduler", () => {
-    jest.isolateModules(() => {
-      const stack = new DisposableStack();
-      if (!("requestAnimationFrame" in globalThis)) {
-        const requestAnimationFrame = (fn: () => void) => {
-          let waiting = true;
-          process.nextTick(() => waiting && fn());
-          return () => (waiting = false);
-        };
-        Object.defineProperty(globalThis, "requestAnimationFrame", {
-          value: requestAnimationFrame,
-          configurable: true,
-          writable: true,
-          enumerable: false,
-        });
-        const cancelAnimationFrame = (cancel: () => void) => cancel();
-        Object.defineProperty(globalThis, "cancelAnimationFrame", {
-          value: cancelAnimationFrame,
-          configurable: true,
-          writable: true,
-          enumerable: false,
-        });
-        stack.append(() => {
+    it("should run fn after requestAnimationFrame", async () => {
+      using module = runIsolated((stack) => {
+        if (!("requestAnimationFrame" in globalThis)) {
+          const requestAnimationFrame = (fn: () => void) => {
+            let waiting = true;
+            process.nextTick(() => waiting && fn());
+            return () => (waiting = false);
+          };
+          Object.defineProperty(globalThis, "requestAnimationFrame", {
+            value: requestAnimationFrame,
+            configurable: true,
+            writable: true,
+            enumerable: false,
+          });
+          const cancelAnimationFrame = (cancel: () => void) => cancel();
+          Object.defineProperty(globalThis, "cancelAnimationFrame", {
+            value: cancelAnimationFrame,
+            configurable: true,
+            writable: true,
+            enumerable: false,
+          });
+          stack.append(() => {
+            delete (globalThis as never as { requestAnimationFrame?: typeof requestAnimationFrame }).requestAnimationFrame;
+            delete (globalThis as never as { cancelAnimationFrame?: typeof cancelAnimationFrame }).cancelAnimationFrame;
+          });
+        }
+        const requestAnimationFrame: (fn: () => void) => void = (globalThis as never as { requestAnimationFrame: typeof requestAnimationFrame })
+          .requestAnimationFrame;
+        const { rafScheduler } = require("./scheduler") as typeof import("./scheduler");
+        return { requestAnimationFrame, rafScheduler };
+      });
+      const { requestAnimationFrame, rafScheduler } = module.value;
+      const spy = jest.fn<() => void>();
+      rafScheduler.schedule(spy);
+      const deferred = Promise.withResolvers<void>();
+      requestAnimationFrame(() => {
+        expect(spy).toHaveBeenCalledTimes(1);
+        deferred.resolve();
+      });
+      await deferred.promise;
+      expect.assertions(1);
+    });
+
+    it("should cancel", async () => {
+      using module = runIsolated((stack) => {
+        if (!("requestAnimationFrame" in globalThis)) {
+          const requestAnimationFrame = (fn: () => void) => {
+            let waiting = true;
+            process.nextTick(() => waiting && fn());
+            return () => (waiting = false);
+          };
+          Object.defineProperty(globalThis, "requestAnimationFrame", {
+            value: requestAnimationFrame,
+            configurable: true,
+            writable: true,
+            enumerable: false,
+          });
+          const cancelAnimationFrame = (cancel: () => void) => cancel();
+          Object.defineProperty(globalThis, "cancelAnimationFrame", {
+            value: cancelAnimationFrame,
+            configurable: true,
+            writable: true,
+            enumerable: false,
+          });
+          stack.append(() => {
+            delete (globalThis as never as { requestAnimationFrame?: typeof requestAnimationFrame }).requestAnimationFrame;
+            delete (globalThis as never as { cancelAnimationFrame?: typeof cancelAnimationFrame }).cancelAnimationFrame;
+          });
+        }
+        const requestAnimationFrame: (fn: () => void) => void = (globalThis as never as { requestAnimationFrame: typeof requestAnimationFrame })
+          .requestAnimationFrame;
+        const { rafScheduler } = require("./scheduler") as typeof import("./scheduler");
+        return { requestAnimationFrame, rafScheduler };
+      });
+      const { requestAnimationFrame, rafScheduler } = module.value;
+      const spy = jest.fn<() => void>();
+      const id = rafScheduler.schedule(spy);
+      rafScheduler.cancel(id);
+      const deferred = Promise.withResolvers<void>();
+      requestAnimationFrame(() => {
+        expect(spy).toHaveBeenCalledTimes(0);
+        deferred.resolve();
+      });
+      await deferred.promise;
+      expect.assertions(1);
+    });
+
+    it("without requestAnimationFrame should be undefined", () => {
+      using module = runIsolated((stack) => {
+        if ("requestAnimationFrame" in globalThis) {
+          const requestAnimationFrame = Object.getOwnPropertyDescriptor(globalThis, "requestAnimationFrame")!;
           delete (globalThis as never as { requestAnimationFrame?: typeof requestAnimationFrame }).requestAnimationFrame;
-          delete (globalThis as never as { cancelAnimationFrame?: typeof cancelAnimationFrame }).cancelAnimationFrame;
-        });
-      }
-      const requestAnimationFrame: (fn: () => void) => void = (globalThis as never as { requestAnimationFrame: typeof requestAnimationFrame })
-        .requestAnimationFrame;
-      const { rafScheduler } = require("./scheduler") as typeof import("./scheduler");
-      afterAll(() => stack.dispose());
-
-      it("should run fn after requestAnimationFrame", async () => {
-        const spy = jest.fn<() => void>();
-        rafScheduler.schedule(spy);
-        const deferred = Promise.withResolvers<void>();
-        requestAnimationFrame(() => {
-          expect(spy).toHaveBeenCalledTimes(1);
-          deferred.resolve();
-        });
-        await deferred.promise;
-        expect.assertions(1);
+          stack.append(() => Object.defineProperty(globalThis, "requestAnimationFrame", requestAnimationFrame));
+        }
+        const { rafScheduler } = require("./scheduler") as typeof import("./scheduler");
+        return { rafScheduler };
       });
-
-      it("should cancel", async () => {
-        const spy = jest.fn<() => void>();
-        const id = rafScheduler.schedule(spy);
-        rafScheduler.cancel(id);
-        const deferred = Promise.withResolvers<void>();
-        requestAnimationFrame(() => {
-          expect(spy).toHaveBeenCalledTimes(0);
-          deferred.resolve();
-        });
-        await deferred.promise;
-        expect.assertions(1);
-      });
+      const { rafScheduler } = module.value;
+      expect(rafScheduler).toBe(undefined);
     });
   });
 
@@ -143,7 +199,7 @@ describe("schedulers", () => {
       setTimeout(() => {
         expect(spy).toHaveBeenCalledTimes(1);
         deferred.resolve();
-      });
+      }, 1);
       await deferred.promise;
       expect.assertions(1);
     });
@@ -156,7 +212,7 @@ describe("schedulers", () => {
       setTimeout(() => {
         expect(spy).toHaveBeenCalledTimes(0);
         deferred.resolve();
-      });
+      }, 1);
       await deferred.promise;
       expect.assertions(1);
     });
