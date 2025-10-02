@@ -1,9 +1,10 @@
-export type EventEmitterScheduler = (fn: () => void) => void;
+import type { Scheduler } from "./scheduler";
+import { asyncScheduler } from "./scheduler";
 
 export class EventEmitter<Events extends Record<string, (...params: never) => void> = Record<string, (...params: unknown[]) => void>> {
   #listeners = new Map<keyof Events, Set<(...params: never) => void>>();
 
-  constructor(private readonly scheduler: EventEmitterScheduler = EventEmitter.asyncScheduler) {}
+  constructor(private readonly scheduler: Scheduler<unknown> = asyncScheduler) {}
 
   on<Event extends keyof Events>(event: Event, listener: (...params: Parameters<Events[Event]>) => void) {
     if (this.#listeners.has(event)) {
@@ -23,18 +24,6 @@ export class EventEmitter<Events extends Record<string, (...params: never) => vo
   emit<Event extends keyof Events>(event: Event, ...params: Parameters<Events[Event]>) {
     const listeners = this.#listeners.get(event)?.values().toArray();
     if (!listeners) return;
-    this.scheduler(() => listeners.forEach((listener) => listener(...(params as never))));
-  }
-
-  static readonly immidiateScheduler: EventEmitterScheduler = (fn) => fn();
-  static readonly microtaskScheduler: EventEmitterScheduler = queueMicrotask;
-  static readonly promiseScheduler: EventEmitterScheduler = (fn) => (Promise.resolve().then(fn), undefined);
-  static readonly timeoutScheduler: EventEmitterScheduler = (fn) => setTimeout(fn, 0);
-
-  static get asyncScheduler() {
-    return EventEmitter.microtaskScheduler;
-  }
-  static get syncScheduler() {
-    return EventEmitter.immidiateScheduler;
+    this.scheduler.schedule(() => listeners.forEach((listener) => listener(...(params as never))));
   }
 }

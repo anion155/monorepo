@@ -1,5 +1,5 @@
-import type { Equal, Expect } from "../type-tests";
 import { EventEmitter } from "./event-emitter";
+import type { Equal, Expect } from "./type-tests";
 
 const emitter = new EventEmitter<{
   a(b: number, c: string): string;

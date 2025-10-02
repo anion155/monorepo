@@ -1,41 +1,11 @@
 import { describe, expect, it, jest } from "@jest/globals";
 
 import { EventEmitter } from "./event-emitter";
+import { immidiateScheduler } from "./scheduler";
 
 describe("class EventEmitter", () => {
-  it(".immidiateScheduler should run fn immediately", () => {
-    const spy = jest.fn<() => void>();
-    EventEmitter.immidiateScheduler(spy);
-    expect(spy).toHaveBeenCalledTimes(1);
-  });
-
-  it(".microtaskScheduler should run fn after queueMicrotask", async () => {
-    const spy = jest.fn<() => void>();
-    EventEmitter.microtaskScheduler(spy);
-    expect(spy).toHaveBeenCalledTimes(0);
-    await new Promise<void>((resolve) => queueMicrotask(resolve));
-    expect(spy).toHaveBeenCalledTimes(1);
-  });
-
-  it(".promiseScheduler should run fn after queueMicrotask", async () => {
-    const spy = jest.fn<() => void>();
-    EventEmitter.promiseScheduler(spy);
-    expect(spy).toHaveBeenCalledTimes(0);
-    await Promise.resolve();
-    expect(spy).toHaveBeenCalledTimes(1);
-  });
-
-  it(".timeoutScheduler should run fn after timer exhaust", () => {
-    jest.useFakeTimers();
-    const spy = jest.fn<() => void>();
-    EventEmitter.timeoutScheduler(spy);
-    expect(spy).toHaveBeenCalledTimes(0);
-    jest.advanceTimersToNextFrame();
-    expect(spy).toHaveBeenCalledTimes(1);
-  });
-
   it("should implement emitter", () => {
-    const emitter = new EventEmitter(EventEmitter.syncScheduler);
+    const emitter = new EventEmitter(immidiateScheduler);
     const listener1 = jest.fn();
     const listener2 = jest.fn();
     const listener3 = jest.fn();
@@ -66,7 +36,7 @@ describe("class EventEmitter", () => {
   });
 
   it(".on() should return function that offs same listener", () => {
-    const emitter = new EventEmitter(EventEmitter.syncScheduler);
+    const emitter = new EventEmitter(immidiateScheduler);
     const listener = jest.fn();
     emitter.on("test", listener)();
     emitter.emit("test", 1, 2);
@@ -74,7 +44,7 @@ describe("class EventEmitter", () => {
   });
 
   it(".emit() should handle no listeners", () => {
-    const emitter = new EventEmitter(EventEmitter.syncScheduler);
+    const emitter = new EventEmitter(immidiateScheduler);
     expect(() => emitter.emit("test", 1, 2)).not.toThrow();
   });
 });

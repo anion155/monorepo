@@ -8,6 +8,8 @@
     "./react": "./src/react/index.ts",
     "./jest": "./src/jest/index.ts",
     "./shared.tsconfig.jest.json": "./shared.tsconfig.jest.json",
+    "./scheduler": "./src/scheduler.ts",
+    "./event-emitter": "./src/event-emitter.ts",
     "./vectors": "./src/vectors.ts"
   },
   "scripts": {

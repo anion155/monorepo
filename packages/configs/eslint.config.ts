@@ -65,6 +65,13 @@ export const jest: Linter.Config[] = [
     files: ["**/*.{test,spec}.{js,jsx,ts,tsx}"],
     ...pluginJest.configs["flat/recommended"],
   },
+  {
+    files: ["**/*.{test,spec}.{js,jsx,ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/consistent-type-imports": "off",
+    },
+  },
 ];
 
 export const react: Linter.Config[] = [
