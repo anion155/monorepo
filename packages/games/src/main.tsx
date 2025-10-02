@@ -2,7 +2,7 @@ import "@anion155/proposal-explicit-resource-management/global";
 
 import { AppRegistry } from "react-native";
 
-import { App } from "./App";
+import { Game } from "./Game";
 
-AppRegistry.registerComponent("App", () => App);
-AppRegistry.runApplication("App", { rootTag: document.getElementById("app") });
+AppRegistry.registerComponent("Game", () => Game);
+AppRegistry.runApplication("Game", { rootTag: document.getElementById("game") });
