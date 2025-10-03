@@ -47,15 +47,19 @@ const Spinner = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
     <Entity ref={ref}>
       <CanvasRendererComponent
         render={(canvas, size) => {
-          const colors = [cssColors.red, cssColors.blue, cssColors.green, cssColors.yellow];
-          canvas.fillStyle = colors[(Math.trunc(Date.now() / 100) + 3) % colors.length];
-          canvas.fillRect(size.w / 2 - 40, size.h / 2 - 40, 40, 40);
-          canvas.fillStyle = colors[(Math.trunc(Date.now() / 100) + 2) % colors.length];
-          canvas.fillRect(size.w / 2, size.h / 2 - 40, 40, 40);
-          canvas.fillStyle = colors[(Math.trunc(Date.now() / 100) + 1) % colors.length];
-          canvas.fillRect(size.w / 2, size.h / 2, 40, 40);
-          canvas.fillStyle = colors[(Math.trunc(Date.now() / 100) + 0) % colors.length];
-          canvas.fillRect(size.w / 2 - 40, size.h / 2, 40, 40);
+          const lines = 16;
+          const rotation = (Math.trunc(Date.now() / (1000 / lines)) % lines) / lines;
+          canvas.translate(size.w / 2, size.h / 2);
+          canvas.rotate(Math.PI * 2 * rotation);
+          for (let index = 0; index < lines; index++) {
+            canvas.beginPath();
+            canvas.rotate((Math.PI * 2) / lines);
+            canvas.moveTo(10, 0);
+            canvas.lineTo(15, 0);
+            canvas.lineWidth = 3;
+            canvas.strokeStyle = `rgba(0, 0, 0, ${index / lines})`;
+            canvas.stroke();
+          }
         }}
       />
     </Entity>

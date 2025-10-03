@@ -26,6 +26,7 @@ export const CanvasRenderer = () => {
           if (Symbol.iterator in entity) traverse(entity as never as IEntities);
         }
       };
+      canvas.clearRect(0, 0, size.w, size.h);
       traverse(game);
     });
   }, [canvas, game, size]);
