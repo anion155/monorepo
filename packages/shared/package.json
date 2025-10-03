@@ -19,10 +19,10 @@
     "lint": "eslint src"
   },
   "optionalDependencies": {
-    "@types/react": "^19.1.18",
+    "@types/react": "^19.2.0",
     "expect": "^30.0.2",
     "jest-diff": "^30.0.2",
-    "react": "^19.1.0"
+    "react": "^19.2.0"
   },
   "devDependencies": {
     "@anion155/configs": "workspace:*",

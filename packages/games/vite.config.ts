@@ -1,11 +1,12 @@
 import path from "node:path";
 
+import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { rnw } from "vite-plugin-rnw";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [rnw()],
+  plugins: [vanillaExtractPlugin(), react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),

@@ -1,3 +1,4 @@
+import { appendProperty } from "@anion155/shared";
 import { createUseContext, useConst, useDeepMemo } from "@anion155/shared/react";
 import { nanoid } from "nanoid";
 import type { ForwardedRef, ReactNode } from "react";
@@ -42,12 +43,16 @@ export const Entity = ({ ref, children }: EntityProps) => {
 
 export const NoEntity = ({ children }: { children?: ReactNode }) => children;
 
+export type EntityComponent<Component, Props extends object> = {
+  (props: Props): ReactNode;
+  readonly name: string;
+  get(entity: EntityController): Component | undefined;
+};
 export const createEntityComponent = <Component, Props extends object>(
   name: string,
   fabric: (entity: EntityController, props: Props) => Component,
-) => {
+): EntityComponent<Component, Props> => {
   const entities = new WeakMap<EntityController, Component>();
-  const get = (entity: EntityController) => entities.get(entity);
   const registerEntity = (entity: EntityController, component: Component) => {
     entity.components.add(Component);
     entities.set(entity, component);
@@ -56,13 +61,18 @@ export const createEntityComponent = <Component, Props extends object>(
       entities.delete(entity);
     };
   };
-  const Provider = (props: Props) => {
+  const Component = (props: Props) => {
     const entity = useEntityContext();
     const memoizedProps = useDeepMemo(props);
     useEffect(() => registerEntity(entity, fabric(entity, memoizedProps)), [entity]);
     return null;
   };
-  Provider.displayName = `${name}Provider`;
-  const Component = { name, get, Provider };
+  appendProperty(Component, "name", { value: name, writable: false, enumerable: true, configurable: true });
+  appendProperty(Component, "get", {
+    value: (entity: EntityController) => entities.get(entity),
+    writable: true,
+    enumerable: false,
+    configurable: true,
+  });
   return Component;
 };

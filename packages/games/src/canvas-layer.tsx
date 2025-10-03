@@ -1,13 +1,10 @@
+import { createUseContext } from "@anion155/shared/react";
+import { mergeRefs } from "@anion155/shared/react/merge-refs";
 import { Size } from "@anion155/shared/vectors";
-import type { JSX } from "react";
-import { useEffect, useId, useRef } from "react";
-import { unstable_createElement } from "react-native-web";
+import type { ComponentProps } from "react";
+import { createContext, useMemo, useState } from "react";
 
-import type { IEntities } from "./entities";
-import { createEntityComponent } from "./entity";
-import { useGameContext } from "./game";
-
-export type CanvasContext2D = CanvasCompositing &
+export type Canvas2D = CanvasCompositing &
   CanvasDrawImage &
   CanvasDrawPath &
   CanvasFillStrokeStyles &
@@ -23,45 +20,18 @@ export type CanvasContext2D = CanvasCompositing &
   CanvasTextDrawingStyles &
   CanvasTransform;
 
-export const CanvasLayer = () => {
-  console.log("GG CanvasLayer", useId());
-  const game = useGameContext();
-  const ctxRef = useRef<CanvasRenderingContext2D>(null);
-  useEffect(() => {
-    const ctx = ctxRef.current;
-    if (!ctx) return;
-    const size = new Size(ctx.canvas);
-    return game.on("frame", () => {
-      const traverse = (entities: IEntities) => {
-        for (const entity of entities) {
-          const canvasComponent = CanvasRendererComponent.get(entity);
-          if (canvasComponent) {
-            ctx.save();
-            try {
-              canvasComponent.render(ctx, size);
-            } finally {
-              ctx.restore();
-            }
-          }
-          if (Symbol.iterator in entity) traverse(entity as never as IEntities);
-        }
-      };
-      traverse(game);
-    });
-  }, [game]);
+export type CanvasContext = { canvas: Canvas2D; size: Size };
+export const CanvasContext = createContext<CanvasContext | undefined>(undefined);
+export const useCanvasContext = createUseContext(CanvasContext, "CanvasContext");
+
+type CanvasLayerProps = ComponentProps<"canvas">;
+export const CanvasLayer = ({ ref, children, ...props }: CanvasLayerProps) => {
+  const [canvas, setCanvas] = useState<CanvasRenderingContext2D | null>(null);
+  const context = useMemo<CanvasContext | null>(() => canvas && { canvas, size: new Size(canvas.canvas) }, [canvas]);
   return (
-    <Canvas
-      ref={(canvas) => {
-        ctxRef.current = canvas?.getContext("2d") ?? null;
-      }}
-      style={{ width: "100%", height: "100%" }}
-    />
+    <>
+      <canvas {...props} ref={mergeRefs(ref, (canvas) => setCanvas(canvas?.getContext("2d") ?? null))} />
+      {context ? <CanvasContext.Provider value={context}>{children}</CanvasContext.Provider> : null}
+    </>
   );
 };
-
-const Canvas = (props: JSX.IntrinsicElements["canvas"]) => unstable_createElement("canvas", props);
-
-export type CanvasRendererComponent = {
-  render(ctx: CanvasContext2D, canvasSize: Size): void;
-};
-export const CanvasRendererComponent = createEntityComponent("CanvasRendererComponent", (entity, props: CanvasRendererComponent) => props);

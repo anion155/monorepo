@@ -1,0 +1,38 @@
+import type { Size } from "@anion155/shared/vectors";
+import { useEffect } from "react";
+
+import type { Canvas2D } from "./canvas-layer";
+import { useCanvasContext } from "./canvas-layer";
+import type { IEntities } from "./entities";
+import { createEntityComponent } from "./entity";
+import { useGameContext } from "./game";
+
+export const CanvasRenderer = () => {
+  const game = useGameContext();
+  const { canvas, size } = useCanvasContext();
+  useEffect(() => {
+    return game.on("frame", () => {
+      const traverse = (entities: IEntities) => {
+        for (const entity of entities) {
+          const canvasComponent = CanvasRendererComponent.get(entity);
+          if (canvasComponent) {
+            canvas.save();
+            try {
+              canvasComponent.render(canvas, size);
+            } finally {
+              canvas.restore();
+            }
+          }
+          if (Symbol.iterator in entity) traverse(entity as never as IEntities);
+        }
+      };
+      traverse(game);
+    });
+  }, [canvas, game, size]);
+  return null;
+};
+
+export type CanvasRendererComponent = {
+  render(canvas: Canvas2D, canvasSize: Size): void;
+};
+export const CanvasRendererComponent = createEntityComponent("CanvasRendererComponent", (entity, props: CanvasRendererComponent) => props);
