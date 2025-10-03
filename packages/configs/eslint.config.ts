@@ -46,6 +46,7 @@ export const typescript: Linter.Config[] = [
       "@typescript-eslint/no-unsafe-declaration-merging": "off",
       "@typescript-eslint/no-empty-object-type": ["error", { allowInterfaces: "with-single-extends" }],
       "@typescript-eslint/consistent-type-imports": ["warn"],
+      "@typescript-eslint/only-throw-error": "off",
     },
   },
   {

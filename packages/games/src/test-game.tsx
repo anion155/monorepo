@@ -1,12 +1,17 @@
-import type { ForwardedRef } from "react";
+import "@anion155/shared/global";
+import "@anion155/shared/react/use-action";
 
+import { Action } from "@anion155/shared/action";
+import { type ForwardedRef, Suspense } from "react";
+
+import BasictilesPath from "@/assets/basictiles.png";
 import { Loop } from "@/atoms/loop";
 
 import { CanvasLayer } from "./canvas-layer";
 import { CanvasRenderer, CanvasRendererComponent } from "./canvas-renderer";
 import { cssColors } from "./css-colors";
 import { EntitiesOrdered } from "./entities-ordered";
-import { EntityContext, type EntityController, useEntity } from "./entity";
+import { Entity, type EntityController } from "./entity";
 import { GameProvider, useGameContext } from "./game";
 import * as styles from "./test-game.css";
 
@@ -19,9 +24,12 @@ export const TestGame = () => {
           <CanvasLayer width="800" height="600" className={styles.canvas}>
             <CanvasRenderer />
           </CanvasLayer>
-          <EntitiesOrdered>
-            <GameMap />
-          </EntitiesOrdered>
+          <Suspense fallback={<Spinner />}>
+            <EntitiesOrdered>
+              <GameMap />
+              <Test />
+            </EntitiesOrdered>
+          </Suspense>
         </GameProvider>
       </div>
     </div>
@@ -34,10 +42,29 @@ const GameLoop = () => {
   return <Loop ticks={{ [FPS_RATE]: game.events.frame }} />;
 };
 
-const GameMap = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
-  const entity = useEntity(ref);
+const Spinner = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
   return (
-    <EntityContext.Provider value={entity}>
+    <Entity ref={ref}>
+      <CanvasRendererComponent
+        render={(canvas, size) => {
+          const colors = [cssColors.red, cssColors.blue, cssColors.green, cssColors.yellow];
+          canvas.fillStyle = colors[(Math.trunc(Date.now() / 100) + 3) % colors.length];
+          canvas.fillRect(size.w / 2 - 40, size.h / 2 - 40, 40, 40);
+          canvas.fillStyle = colors[(Math.trunc(Date.now() / 100) + 2) % colors.length];
+          canvas.fillRect(size.w / 2, size.h / 2 - 40, 40, 40);
+          canvas.fillStyle = colors[(Math.trunc(Date.now() / 100) + 1) % colors.length];
+          canvas.fillRect(size.w / 2, size.h / 2, 40, 40);
+          canvas.fillStyle = colors[(Math.trunc(Date.now() / 100) + 0) % colors.length];
+          canvas.fillRect(size.w / 2 - 40, size.h / 2, 40, 40);
+        }}
+      />
+    </Entity>
+  );
+};
+
+const GameMap = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
+  return (
+    <Entity ref={ref}>
       <CanvasRendererComponent
         render={(canvas, canvasSize) => {
           canvas.fillStyle = cssColors.grey;
@@ -50,6 +77,27 @@ const GameMap = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
           }
         }}
       />
-    </EntityContext.Provider>
+    </Entity>
+  );
+};
+
+const BasictilesAction = new Action(async (src: string) => {
+  const image = new Image();
+  await new Promise<void>((resolve) => {
+    image.onload = () => resolve();
+    image.src = src;
+  });
+  return image;
+});
+const Test = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
+  const BasictilesImage = BasictilesAction.useAwait(BasictilesPath);
+  return (
+    <Entity ref={ref}>
+      <CanvasRendererComponent
+        render={(canvas, canvasSize) => {
+          canvas.drawImage(BasictilesImage, 0, 0, 16, 16, 0, 0, 20, 20);
+        }}
+      />
+    </Entity>
   );
 };

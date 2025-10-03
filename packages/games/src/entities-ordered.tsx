@@ -8,6 +8,7 @@ import { cloneElement, Fragment, isValidElement, useEffect, useImperativeHandle 
 import type { IEntities } from "./entities";
 import { EntitiesContext } from "./entities";
 import { EntityController, useEntityParent } from "./entity";
+import { passChildren } from "./pass-children";
 
 export class EntitiesOrderedController extends EntityController implements IEntities {
   readonly #children = new OrderedMap<string, EntityController>();
@@ -61,8 +62,8 @@ export const EntitiesOrdered = ({ ref, children }: EntitiesOrderedProps) => {
   const traverseNode = (node: ReactNode): ReactNode => {
     if (Array.isArray(node)) return node.map(traverseNode);
     if (!isValidElement(node)) return node;
-    if (node.type === Fragment) return cloneElement(node, { children: traverseNode((node.props as { children: ReactNode }).children) } as never);
-    const index = array.length;
+    if (node.type === Fragment) return passChildren(node, traverseNode((node.props as { children: ReactNode }).children));
+    const index = array.push(null) - 1;
     return cloneElement(node, {
       ref: mergeRefs((node.props as { ref?: ForwardedRef<EntityController> }).ref, (entity) => (array[index] = entity)),
     } as never);
@@ -72,5 +73,5 @@ export const EntitiesOrdered = ({ ref, children }: EntitiesOrderedProps) => {
     entities.setEntities(...array.filter(isTruthy));
     return () => entities.clearEntities();
   }, [entities, array]);
-  return <EntitiesContext.Provider value={entities}>{children}</EntitiesContext.Provider>;
+  return passChildren(<EntitiesContext.Provider value={entities} />, children);
 };

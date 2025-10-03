@@ -11,14 +11,14 @@ export const CanvasRenderer = () => {
   const game = useGameContext();
   const { canvas, size } = useCanvasContext();
   useEffect(() => {
-    return game.on("frame", () => {
+    return game.on("frame", (deltaTime) => {
       const traverse = (entities: IEntities) => {
         for (const entity of entities) {
           const canvasComponent = CanvasRendererComponent.get(entity);
           if (canvasComponent) {
             canvas.save();
             try {
-              canvasComponent.render(canvas, size);
+              canvasComponent.render(canvas, size, deltaTime);
             } finally {
               canvas.restore();
             }
@@ -33,6 +33,6 @@ export const CanvasRenderer = () => {
 };
 
 export type CanvasRendererComponent = {
-  render(canvas: Canvas2D, canvasSize: Size): void;
+  render(canvas: Canvas2D, canvasSize: Size, deltaTime: number): void;
 };
 export const CanvasRendererComponent = createEntityComponent("CanvasRendererComponent", (entity, props: CanvasRendererComponent) => props);

@@ -11,7 +11,10 @@
     "./event-emitter": "./src/event-emitter.ts",
     "./vectors": "./src/vectors.ts",
     "./ordered-map": "./src/ordered-map.ts",
+    "./lift": "./src/lift.ts",
+    "./action": "./src/action.ts",
     "./react/merge-refs": "./src/react/merge-refs.ts",
+    "./react/use-action": "./src/react/use-action.ts",
     ".": "./src/index.ts"
   },
   "scripts": {

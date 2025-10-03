@@ -6,6 +6,7 @@ import { createContext, useEffect, useImperativeHandle } from "react";
 
 import type { IEntities } from "./entities";
 import { useEntitiesContext } from "./entities";
+import { passChildren } from "./pass-children";
 
 export class EntityController {
   readonly id = nanoid();
@@ -37,8 +38,8 @@ export const useEntity = (ref: ForwardedRef<EntityController> | undefined) => {
 
 type EntityProps = { ref?: ForwardedRef<EntityController>; children?: ReactNode };
 export const Entity = ({ ref, children }: EntityProps) => {
-  useEntity(ref);
-  return children;
+  const entity = useEntity(ref);
+  return passChildren(<EntityContext.Provider value={entity} />, children);
 };
 
 export const NoEntity = ({ children }: { children?: ReactNode }) => children;
