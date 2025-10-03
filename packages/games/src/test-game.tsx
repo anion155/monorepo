@@ -4,6 +4,7 @@ import { Loop } from "@/atoms/loop";
 
 import { CanvasLayer } from "./canvas-layer";
 import { CanvasRenderer, CanvasRendererComponent } from "./canvas-renderer";
+import { cssColors } from "./css-colors";
 import { EntitiesOrdered } from "./entities-ordered";
 import { EntityContext, type EntityController, useEntity } from "./entity";
 import { GameProvider, useGameContext } from "./game";
@@ -15,7 +16,7 @@ export const TestGame = () => {
       <div className={styles.container}>
         <GameProvider>
           <GameLoop />
-          <CanvasLayer className={styles.canvas}>
+          <CanvasLayer width="800" height="600" className={styles.canvas}>
             <CanvasRenderer />
           </CanvasLayer>
           <EntitiesOrdered>
@@ -39,8 +40,14 @@ const GameMap = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
     <EntityContext.Provider value={entity}>
       <CanvasRendererComponent
         render={(canvas, canvasSize) => {
-          canvas.fillStyle = "red";
+          canvas.fillStyle = cssColors.grey;
           canvas.fillRect(0, 0, canvasSize.w, canvasSize.h);
+          for (let x = 0; x < canvasSize.w / 20; x += 1) {
+            for (let y = 0; y < canvasSize.h / 20; y += 1) {
+              canvas.fillStyle = (x + y) % 2 === 0 ? cssColors.black : cssColors.red;
+              canvas.fillRect(x * 20, y * 20, 20, 20);
+            }
+          }
         }}
       />
     </EntityContext.Provider>

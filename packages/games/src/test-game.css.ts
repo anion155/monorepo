@@ -10,10 +10,11 @@ export const screen = style({
 
 export const container = style({
   width: "100%",
-  aspectRatio: 800 / 600,
+  aspectRatio: `${800 / 600}`,
 });
 
 export const canvas = style({
   width: "100%",
   height: "100%",
+  imageRendering: "crisp-edges",
 });

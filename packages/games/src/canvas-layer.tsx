@@ -2,7 +2,7 @@ import { createUseContext } from "@anion155/shared/react";
 import { mergeRefs } from "@anion155/shared/react/merge-refs";
 import { Size } from "@anion155/shared/vectors";
 import type { ComponentProps } from "react";
-import { createContext, useMemo, useState } from "react";
+import { createContext, useCallback, useMemo, useState } from "react";
 
 export type Canvas2D = CanvasCompositing &
   CanvasDrawImage &
@@ -26,11 +26,18 @@ export const useCanvasContext = createUseContext(CanvasContext, "CanvasContext")
 
 type CanvasLayerProps = ComponentProps<"canvas">;
 export const CanvasLayer = ({ ref, children, ...props }: CanvasLayerProps) => {
-  const [canvas, setCanvas] = useState<CanvasRenderingContext2D | null>(null);
-  const context = useMemo<CanvasContext | null>(() => canvas && { canvas, size: new Size(canvas.canvas) }, [canvas]);
+  const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
+  const handleCanvas = useCallback((canvas: HTMLCanvasElement | null) => {
+    if (!canvas) return setCtx(null);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return setCtx(null);
+    ctx.imageSmoothingEnabled = false;
+    setCtx(ctx);
+  }, []);
+  const context = useMemo<CanvasContext | null>(() => ctx && { canvas: ctx, size: new Size(ctx.canvas) }, [ctx]);
   return (
     <>
-      <canvas {...props} ref={mergeRefs(ref, (canvas) => setCanvas(canvas?.getContext("2d") ?? null))} />
+      <canvas {...props} ref={mergeRefs(ref, handleCanvas)} />
       {context ? <CanvasContext.Provider value={context}>{children}</CanvasContext.Provider> : null}
     </>
   );
