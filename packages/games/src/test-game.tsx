@@ -1,10 +1,9 @@
 import "@anion155/shared/global";
 import "@anion155/shared/react/use-action";
 
-import { Action } from "@anion155/shared/action";
 import { type ForwardedRef, Suspense } from "react";
 
-import BasictilesPath from "@/assets/basictiles.png";
+import BasicTilesPath from "@/assets/basic-tiles.png";
 import { Loop } from "@/atoms/loop";
 
 import { CanvasLayer } from "./canvas-layer";
@@ -13,6 +12,7 @@ import { cssColors } from "./css-colors";
 import { EntitiesOrdered } from "./entities-ordered";
 import { Entity, type EntityController } from "./entity";
 import { GameProvider, useGameContext } from "./game";
+import { ImageLoader } from "./image-loader";
 import * as styles from "./test-game.css";
 
 export const TestGame = () => {
@@ -44,7 +44,7 @@ const GameLoop = () => {
 
 const Spinner = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
   return (
-    <Entity ref={ref}>
+    <Entity ref={ref} name="spinner">
       <CanvasRendererComponent
         render={(canvas, size) => {
           const lines = 16;
@@ -67,16 +67,16 @@ const Spinner = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
 };
 
 const GameMap = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
+  const BasicTilesImage = ImageLoader.default.useAwait(BasicTilesPath);
   return (
-    <Entity ref={ref}>
+    <Entity ref={ref} name="map">
       <CanvasRendererComponent
         render={(canvas, canvasSize) => {
-          canvas.fillStyle = cssColors.grey;
+          canvas.fillStyle = cssColors.black;
           canvas.fillRect(0, 0, canvasSize.w, canvasSize.h);
           for (let x = 0; x < canvasSize.w / 20; x += 1) {
             for (let y = 0; y < canvasSize.h / 20; y += 1) {
-              canvas.fillStyle = (x + y) % 2 === 0 ? cssColors.black : cssColors.red;
-              canvas.fillRect(x * 20, y * 20, 20, 20);
+              canvas.drawImage(BasicTilesImage, 0, 0, 16, 16, x * 20, y * 20, 20, 20);
             }
           }
         }}
@@ -85,23 +85,6 @@ const GameMap = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
   );
 };
 
-const BasictilesAction = new Action(async (src: string) => {
-  const image = new Image();
-  await new Promise<void>((resolve) => {
-    image.onload = () => resolve();
-    image.src = src;
-  });
-  return image;
-});
 const Test = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
-  const BasictilesImage = BasictilesAction.useAwait(BasictilesPath);
-  return (
-    <Entity ref={ref}>
-      <CanvasRendererComponent
-        render={(canvas, canvasSize) => {
-          canvas.drawImage(BasictilesImage, 0, 0, 16, 16, 0, 0, 20, 20);
-        }}
-      />
-    </Entity>
-  );
+  return <Entity ref={ref} name="test"></Entity>;
 };

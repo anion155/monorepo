@@ -10,11 +10,13 @@ import { passChildren } from "./pass-children";
 
 export class EntityController {
   readonly id = nanoid();
+  readonly name: string;
   parent: IEntities | null = null;
-  readonly components = new Set();
+  readonly components = new Map();
 
-  constructor() {
+  constructor(name?: string) {
     Object.defineProperty(this, "parent", { enumerable: false });
+    this.name = name ?? this.id;
   }
 }
 export const EntityContext = createContext<EntityController | undefined>(undefined);
@@ -26,19 +28,19 @@ export const useEntityParent = (entity: EntityController) => {
     if (!parent) return;
     parent.appendEntity(entity);
     return () => parent.removeEntity(entity);
-  }, []);
+  }, [entity, parent]);
   return entity;
 };
-export const useEntity = (ref: ForwardedRef<EntityController> | undefined) => {
-  const entity = useConst(() => new EntityController());
+export const useEntity = (name?: string, ref?: ForwardedRef<EntityController>) => {
+  const entity = useConst(() => new EntityController(name));
   useImperativeHandle(ref, () => entity, [entity]);
   useEntityParent(entity);
   return entity;
 };
 
-type EntityProps = { ref?: ForwardedRef<EntityController>; children?: ReactNode };
-export const Entity = ({ ref, children }: EntityProps) => {
-  const entity = useEntity(ref);
+type EntityProps = { ref?: ForwardedRef<EntityController>; name?: string; children?: ReactNode };
+export const Entity = ({ ref, name, children }: EntityProps) => {
+  const entity = useEntity(name, ref);
   return passChildren(<EntityContext.Provider value={entity} />, children);
 };
 
@@ -55,17 +57,17 @@ export const createEntityComponent = <Component, Props extends object>(
 ): EntityComponent<Component, Props> => {
   const entities = new WeakMap<EntityController, Component>();
   const registerEntity = (entity: EntityController, component: Component) => {
-    entity.components.add(Component);
+    entity.components.set(Component.name, Component);
     entities.set(entity, component);
     return () => {
-      entity.components.delete(Component);
+      entity.components.delete(Component.name);
       entities.delete(entity);
     };
   };
   const Component = (props: Props) => {
     const entity = useEntityContext();
     const memoizedProps = useDeepMemo(props);
-    useEffect(() => registerEntity(entity, fabric(entity, memoizedProps)), [entity]);
+    useEffect(() => registerEntity(entity, fabric(entity, memoizedProps)), [entity, memoizedProps]);
     return null;
   };
   appendProperty(Component, "name", { value: name, writable: false, enumerable: true, configurable: true });

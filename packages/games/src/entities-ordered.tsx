@@ -31,7 +31,7 @@ export class EntitiesOrderedController extends EntityController implements IEnti
       this.#children.set(index, child.id, child);
       child.parent = this;
     }
-    for (let index = children.length; index < this.#children.length; index += 1) {
+    for (let index = children.length; index < this.#children.size; index += 1) {
       this.#children.at(index)!.parent = null;
     }
     this.#children.splice(children.length);
