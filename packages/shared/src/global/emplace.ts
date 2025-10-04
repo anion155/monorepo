@@ -24,7 +24,10 @@ declare global {
     /**
      * Creates Map with default fabric for emplace method.
      */
-    withFabric<K, V>(fabric: (key: K) => V, iterable?: Iterable<readonly [K, V]> | null): MapWithFabric<K, V>;
+    withFabric: {
+      <K, V>(fabric: (key: K) => V, iterable?: Iterable<readonly [K, V]> | null): MapWithFabric<K, V>;
+      new <K, V>(fabric: (key: K) => V, iterable?: Iterable<readonly [K, V]> | null): MapWithFabric<K, V>;
+    };
   }
 }
 defineMethod(Map.prototype, "emplace", function emplace(key: unknown, fabric: (key: unknown) => unknown) {
@@ -70,7 +73,10 @@ declare global {
     /**
      * Creates WeakMap with default fabric for emplace method.
      */
-    withFabric<K extends WeakKey, V>(fabric: (key: K) => V, iterable?: Iterable<readonly [K, V]>): WeakMapWithFabric<K, V>;
+    withFabric: {
+      <K extends WeakKey, V>(fabric: (key: K) => V, iterable?: Iterable<readonly [K, V]>): WeakMapWithFabric<K, V>;
+      new <K extends WeakKey, V>(fabric: (key: K) => V, iterable?: Iterable<readonly [K, V]>): WeakMapWithFabric<K, V>;
+    };
   }
 }
 defineMethod(WeakMap.prototype, "emplace", function emplace(key: WeakKey, fabric: (key: WeakKey) => unknown) {

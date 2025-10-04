@@ -1,5 +1,4 @@
-import { appendProperty } from "@anion155/shared";
-import { createUseContext, useConst, useDeepMemo } from "@anion155/shared/react";
+import { createUseContext, useConst } from "@anion155/shared/react";
 import { nanoid } from "nanoid";
 import type { ForwardedRef, ReactNode } from "react";
 import { createContext, useEffect, useImperativeHandle } from "react";
@@ -12,7 +11,7 @@ export class EntityController {
   readonly id = nanoid();
   readonly name: string;
   parent: IEntities | null = null;
-  readonly components = new Map();
+  readonly components = new Map<string, unknown>();
 
   constructor(name?: string) {
     Object.defineProperty(this, "parent", { enumerable: false });
@@ -46,36 +45,29 @@ export const Entity = ({ ref, name, children }: EntityProps) => {
 
 export const NoEntity = ({ children }: { children?: ReactNode }) => children;
 
-export type EntityComponent<Component, Props extends object> = {
-  (props: Props): ReactNode;
-  readonly name: string;
-  get(entity: EntityController): Component | undefined;
-};
-export const createEntityComponent = <Component, Props extends object>(
-  name: string,
-  fabric: (entity: EntityController, props: Props) => Component,
-): EntityComponent<Component, Props> => {
-  const entities = new WeakMap<EntityController, Component>();
-  const registerEntity = (entity: EntityController, component: Component) => {
-    entity.components.set(Component.name, Component);
-    entities.set(entity, component);
-    return () => {
-      entity.components.delete(Component.name);
-      entities.delete(entity);
-    };
-  };
-  const Component = (props: Props) => {
+export const createEntityComponent = <UseFabric extends (props: never) => unknown>(name: string, useFabric: UseFabric) => {
+  type Component = ReturnType<UseFabric>;
+  type Props = Parameters<UseFabric>[0];
+  const get = (entity: EntityController) => entity.components.get(name) as Component;
+  const useRegister: typeof useFabric = ((props: Props) => {
     const entity = useEntityContext();
-    const memoizedProps = useDeepMemo(props);
-    useEffect(() => registerEntity(entity, fabric(entity, memoizedProps)), [entity, memoizedProps]);
+    const component = useFabric(props);
+    useEffect(() => {
+      entity.components.set(name, component);
+      return () => {
+        entity.components.delete(name);
+      };
+    }, [component, entity]);
+    return component;
+  }) as never;
+  const Register = ({
+    ref,
+    // @ts-expect-error - Props is object
+    ...props
+  }: { ref?: ForwardedRef<Component> } & Props) => {
+    const component = useRegister(props as Props);
+    useImperativeHandle(ref, () => component as never, [component]);
     return null;
   };
-  appendProperty(Component, "name", { value: name, writable: false, enumerable: true, configurable: true });
-  appendProperty(Component, "get", {
-    value: (entity: EntityController) => entities.get(entity),
-    writable: true,
-    enumerable: false,
-    configurable: true,
-  });
-  return Component;
+  return { name, get, useRegister, Register };
 };

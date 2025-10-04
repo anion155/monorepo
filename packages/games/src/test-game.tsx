@@ -1,18 +1,22 @@
 import "@anion155/shared/global";
 import "@anion155/shared/react/use-action";
 
-import { type ForwardedRef, Suspense } from "react";
+import { Action } from "@anion155/shared/action";
+import { Point, Rect, Size } from "@anion155/shared/vectors";
+import { type ForwardedRef, Suspense, useRef } from "react";
 
 import BasicTilesPath from "@/assets/basic-tiles.png";
 import { Loop } from "@/atoms/loop";
 
 import { CanvasLayer } from "./canvas-layer";
-import { CanvasRenderer, CanvasRendererComponent } from "./canvas-renderer";
+import { CanvasRenderer, CanvasRendererEntityComponent } from "./canvas-renderer";
 import { cssColors } from "./css-colors";
 import { EntitiesOrdered } from "./entities-ordered";
 import { Entity, type EntityController } from "./entity";
 import { GameProvider, useGameContext } from "./game";
-import { ImageLoader } from "./image-loader";
+import type { SpritesResource } from "./image-resource";
+import { createImageResource, createSpritesResource, loadImage } from "./image-resource";
+import { ResourceEntityComponent } from "./resources";
 import * as styles from "./test-game.css";
 
 export const TestGame = () => {
@@ -39,13 +43,13 @@ export const TestGame = () => {
 const FPS_RATE = 1000 / 60;
 const GameLoop = () => {
   const game = useGameContext();
-  return <Loop ticks={{ [FPS_RATE]: game.events.frame }} />;
+  return <Loop ticks={{ [1000]: game.events.frame }} />;
 };
 
 const Spinner = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
   return (
     <Entity ref={ref} name="spinner">
-      <CanvasRendererComponent
+      <CanvasRendererEntityComponent.Register
         render={(canvas, size) => {
           const lines = 16;
           const rotation = (Math.trunc(Date.now() / (1000 / lines)) % lines) / lines;
@@ -66,17 +70,25 @@ const Spinner = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
   );
 };
 
+const BasicTilesResource = ResourceEntityComponent.createResource(
+  new Action(async () => {
+    const image = await loadImage(BasicTilesPath);
+    const imageResource = createImageResource(image);
+    return createSpritesResource(imageResource, new Size(8, 15), { spriteSize: new Size(16, 16) });
+  }).useAwait,
+);
 const GameMap = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
-  const BasicTilesImage = ImageLoader.default.useAwait(BasicTilesPath);
+  const BasicTilesRef = useRef<SpritesResource | null>(null);
   return (
     <Entity ref={ref} name="map">
-      <CanvasRendererComponent
+      <BasicTilesResource ref={BasicTilesRef} />
+      <CanvasRendererEntityComponent.Register
         render={(canvas, canvasSize) => {
           canvas.fillStyle = cssColors.black;
           canvas.fillRect(0, 0, canvasSize.w, canvasSize.h);
           for (let x = 0; x < canvasSize.w / 20; x += 1) {
             for (let y = 0; y < canvasSize.h / 20; y += 1) {
-              canvas.drawImage(BasicTilesImage, 0, 0, 16, 16, x * 20, y * 20, 20, 20);
+              BasicTilesRef.current?.renderSprite(canvas, new Point(0, 8), new Rect(x * 20, y * 20, 20, 20));
             }
           }
         }}

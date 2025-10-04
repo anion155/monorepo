@@ -22,6 +22,13 @@ describe("Map emplace extensions", () => {
     expect(map.emplace(second)).toStrictEqual({ value: "fabric-2" });
   });
 
+  it("new Map.withFabric() should return existing or create new value", () => {
+    const map = new Map.withFabric(fabric, [[first, { value: "manual-1" }]]);
+    expect(map).toBeInstanceOf(Map);
+    expect(map.emplace(first)).toStrictEqual({ value: "manual-1" });
+    expect(map.emplace(second)).toStrictEqual({ value: "fabric-2" });
+  });
+
   it("Map's .withFabric() should return existing or create new value", () => {
     const source = new Map([[first, { value: "manual-1" }]]);
     const map = source.withFabric(fabric);
@@ -37,6 +44,13 @@ describe("Map emplace extensions", () => {
 
   it("WeakMap.withFabric() should return existing or create new value", () => {
     const map = WeakMap.withFabric(fabric, [[first, { value: "manual-1" }]]);
+    expect(map.emplace(first)).toStrictEqual({ value: "manual-1" });
+    expect(map.emplace(second)).toStrictEqual({ value: "fabric-2" });
+  });
+
+  it("new WeakMap.withFabric() should return existing or create new value", () => {
+    const map = new WeakMap.withFabric(fabric, [[first, { value: "manual-1" }]]);
+    expect(map).toBeInstanceOf(WeakMap);
     expect(map.emplace(first)).toStrictEqual({ value: "manual-1" });
     expect(map.emplace(second)).toStrictEqual({ value: "fabric-2" });
   });

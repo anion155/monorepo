@@ -1,5 +1,6 @@
+import { useStableCallback } from "@anion155/shared/react";
 import type { Size } from "@anion155/shared/vectors";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 import type { Canvas2D } from "./canvas-layer";
 import { useCanvasContext } from "./canvas-layer";
@@ -14,7 +15,7 @@ export const CanvasRenderer = () => {
     return game.on("frame", (deltaTime) => {
       const traverse = (entities: IEntities) => {
         for (const entity of entities) {
-          const canvasComponent = CanvasRendererComponent.get(entity);
+          const canvasComponent = CanvasRendererEntityComponent.get(entity);
           if (canvasComponent) {
             canvas.save();
             try {
@@ -33,7 +34,13 @@ export const CanvasRenderer = () => {
   return null;
 };
 
-export type CanvasRendererComponent = {
+export type CanvasRendererEntityComponent = {
   render(canvas: Canvas2D, canvasSize: Size, deltaTime: number): void;
 };
-export const CanvasRendererComponent = createEntityComponent("CanvasRendererComponent", (entity, props: CanvasRendererComponent) => props);
+export const CanvasRendererEntityComponent = createEntityComponent(
+  "CanvasRenderer",
+  (props: CanvasRendererEntityComponent): CanvasRendererEntityComponent => {
+    const render = useStableCallback(props.render);
+    return useMemo(() => ({ render }), [render]);
+  },
+);
