@@ -2,10 +2,9 @@ import "@anion155/shared/global";
 import "@anion155/shared/react/use-action";
 
 import { Action } from "@anion155/shared/action";
-import { Point, Rect, Size } from "@anion155/shared/vectors";
 import { type ForwardedRef, Suspense, useRef } from "react";
 
-import BasicTilesPath from "@/assets/basic-tiles.png";
+import GrassMapPath from "@/assets/grass_tileset_map.tmj?url";
 import { Loop } from "@/atoms/loop";
 
 import { CanvasLayer } from "./canvas-layer";
@@ -14,10 +13,10 @@ import { cssColors } from "./css-colors";
 import { EntitiesOrdered } from "./entities-ordered";
 import { Entity, type EntityController } from "./entity";
 import { GameProvider, useGameContext } from "./game";
-import type { SpritesResource } from "./image-resource";
-import { createImageResource, createSpritesResource, loadImage } from "./image-resource";
 import { ResourceEntityComponent } from "./resources";
 import * as styles from "./test-game.css";
+import type { TMXResource } from "./tmx-resource";
+import { createTMXResource } from "./tmx-resource";
 
 export const TestGame = () => {
   return (
@@ -70,27 +69,17 @@ const Spinner = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
   );
 };
 
-const BasicTilesResource = ResourceEntityComponent.createResource(
-  new Action(async () => {
-    const image = await loadImage(BasicTilesPath);
-    const imageResource = createImageResource(image);
-    return createSpritesResource(imageResource, new Size(8, 15), { spriteSize: new Size(16, 16) });
-  }).useAwait,
-);
+const MapResource = ResourceEntityComponent.createResource(new Action(() => createTMXResource(GrassMapPath)).useAwait);
 const GameMap = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
-  const BasicTilesRef = useRef<SpritesResource | null>(null);
+  const MapRef = useRef<TMXResource | null>(null);
   return (
     <Entity ref={ref} name="map">
-      <BasicTilesResource ref={BasicTilesRef} />
+      <MapResource ref={MapRef} />
       <CanvasRendererEntityComponent.Register
         render={(canvas, canvasSize) => {
           canvas.fillStyle = cssColors.black;
           canvas.fillRect(0, 0, canvasSize.w, canvasSize.h);
-          for (let x = 0; x < canvasSize.w / 20; x += 1) {
-            for (let y = 0; y < canvasSize.h / 20; y += 1) {
-              BasicTilesRef.current?.renderSprite(canvas, new Point(0, 8), new Rect(x * 20, y * 20, 20, 20));
-            }
-          }
+          MapRef.current?.render(canvas);
         }}
       />
     </Entity>

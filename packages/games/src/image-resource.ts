@@ -2,8 +2,9 @@ import { Point, Rect, Size } from "@anion155/shared/vectors";
 
 export const loadImage = async (src: string) => {
   const image = new Image();
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     image.onload = () => resolve();
+    image.onerror = (event) => reject(typeof event === "string" ? new Error(event) : new Error());
     image.src = src;
   });
   return image;
@@ -46,18 +47,22 @@ export const createImageResource = (image: HTMLImageElement) => {
 export type ImageResource = ReturnType<typeof createImageResource>;
 
 export const createSpritesResource = (
-  { image, render }: ImageResource,
-  [cols, rows]: Size,
-  maybeBounds: { spriteSize: Size; offset?: Point; gaps?: Size } | Rect[],
+  image: HTMLImageElement,
+  maybeBounds: { spriteSize: Size; size?: Size; offset?: Point; gaps?: Size } | Rect[],
 ) => {
   let bounds: Rect[];
   if (Array.isArray(maybeBounds)) {
     bounds = maybeBounds;
   } else {
-    const { spriteSize, offset = new Point(0, 0), gaps = new Size(0, 0) } = maybeBounds;
+    const {
+      spriteSize,
+      size = new Size(Math.trunc(image.width / spriteSize.w), Math.trunc(image.height / spriteSize.h)),
+      offset = new Point(0, 0),
+      gaps = new Size(0, 0),
+    } = maybeBounds;
     bounds = [];
-    for (let y = 0; y < rows; y += 1) {
-      for (let x = 0; x < cols; x += 1) {
+    for (let y = 0; y < size.h; y += 1) {
+      for (let x = 0; x < size.w; x += 1) {
         bounds.push(
           new Rect(offset.x + x * (spriteSize.w + gaps.w) - gaps.w, offset.y + y * (spriteSize.h + gaps.h) - gaps.h, spriteSize.w, spriteSize.h),
         );
@@ -71,6 +76,6 @@ export const createSpritesResource = (
     const destSize = dest instanceof Rect ? dest.size : source.size;
     canvas.drawImage(image, source.x, source.y, source.w, source.h, dest.x, dest.y, destSize.w, destSize.h);
   }
-  return { image, render, renderSprite };
+  return { ...createImageResource(image), renderSprite };
 };
 export type SpritesResource = ReturnType<typeof createSpritesResource>;
