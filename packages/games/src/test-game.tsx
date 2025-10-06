@@ -2,7 +2,7 @@ import "@anion155/shared/global";
 import "@anion155/shared/react/use-action";
 
 import { Action } from "@anion155/shared/action";
-import { Point } from "@anion155/shared/vectors";
+import { Point, Size } from "@anion155/shared/vectors";
 import { Suspense, useRef } from "react";
 
 import GrassMapPath from "@/assets/grass_tileset_map.tmj?url";
@@ -83,7 +83,7 @@ const Map = (props: EntityProps) => {
           canvas.fillStyle = cssColors.black;
           canvas.fillRect(0, 0, canvasSize.w, canvasSize.h);
           canvas.save();
-          MapRef.current?.render(canvas);
+          MapRef.current?.render(canvas, new Size(32, 32));
           canvas.restore();
         }}
       />

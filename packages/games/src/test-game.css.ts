@@ -11,6 +11,12 @@ export const screen = style({
 export const container = style({
   width: "100%",
   aspectRatio: `${800 / 600}`,
+  "@media": {
+    "(min-aspect-ratio: 800/600)": {
+      width: "unset",
+      height: "100%",
+    },
+  },
 });
 
 export const canvas = style({

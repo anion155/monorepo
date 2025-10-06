@@ -50,7 +50,7 @@ export const createTMXResource = async (filePath: string) => {
     if (layer.compression) TODO("TMX: data compression is not supported");
     return new Uint16Array(data);
   });
-  const render = (canvas: Canvas2D) => {
+  const render = (canvas: Canvas2D, tileSize: Size = new Size(map.tilewidth, map.tileheight)) => {
     for (const layer of map.layers) {
       if (!layer.visible || layer.opacity === 0) continue;
       if (layer.type === "tilelayer") {
@@ -62,11 +62,7 @@ export const createTMXResource = async (filePath: string) => {
             const gid = data[y * layer.height + x];
             const spriteIndex = sprites.findIndex((_, index) => gid >= gids[index]);
             if (spriteIndex < 0) continue;
-            sprites[spriteIndex].renderSprite(
-              canvas,
-              gid - gids[spriteIndex],
-              new Rect(x * map.tilewidth, y * map.tileheight, map.tilewidth, map.tileheight),
-            );
+            sprites[spriteIndex].renderSprite(canvas, gid - gids[spriteIndex], new Rect(x * tileSize.w, y * tileSize.h, tileSize.w, tileSize.h));
           }
         }
         canvas.restore();
