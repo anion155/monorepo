@@ -47,4 +47,19 @@ describe("class EventEmitter", () => {
     const emitter = new EventEmitter(immidiateScheduler);
     expect(() => emitter.emit("test", 1, 2)).not.toThrow();
   });
+
+  it("events.test() should emit test event", () => {
+    const emitter = new EventEmitter(immidiateScheduler);
+    const listener = jest.fn();
+    emitter.on("test", listener);
+    emitter.events.test(1, 2);
+    expect(listener).toHaveBeenCalledWith(1, 2);
+  });
+
+  it("events.test should be cached", () => {
+    const emitter = new EventEmitter(immidiateScheduler);
+    const test1 = emitter.events.test;
+    const test2 = emitter.events.test;
+    expect(test1).toBe(test2);
+  });
 });
