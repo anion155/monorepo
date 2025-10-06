@@ -1,4 +1,6 @@
-import { Point, Rect, Size } from "@anion155/shared/vectors";
+import { Point } from "@anion155/shared/linear/point";
+import { Rect } from "@anion155/shared/linear/rect";
+import { Size } from "@anion155/shared/linear/size";
 
 export const loadImage = async (src: string) => {
   const image = new Image();

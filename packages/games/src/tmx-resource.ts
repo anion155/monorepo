@@ -1,5 +1,7 @@
 import { DeveloperError, TODO } from "@anion155/shared";
-import { Point, Rect, Size } from "@anion155/shared/vectors";
+import { Point } from "@anion155/shared/linear/point";
+import { Rect } from "@anion155/shared/linear/rect";
+import { Size } from "@anion155/shared/linear/size";
 
 import type { Canvas2D } from "./canvas-layer";
 import { createSpritesResource, loadImage, type SpritesResource } from "./image-resource";

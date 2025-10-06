@@ -1,6 +1,6 @@
+import { Size } from "@anion155/shared/linear/size";
 import { createUseContext } from "@anion155/shared/react";
 import { mergeRefs } from "@anion155/shared/react/merge-refs";
-import { Size } from "@anion155/shared/vectors";
 import type { ComponentProps } from "react";
 import { createContext, useCallback, useMemo, useState } from "react";
 

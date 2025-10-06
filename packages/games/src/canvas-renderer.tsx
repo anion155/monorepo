@@ -1,5 +1,5 @@
+import type { Size } from "@anion155/shared/linear/size";
 import { useStableCallback } from "@anion155/shared/react";
-import type { Size } from "@anion155/shared/vectors";
 import { useEffect, useMemo } from "react";
 
 import type { Canvas2D } from "./canvas-layer";

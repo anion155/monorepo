@@ -2,7 +2,9 @@ import "@anion155/shared/global";
 import "@anion155/shared/react/use-action";
 
 import { Action } from "@anion155/shared/action";
-import { Point, Size } from "@anion155/shared/vectors";
+import { Point } from "@anion155/shared/linear/point";
+import { Size } from "@anion155/shared/linear/size";
+import { useActionAwait } from "@anion155/shared/react/use-action";
 import { Suspense, useRef } from "react";
 
 import GrassMapPath from "@/assets/grass_tileset_map.tmj?url";
@@ -72,7 +74,12 @@ const Spinner = (props: EntityProps) => {
   );
 };
 
-const MapResource = ResourceEntityComponent.createResource(new Action(() => createTMXResource(GrassMapPath)).useAwait);
+const MapResource = ResourceEntityComponent.createResource(
+  (() => {
+    const action = new Action(() => createTMXResource(GrassMapPath));
+    return () => useActionAwait(action);
+  })(),
+);
 const Map = (props: EntityProps) => {
   const MapRef = useRef<TMXResource | null>(null);
   return (

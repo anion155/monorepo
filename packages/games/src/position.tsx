@@ -1,6 +1,6 @@
 import { EventEmitter } from "@anion155/shared/event-emitter";
+import { Point } from "@anion155/shared/linear/point";
 import { useConst } from "@anion155/shared/react";
-import { Point } from "@anion155/shared/vectors";
 import { useEffect } from "react";
 
 import { createEntityComponent, EntityController } from "./entity";
