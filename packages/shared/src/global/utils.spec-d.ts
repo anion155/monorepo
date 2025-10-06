@@ -55,17 +55,17 @@ type DeepMutableCases = [
 
 type ExtendCases = [
   // should make mutable all props no matter how deep
-  Expect<Equal<Extend<{ a: number; b: string }, { b: "test"; c: object }>, { a: number } & { b: "test"; c: object }>>,
+  Expect<Equal<Extend<{ a: number; b: string }, { b: "test"; c: object }>, { a: number; b: "test"; c: object }>>,
 ];
 
 type PartialSomeCases = [
   // should change 'b' to optional
-  Expect<Equal<PartialSome<{ a: number; b: string }, "b">, { a: number } & { b?: string }>>,
+  Expect<Equal<PartialSome<{ a: number; b: string }, "b">, { a: number; b?: string }>>,
 ];
 
 type RequiredSomeCases = [
   // should change 'b' to required
-  Expect<Equal<RequiredSome<{ a?: number; b?: string }, "b">, { a?: number } & { b: string }>>,
+  Expect<Equal<RequiredSome<{ a?: number; b?: string }, "b">, { a?: number; b: string }>>,
 ];
 
 type IfEqualsCases = [
@@ -106,4 +106,10 @@ type TuplePopCases = [
   Expect<Equal<TuplePop<[]>, [[], undefined]>>,
   Expect<Equal<TuplePop<number[]>, [number[], number]>>,
   Expect<Equal<TuplePop<[1, ...number[]]>, [[1, ...number[]], number]>>,
+];
+
+type ExclusiveUnionCases = [
+  // should create tuple
+  Expect<Equal<ExclusiveUnion<{ a: number }, { b: string }>, { a: number; b?: undefined } | { a?: undefined; b: string }>>,
+  Expect<Equal<ExclusiveUnion<{ a: number }, { a: string }>, { a: number } | { a: string }>>,
 ];

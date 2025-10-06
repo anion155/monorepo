@@ -25,7 +25,7 @@ declare global {
   };
 
   /** Takes U and adds not overlapping fields from T */
-  type Extend<T, U> = Omit<T, keyof U> & U;
+  type Extend<T, U> = Omit<Omit<T, keyof U> & U, never>;
   /** Changes some fields to optional */
   type PartialSome<T, K extends keyof T> = Extend<T, Partial<PickHelper<T, K>>>;
   /** Changes some fields to required */
@@ -57,6 +57,12 @@ declare global {
         : [T, T[0]];
 
   type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I extends U) => void ? I : never;
+
+  type ExclusiveUnion<T extends object, U extends object> = T extends unknown
+    ? U extends unknown
+      ? Omit<T & { [K in Exclude<keyof U, keyof T>]?: never }, never> | Omit<U & { [K in Exclude<keyof T, keyof U>]?: never }, never>
+      : never
+    : never;
 }
 
 export {};
