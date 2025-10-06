@@ -1,10 +1,10 @@
-import type { Scheduler } from "./scheduler";
+import type { SchedulerCancelable } from "./scheduler";
 import { asyncScheduler } from "./scheduler";
 
 export class EventEmitter<Events extends Record<string, (...params: never) => void> = Record<string, (...params: unknown[]) => void>> {
   #listeners = new Map<keyof Events, Set<(...params: never) => void>>();
 
-  constructor(private readonly scheduler: Scheduler<unknown> = asyncScheduler) {}
+  constructor(private readonly scheduler: SchedulerCancelable<unknown> = asyncScheduler) {}
 
   on<Event extends keyof Events>(event: Event, listener: (...params: Parameters<Events[Event]>) => void) {
     if (this.#listeners.has(event)) {

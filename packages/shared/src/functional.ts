@@ -92,7 +92,7 @@ export function cloneCallable<Fn extends Callable<never, unknown>>(fn: Fn): Infe
 export function hoistCallable<Source extends Callable<never, unknown>, Hoisted extends Callable<never, unknown>>(
   source: Source,
   hoisted: Hoisted,
-): Extend<Omit<Source, "">, Hoisted> {
+): Extend<Source, Hoisted> & InferCallableSign<Hoisted> {
   Object.setPrototypeOf(hoisted, source);
   if (Object.getOwnPropertyDescriptor(hoisted, "name")) {
     // @ts-expect-error(2704): there is name in fn
@@ -131,7 +131,7 @@ export function wrapCallable<Source extends Callable<never, unknown>, Wrapped ex
   source: Source,
   wrappedFabric: CallableWrapperFabric<Source, Wrapped>,
   name?: string,
-): Extend<Omit<Source, "">, Wrapped> {
+): Extend<Source, Wrapped> & InferCallableSign<Wrapped> {
   return nameCallable(
     name ?? source.name,
     proxyCallable((call, getTarget) => {
@@ -279,7 +279,6 @@ export function reduce<Value, Result>(
     let index = 0;
     while (!results.done) {
       accumulated = reducer(accumulated, results.value, index, (result) => {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw { [reducedSymbol]: result };
       });
       index += 1;
