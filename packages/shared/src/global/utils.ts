@@ -56,8 +56,10 @@ declare global {
         ? [[Head, ...TuplePop<Rest>[0]], TuplePop<Rest>[1]]
         : [T, T[0]];
 
+  /** Converts union type to intersection type */
   type UnionToIntersection<U> = (U extends unknown ? (k: U) => void : never) extends (k: infer I extends U) => void ? I : never;
 
+  /** Creates union of {@link T} and {@link U} types and adds undefined optional definitions */
   type ExclusiveUnion<T extends object, U extends object> = T extends unknown
     ? U extends unknown
       ? Omit<T & { [K in Exclude<keyof U, keyof T>]?: never }, never> | Omit<U & { [K in Exclude<keyof T, keyof U>]?: never }, never>

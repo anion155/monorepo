@@ -13,6 +13,7 @@
     "./ordered-map": "./src/ordered-map.ts",
     "./lift": "./src/lift.ts",
     "./action": "./src/action.ts",
+    "./decorators": "./src/decorators.ts",
     "./react/merge-refs": "./src/react/merge-refs.ts",
     "./react/use-action": "./src/react/use-action.tsx",
     ".": "./src/index.ts"
