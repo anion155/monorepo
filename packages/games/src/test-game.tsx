@@ -2,7 +2,8 @@ import "@anion155/shared/global";
 import "@anion155/shared/react/use-action";
 
 import { Action } from "@anion155/shared/action";
-import { type ForwardedRef, Suspense, useRef } from "react";
+import { Point } from "@anion155/shared/vectors";
+import { Suspense, useRef } from "react";
 
 import GrassMapPath from "@/assets/grass_tileset_map.tmj?url";
 import { Loop } from "@/atoms/loop";
@@ -11,12 +12,13 @@ import { CanvasLayer } from "./canvas-layer";
 import { CanvasRenderer, CanvasRendererEntityComponent } from "./canvas-renderer";
 import { cssColors } from "./css-colors";
 import { EntitiesOrdered } from "./entities-ordered";
-import { Entity, type EntityController } from "./entity";
+import type { EntityProps } from "./entity";
+import { Entity } from "./entity";
 import { GameProvider, useGameContext } from "./game";
+import { PositionEntityComponent } from "./position";
 import { ResourceEntityComponent } from "./resources";
 import * as styles from "./test-game.css";
-import type { TMXResource } from "./tmx-resource";
-import { createTMXResource } from "./tmx-resource";
+import { createTMXResource, type TMXResource } from "./tmx-resource";
 
 export const TestGame = () => {
   return (
@@ -27,9 +29,10 @@ export const TestGame = () => {
           <CanvasLayer width="800" height="600" className={styles.canvas}>
             <CanvasRenderer />
           </CanvasLayer>
-          <Suspense fallback={<Spinner />}>
+          <Camera name="camera" />
+          <Suspense fallback={<Spinner name="spinner" />}>
             <EntitiesOrdered>
-              <GameMap />
+              <Map name="map" />
               <Test />
             </EntitiesOrdered>
           </Suspense>
@@ -42,12 +45,12 @@ export const TestGame = () => {
 const FPS_RATE = 1000 / 60;
 const GameLoop = () => {
   const game = useGameContext();
-  return <Loop ticks={{ [1000]: game.events.frame }} />;
+  return <Loop ticks={{ [FPS_RATE]: game.events.frame }} />;
 };
 
-const Spinner = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
+const Spinner = (props: EntityProps) => {
   return (
-    <Entity ref={ref} name="spinner">
+    <Entity {...props}>
       <CanvasRendererEntityComponent.Register
         render={(canvas, size) => {
           const lines = 16;
@@ -70,22 +73,32 @@ const Spinner = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
 };
 
 const MapResource = ResourceEntityComponent.createResource(new Action(() => createTMXResource(GrassMapPath)).useAwait);
-const GameMap = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
+const Map = (props: EntityProps) => {
   const MapRef = useRef<TMXResource | null>(null);
   return (
-    <Entity ref={ref} name="map">
+    <Entity {...props}>
       <MapResource ref={MapRef} />
       <CanvasRendererEntityComponent.Register
         render={(canvas, canvasSize) => {
           canvas.fillStyle = cssColors.black;
           canvas.fillRect(0, 0, canvasSize.w, canvasSize.h);
+          canvas.save();
           MapRef.current?.render(canvas);
+          canvas.restore();
         }}
       />
     </Entity>
   );
 };
 
-const Test = ({ ref }: { ref?: ForwardedRef<EntityController> }) => {
-  return <Entity ref={ref} name="test"></Entity>;
+const Camera = (props: EntityProps) => {
+  return (
+    <Entity {...props}>
+      <PositionEntityComponent.Register position={new Point(0, 0)} />
+    </Entity>
+  );
+};
+
+const Test = (props: EntityProps) => {
+  return <Entity {...props}></Entity>;
 };

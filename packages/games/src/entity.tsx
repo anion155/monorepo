@@ -37,7 +37,7 @@ export const useEntity = (name?: string, ref?: ForwardedRef<EntityController>) =
   return entity;
 };
 
-type EntityProps = { ref?: ForwardedRef<EntityController>; name?: string; children?: ReactNode };
+export type EntityProps = { ref?: ForwardedRef<EntityController>; name?: string; children?: ReactNode };
 export const Entity = ({ ref, name, children }: EntityProps) => {
   const entity = useEntity(name, ref);
   return passChildren(<EntityContext.Provider value={entity} />, children);
