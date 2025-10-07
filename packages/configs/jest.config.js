@@ -67,15 +67,23 @@ export const base = jestConfig({
  * @param {string} [baseConfigPath]
  */
 export const typescript = (configPath = "./tsconfig.jest.json") => {
-  return jestConfig(createDefaultPreset({ tsconfig: configPath }), {
-    setupFiles: [
-      "@anion155/proposal-iterator-helpers/global",
-      "@anion155/proposal-async-iterator-helpers/global",
-      "@anion155/proposal-explicit-resource-management/global",
-      "@anion155/proposal-promise-with-resolvers/global",
-      "@anion155/shared/jest",
-    ],
-  });
+  return jestConfig(
+    createDefaultPreset({
+      tsconfig: configPath,
+      astTransformers: {
+        after: ["../configs/jest.transformer.ts"],
+      },
+    }),
+    {
+      setupFiles: [
+        "@anion155/proposal-iterator-helpers/global",
+        "@anion155/proposal-async-iterator-helpers/global",
+        "@anion155/proposal-explicit-resource-management/global",
+        "@anion155/proposal-promise-with-resolvers/global",
+        "@anion155/shared/jest",
+      ],
+    },
+  );
 };
 
 export const reactDOM = jestConfig({
