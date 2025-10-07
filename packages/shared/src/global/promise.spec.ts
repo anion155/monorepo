@@ -14,9 +14,9 @@ describe("Promise extensions", () => {
     });
   });
 
-  describe("Promise.wait()", () => {
+  describe("Promise.delay()", () => {
     it("should create promise resolved on timeout", async () => {
-      const promise = Promise.wait(10);
+      const promise = Promise.delay(10);
       await expect(isPromisePending(promise)).resolves.toBe(true);
       await jest.advanceTimersByTimeAsync(10);
       await expect(promise).resolves.toBeUndefined();

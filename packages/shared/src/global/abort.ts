@@ -1,5 +1,21 @@
+import { AbortError } from "../abort";
 import { noop } from "../functional";
-import { defineMethod } from "../object";
+import { defineMethod, modifyMethod } from "../object";
+
+(() => {
+  const controller = new AbortController();
+  controller.abort();
+  if (!controller.signal.reason || !(controller.signal.reason instanceof AbortError)) {
+    modifyMethod(
+      AbortController.prototype,
+      "abort",
+      (original) =>
+        function abort(this: AbortController, reason: unknown = new AbortError()) {
+          original.call(this, reason);
+        },
+    );
+  }
+})();
 
 declare global {
   interface AbortSignal {

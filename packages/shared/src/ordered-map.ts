@@ -1,4 +1,4 @@
-import { createErrorClass } from "./errors";
+import { createErrorClass, DeveloperError } from "./errors";
 
 /**
  * OrderedMap maintains insertion order of keys while providing O(1) key lookup.
@@ -161,4 +161,4 @@ export class OrderedMap<Key, Value> {
   }
 }
 
-export class InvalidOrderedMap extends createErrorClass("OrderedMap is in invalid state") {}
+export class InvalidOrderedMap extends createErrorClass("InvalidOrderedMap", "OrderedMap is in invalid state", DeveloperError) {}

@@ -15,10 +15,10 @@ defineMethod(Promise, "never", function never() {
 declare global {
   interface PromiseConstructor {
     /** Returns promise resolved on timeout */
-    wait(ms: number): Promise<void>;
+    delay(ms: number): Promise<void>;
   }
 }
-defineMethod(Promise, "wait", function wait(ms) {
+defineMethod(Promise, "delay", function delay(ms) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 });
 

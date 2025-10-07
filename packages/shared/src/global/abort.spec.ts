@@ -2,9 +2,17 @@ import "./abort";
 
 import { describe, expect, it, jest } from "@jest/globals";
 
+import { AbortError } from "../abort";
+import { doThrow } from "../do";
 import { isPromisePending } from "../promise";
 
-describe("abort extensions", () => {
+describe("abort utils", () => {
+  it("controller.abort() should use AbortError as default error", () => {
+    const controller = new AbortController();
+    controller.abort();
+    expect(() => doThrow(controller.signal.reason)).toStrictThrow(new AbortError());
+  });
+
   describe("AbortSignal extensions", () => {
     describe(".handle()", () => {
       it("should handle aborted signal", () => {
