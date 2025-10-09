@@ -1,3 +1,4 @@
+import { act } from "@testing-library/react";
 import type { JSXElementConstructor, ReactElement, ReactNode } from "react";
 import { cloneElement, createElement, isValidElement, useEffect } from "react";
 
@@ -80,11 +81,19 @@ export type AnyRender = (
   unmount: () => void;
 };
 
+export type WrappedRenderParams<BaseRender extends AnyRender> = [
+  ui: ReactNode,
+  options?: Omit<Parameters<BaseRender>[1], "wrapper"> & { wrapper?: WrapperArgP | WrapperArgP[] },
+];
 export type WrappedRenderFunction<BaseRender extends AnyRender> = {
-  (ui: ReactNode, options?: Omit<Parameters<BaseRender>[1], "wrapper"> & { wrapper?: WrapperArgP | WrapperArgP[] }): ReturnType<BaseRender>;
+  (...params: WrappedRenderParams<BaseRender>): ReturnType<BaseRender>;
+};
+export type WrappedRenderActedFunction<BaseRender extends AnyRender> = {
+  (...params: WrappedRenderParams<BaseRender>): Promise<ReturnType<BaseRender>>;
 };
 export type WrappedRender<BaseRender extends AnyRender> = WrappedRenderFunction<BaseRender> & {
   render: WrappedRenderFunction<BaseRender>;
+  acted: WrappedRenderActedFunction<BaseRender>;
   baseRender: BaseRender;
   /**
    * Adds {@link next} wrappers to current render function.
@@ -129,6 +138,7 @@ export function createRender<BaseRender extends AnyRender>(
   };
   const methods: Omit<WrappedRender<BaseRender>, ""> = {
     render,
+    acted: (...params) => act(() => render(...params)),
     baseRender,
     with: (...next) => createRender(baseRender, baseOptions, globalWrappers, [...(wrappers ?? []), ...next]),
     without: () => createRender(baseRender, baseOptions, globalWrappers, []),

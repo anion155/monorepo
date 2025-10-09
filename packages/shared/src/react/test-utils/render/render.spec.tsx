@@ -1,7 +1,7 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { render as baseRender } from "@testing-library/react";
+import { act, render as baseRender } from "@testing-library/react";
 import type { ContextType, FC } from "react";
-import { createContext, useContext, useMemo } from "react";
+import { createContext, Suspense, use, useContext, useMemo } from "react";
 
 import { DeveloperError } from "../../../errors";
 import type { Wrapper } from "./base";
@@ -153,6 +153,40 @@ describe("render test utils", () => {
     it("should render without any providers", () => {
       const render = createRender(baseRender, {}, globalWrappers, undefined);
       expect(render.without().render(<TestComponent />).container).toStrictEqual(baseRender(<TestComponent />).container);
+    });
+
+    it.failing("will fail without .acted() wrapper", async () => {
+      const render = createRender(baseRender, {}, new GlobalWrappers(), undefined);
+      const deferred = Promise.withResolvers<string>();
+      const AsyncComponent = () => {
+        return use(deferred.promise);
+      };
+      using errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const component = render(<Suspense fallback="loading" children={<AsyncComponent />} />);
+      expect(component.asFragment()).toHaveTextContent("loading");
+      await act(() => {
+        deferred.resolve("resolved");
+        return Promise.resolve();
+      });
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("A component suspended inside an `act` scope"));
+      expect(component.asFragment()).toHaveTextContent("resolved");
+    });
+
+    it(".acted() should properly render async component", async () => {
+      const render = createRender(baseRender, {}, new GlobalWrappers(), undefined);
+      const deferred = Promise.withResolvers<string>();
+      const AsyncComponent = () => {
+        return use(deferred.promise);
+      };
+      using errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const component = await render.acted(<Suspense fallback="loading" children={<AsyncComponent />} />);
+      expect(component.asFragment()).toHaveTextContent("loading");
+      await act(() => {
+        deferred.resolve("resolved");
+        return Promise.resolve();
+      });
+      expect(component.asFragment()).toHaveTextContent("resolved");
+      expect(errorSpy).toHaveBeenCalledTimes(0);
     });
   });
 
