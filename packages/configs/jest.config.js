@@ -60,6 +60,13 @@ export function jestProjects(baseFabric, scheme) {
 
 export const base = jestConfig({
   clearMocks: true,
+  setupFiles: [
+    "@anion155/proposal-explicit-resource-management/global",
+    "@anion155/proposal-iterator-helpers/global",
+    "@anion155/proposal-async-iterator-helpers/global",
+    "@anion155/proposal-promise-with-resolvers/global",
+    "@anion155/shared/jest",
+  ],
 });
 
 /**
@@ -71,18 +78,9 @@ export const typescript = (configPath = "./tsconfig.jest.json") => {
     createDefaultPreset({
       tsconfig: configPath,
       astTransformers: {
-        after: ["../configs/jest.transformer.ts"],
+        after: ["@anion155/configs/jest.transformer"],
       },
     }),
-    {
-      setupFiles: [
-        "@anion155/proposal-iterator-helpers/global",
-        "@anion155/proposal-async-iterator-helpers/global",
-        "@anion155/proposal-explicit-resource-management/global",
-        "@anion155/proposal-promise-with-resolvers/global",
-        "@anion155/shared/jest",
-      ],
-    },
   );
 };
 

@@ -1,0 +1,18 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+deleted file mode 100644
+index 2a6752990103f99ba7cbc2653dad53eccf0fd6a3..0000000000000000000000000000000000000000
+diff --git a/types/jest-globals.d.ts b/types/jest-globals.d.ts
+index a6819079afe0717892ef711539ee8f13a4a13582..e15194f867388990cbeeaad81e8a3b483b890267 100644
+--- a/types/jest-globals.d.ts
++++ b/types/jest-globals.d.ts
+@@ -2,8 +2,8 @@ import {type expect} from '@jest/globals'
+ import {type TestingLibraryMatchers} from './matchers'
+ 
+ export {}
+-declare module '@jest/expect' {
+-  export interface Matchers<R extends void | Promise<void>>
++declare module 'expect' {
++  export interface Matchers<R extends void | Promise<void>, T = unknown>
+     extends TestingLibraryMatchers<
+       ReturnType<typeof expect.stringContaining>,
+       R

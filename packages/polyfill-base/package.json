@@ -3,6 +3,10 @@
   "private": true,
   "module": "index.ts",
   "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./jest.config": "./jest.config.js"
+  },
   "devDependencies": {
     "@anion155/configs": "workspace:*",
     "@jest/globals": "^30.0.0",

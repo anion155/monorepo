@@ -1,0 +1,15 @@
+diff --git a/build/index.js b/build/index.js
+index f32acb802a24eb6686c2a1a3d82f4068ac5ff2b7..0a9ededa83b931311ad1c70b4f18dc4dc70b7854 100644
+--- a/build/index.js
++++ b/build/index.js
+@@ -371,8 +371,8 @@ class ModuleMocker {
+         return f;
+       };
+       f.withImplementation = withImplementation.bind(this);
+-      if (Symbol.dispose) {
+-        f[Symbol.dispose] = f.mockRestore;
++      if (this._environmentGlobal.Symbol.dispose) {
++        f[this._environmentGlobal.Symbol.dispose] = f.mockRestore;
+       }
+       function withImplementation(fn, callback) {
+         // Remember previous mock implementation, then set new one

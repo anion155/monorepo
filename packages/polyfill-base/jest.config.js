@@ -1,6 +1,6 @@
-import { jestConfig } from "@anion155/configs/jest.config.js";
+import { jestConfig } from "@anion155/configs/jest.config";
 
-/** @typedef {import("@anion155/configs/jest.config.js").Config} Config */
+/** @typedef {import("@anion155/configs/jest.config").Config} Config */
 
 export const polyfillConfig = jestConfig({
   setupFiles: ["@anion155/polyfill-base/setup-jest.ts"],

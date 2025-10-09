@@ -4,3 +4,7 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - unrs-resolver
+
+patchedDependencies:
+  '@testing-library/jest-dom': patches/@testing-library__jest-dom.patch
+  jest-mock: patches/jest-mock.patch
