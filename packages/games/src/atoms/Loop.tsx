@@ -1,5 +1,5 @@
 import { useDeepMemo, useStableCallback } from "@anion155/shared/react";
-import type { Scheduler } from "@anion155/shared/scheduler";
+import type { SchedulerCancelable } from "@anion155/shared/scheduler";
 import { rafScheduler } from "@anion155/shared/scheduler";
 import { useEffect } from "react";
 
@@ -7,7 +7,7 @@ type LoopProps<SchedulerId> = {
   active?: boolean;
   ticks?: Record<number, (deltaTime: DOMHighResTimeStamp) => void>;
   onLoop?: (now: DOMHighResTimeStamp) => void;
-  scheduler?: Scheduler<SchedulerId>;
+  scheduler?: SchedulerCancelable<SchedulerId>;
 };
 
 export const Loop = <SchedulerId,>({ active = true, ticks = {}, onLoop, scheduler = rafScheduler as never }: LoopProps<SchedulerId>) => {

@@ -69,8 +69,8 @@ export class Action<Params extends unknown[], Result> extends EventEmitter<{
     return this.#result;
   }
   get state(): Readonly<ActionRunningState<Params, Result>> | Readonly<ActionResultState<Params, Result>> {
-    if (this.running.status === "pending" || !this.result) return this.running;
-    return this.result;
+    if (this.#running.status === "pending" || !this.#result) return this.#running;
+    return this.#result;
   }
 
   constructor(callback: ActionCallback<Params, Result>) {

@@ -1,7 +1,10 @@
 import { describe, expect, it, jest } from "@jest/globals";
+import { waitFor } from "@testing-library/react";
 import { Suspense } from "react";
 
 import { Action, InvalidActionState } from "../action";
+import { createErrorClass } from "../errors";
+import { ErrorBoundary } from "./error-boundary";
 import { act, render, renderHook } from "./test-utils/render";
 import { useActionAwait, useActionCall, useActionResultState, useActionRunningState, useActionState } from "./use-action";
 
@@ -87,6 +90,27 @@ describe("Action hooks", () => {
       await act(() => Promise.resolve());
       expect(component.asFragment()).toHaveTextContent("resolved");
       expect(spy).toHaveBeenCalledWith("test-2");
+    });
+
+    it("should rethrow action error", async () => {
+      class TestError extends createErrorClass("TestError") {}
+
+      const deferred = Promise.withResolvers<string>();
+      const action = new Action(() => deferred.promise);
+      const Test = () => {
+        useActionAwait<[], string>(action);
+        return "resolved";
+      };
+
+      using errorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+      const component = await renderSuspense.with(<ErrorBoundary fallback="error" />).acted(<Test />);
+      expect(component.asFragment()).toHaveTextContent("loading");
+
+      deferred.reject(new TestError());
+      await waitFor(() => expect(component.asFragment()).toHaveTextContent("error"));
+      expect(errorSpy.mock.calls).toStrictEqual([
+        [expect.any(String), new TestError(), "The above error occurred in the <Test> component.", expect.any(String)],
+      ]);
     });
 
     it("should throw InvalidActionState", async () => {

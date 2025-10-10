@@ -1,6 +1,6 @@
 import { runGC } from "./gc";
 
-/** Allow developer to wait until value created by {@link fabric} is reclaimed. */
+/** Allow developer to wait until value created by {@link fabric} is reclaimed by garbage collector. */
 export class Waiter {
   #registry: FinalizationRegistry<unknown>;
   #waiting = true;
