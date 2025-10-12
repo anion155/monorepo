@@ -114,7 +114,7 @@ describe("class Action", () => {
     promise = action.run();
     (action.running as ActionRunningStatePending<unknown[], string>).abort();
     deferred.reject(new TestError());
-    await promise;
+    await expect(promise).rejects.toStrictThrow(new TestError());
     expect(action.state).toStrictEqual({ status: "rejected", params: [], reason: new AbortError() });
   });
 

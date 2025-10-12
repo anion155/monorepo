@@ -96,15 +96,17 @@ export class Action<Params extends unknown[], Result> extends EventEmitter<{
       this.emit("updated", this.state);
       return promise.then(
         (value) => {
-          if (done) return;
-          done = true;
-          this.#resolved(value, params);
+          if (!done) {
+            done = true;
+            this.#resolved(value, params);
+          }
           return value;
         },
         (reason) => {
-          if (done) return;
-          done = true;
-          this.#rejected(reason, params);
+          if (!done) {
+            done = true;
+            this.#rejected(reason, params);
+          }
           throw reason;
         },
       );
