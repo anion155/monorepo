@@ -49,4 +49,23 @@ describe("Vector(length)", () => {
       (point as unknown as number[])[1] = 3;
     }).toStrictThrow(new TypeError("Cannot assign to read only property '1' of object '[object TestPoint]'"));
   });
+
+  it("Vector.project() should require parseParams() static method", () => {
+    const TestPoint = Vector(2, "TestPoint");
+    const a = new TestPoint(1, 2);
+    const b = new TestPoint(2, 3);
+    // @ts-expect-error - incorrect types
+    expect(() => TestPoint.project(a, b, (a, b) => a + b)).toStrictThrow(new TypeError("this.parseParams is not a function"));
+  });
+
+  it("Vector.project should project vector with operator", () => {
+    class TestPoint extends Vector(2, "TestPoint") {
+      static parseParams(point: TestPoint) {
+        return point;
+      }
+    }
+    const a = new TestPoint(1, 2);
+    const b = new TestPoint(2, 3);
+    expect(TestPoint.project(a, b, (a, b) => a + b)).toStrictEqual(new TestPoint(3, 5));
+  });
 });

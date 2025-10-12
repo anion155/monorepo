@@ -11,16 +11,20 @@ export type RectObject = PointObject & SizeObject;
 /** Rect class. */
 export class Rect extends Vector(4, "Rect") implements PointObject, SizeObject, SizeShortObject {
   /** Parses {@link RectParams} into tuple of 4 numbers */
-  static parse(...params: RectParams): VectorArray<4> {
+  static parseParams(...params: RectParams): VectorArray<4> {
     if (params.length === 4) return params;
-    if (params.length === 2) return [...Point.parse(params[0]), ...Size.parse(params[1])];
+    if (params.length === 2) return [...Point.parseParams(params[0]), ...Size.parseParams(params[1])];
     if ("x" in params[0]) return [params[0].x, params[0].y, params[0].width, params[0].height];
     return params[0];
+  }
+  static parseValue(value: RectValue): Rect {
+    if (value instanceof Rect) return value;
+    return new Rect(...this.parseParams(value));
   }
   constructor(
     ...params: [rect: RectObject | VectorArray<4>] | [point: PointValue, size: SizeValue] | [x: number, y: number, width: number, height: number]
   ) {
-    super(...Rect.parse(...params));
+    super(...Rect.parseParams(...params));
   }
 
   /** Alias for `size[0]` */
