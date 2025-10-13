@@ -22,13 +22,13 @@ export class EntitiesOrderedController extends EntityController implements IEnti
     return this.#children.at(index);
   }
   appendEntity(child: EntityController): void {
-    this.#children.push(child.id, child, true);
+    this.#children.push(child.name, child, true);
     child.parent = this;
   }
   setEntities(...children: EntityController[]): void {
     for (let index = 0; index < children.length; index += 1) {
       const child = children[index];
-      this.#children.set(index, child.id, child);
+      this.#children.set(index, child.name, child);
       child.parent = this;
     }
     for (let index = children.length; index < this.#children.size; index += 1) {
@@ -38,7 +38,7 @@ export class EntitiesOrderedController extends EntityController implements IEnti
   }
   removeEntity(child: EntityController): void {
     child.parent = null;
-    this.#children.delete(child.id);
+    this.#children.delete(child.name);
   }
   clearEntities() {
     for (const [, child] of this.#children) {

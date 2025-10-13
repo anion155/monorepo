@@ -2,10 +2,10 @@ import "@anion155/shared/global";
 import "@anion155/shared/react/use-action";
 
 import { Action } from "@anion155/shared/action";
-import { Point } from "@anion155/shared/linear/point";
 import { Size } from "@anion155/shared/linear/size";
 import { useActionAwait } from "@anion155/shared/react/use-action";
-import { Suspense, useRef } from "react";
+import * as Keys from "keycode-js";
+import { Suspense, useEffect, useRef } from "react";
 
 import GrassMapPath from "@/assets/grass_tileset_map.tmj?url";
 import { Loop } from "@/atoms/loop";
@@ -18,9 +18,8 @@ import type { EntityProps } from "./entity";
 import { Entity } from "./entity";
 import { GameProvider, useGameContext } from "./game";
 import { PositionEntityComponent } from "./position";
-import { ResourceEntityComponent } from "./resources";
 import * as styles from "./test-game.css";
-import { createTMXResource, type TMXResource } from "./tmx-resource";
+import { createTMXResource } from "./tmx-resource";
 
 export const TestGame = () => {
   return (
@@ -47,10 +46,13 @@ export const TestGame = () => {
 const FPS_RATE = 1000 / 60;
 const GameLoop = () => {
   const game = useGameContext();
-  return <Loop ticks={{ [FPS_RATE]: game.events.frame }} />;
+  return <Loop ticks={{ [FPS_RATE]: game.events.frame }} onLoop={game.events.tick} />;
 };
 
-const Spinner = (props: EntityProps) => {
+type SpinnerEntityComponents = {
+  canvasRenderer: CanvasRendererEntityComponent;
+};
+const Spinner = (props: EntityProps<SpinnerEntityComponents>) => {
   return (
     <Entity {...props}>
       <CanvasRendererEntityComponent.Register
@@ -74,23 +76,21 @@ const Spinner = (props: EntityProps) => {
   );
 };
 
-const MapResource = ResourceEntityComponent.createResource(
-  (() => {
-    const action = new Action(() => createTMXResource(GrassMapPath));
-    return () => useActionAwait(action);
-  })(),
-);
+const MapResource = new Action(() => createTMXResource(GrassMapPath));
 const Map = (props: EntityProps) => {
-  const MapRef = useRef<TMXResource | null>(null);
+  const game = useGameContext();
+  const camera = game.getEntity<CameraEntityComponents>("camera")?.components.position;
+  const map = useActionAwait(MapResource);
   return (
     <Entity {...props}>
-      <MapResource ref={MapRef} />
       <CanvasRendererEntityComponent.Register
         render={(canvas, canvasSize) => {
           canvas.fillStyle = cssColors.black;
           canvas.fillRect(0, 0, canvasSize.w, canvasSize.h);
           canvas.save();
-          MapRef.current?.render(canvas, new Size(32, 32));
+          canvas.translate(canvasSize.w / 2, canvasSize.h / 2);
+          if (camera) canvas.translate(-camera.value.x, -camera.value.y);
+          map.render(canvas, new Size(32, 32));
           canvas.restore();
         }}
       />
@@ -98,10 +98,36 @@ const Map = (props: EntityProps) => {
   );
 };
 
-const Camera = (props: EntityProps) => {
+type CameraEntityComponents = {
+  position: PositionEntityComponent;
+};
+const Camera = (props: EntityProps<CameraEntityComponents>) => {
+  const ref = useRef<PositionEntityComponent>(null);
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      const position = ref.current;
+      if (!position) return;
+      switch (event.code) {
+        case Keys.CODE_A:
+          position.value = position.value.add([-10, 0]);
+          break;
+        case Keys.CODE_D:
+          position.value = position.value.add([10, 0]);
+          break;
+        case Keys.CODE_S:
+          position.value = position.value.add([0, 10]);
+          break;
+        case Keys.CODE_W:
+          position.value = position.value.add([0, -10]);
+          break;
+      }
+    };
+    document.addEventListener("keypress", handler);
+    return () => document.removeEventListener("keypress", handler);
+  }, []);
   return (
     <Entity {...props}>
-      <PositionEntityComponent.Register position={new Point(0, 0)} />
+      <PositionEntityComponent.Register ref={ref} />
     </Entity>
   );
 };

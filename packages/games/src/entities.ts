@@ -5,7 +5,7 @@ import type { EntityController } from "./entity";
 
 export type IEntities = {
   [Symbol.iterator](): Iterator<EntityController>;
-  getEntity(id: string): EntityController | undefined;
+  getEntity(name: string): EntityController | undefined;
   appendEntity(child: EntityController): void;
   removeEntity(child: EntityController): void;
   clearEntities(): void;

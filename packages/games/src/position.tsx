@@ -1,12 +1,26 @@
 import { EventEmitter } from "@anion155/shared/event-emitter";
 import { Point } from "@anion155/shared/linear/point";
-import { useConst } from "@anion155/shared/react";
-import { useEffect } from "react";
+import { useFabric } from "@anion155/shared/react";
+import { type ForwardedRef, useEffect } from "react";
 
-import { createEntityComponent, EntityController } from "./entity";
+import { EntityController, useRegisterEntityComponent } from "./entity";
 
-export class PositionController extends EventEmitter<{ change(value: Point): void }> {
-  #value: Point = new Point(0, 0);
+type PositionEntityComponentProps = { ref?: ForwardedRef<PositionEntityComponent>; name?: string } & ExclusiveUnion<
+  { position?: Point },
+  { follow: EntityController<{ position: PositionEntityComponent }> | PositionEntityComponent }
+>;
+const PositionEntityComponentRegister = ({ ref, position, follow, name }: PositionEntityComponentProps) => {
+  const component = useFabric(() => new PositionEntityComponent((position ?? follow) as never, name), [follow, name, position]);
+  useEffect(() => {
+    if (position) component.value = position;
+    else if (follow) component.follow(follow);
+  }, [component, follow, position]);
+  useRegisterEntityComponent(component, ref);
+  return null;
+};
+
+export class PositionEntityComponent extends EventEmitter<{ change(value: Point): void }> {
+  #value: Point;
   #follow: { (): void } | undefined = undefined;
   get value(): Point {
     return this.#value;
@@ -17,10 +31,9 @@ export class PositionController extends EventEmitter<{ change(value: Point): voi
     this.#value = next;
     this.emit("change", next);
   }
-
-  follow(follow: EntityController | PositionController) {
+  follow(follow: PositionEntityComponent | EntityController<{ position: PositionEntityComponent }>) {
     this.#follow?.();
-    if (follow instanceof EntityController) follow = PositionEntityComponent.get(follow)!;
+    if (follow instanceof EntityController) follow = follow.components.position;
     const cleanup = follow.on("change", (next) => {
       this.#value = next;
       this.emit("change", next);
@@ -28,22 +41,23 @@ export class PositionController extends EventEmitter<{ change(value: Point): voi
     this.#follow = cleanup;
     return cleanup;
   }
-}
 
-declare module "./entity" {
-  interface EntityComponents {
-    position: PositionController;
+  constructor(position?: Point, name?: string);
+  constructor(follow: PositionEntityComponent | EntityController<{ position: PositionEntityComponent }>, name?: string);
+  constructor(
+    positionOrFollow?: Point | PositionEntityComponent | EntityController<{ position: PositionEntityComponent }>,
+    readonly name = "position",
+  ) {
+    super();
+    if (positionOrFollow instanceof Point) {
+      this.#value = positionOrFollow;
+    } else if (positionOrFollow) {
+      this.#value = new Point(0, 0);
+      this.follow(positionOrFollow);
+    } else {
+      this.#value = new Point(0, 0);
+    }
   }
-}
 
-export const PositionEntityComponent = createEntityComponent(
-  "position",
-  ({ position, follow }: ExclusiveUnion<{ position?: Point }, { follow: EntityController | PositionController }>) => {
-    const controller = useConst(() => new PositionController());
-    useEffect(() => {
-      if (position) controller.value = position;
-      if (follow) controller.follow(follow);
-    }, [controller, follow, position]);
-    return controller;
-  },
-);
+  static Register = PositionEntityComponentRegister;
+}

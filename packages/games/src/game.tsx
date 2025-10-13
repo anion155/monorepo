@@ -7,7 +7,13 @@ import { createContext, useImperativeHandle } from "react";
 import { EntitiesContext, type IEntities } from "./entities";
 import { type EntityController } from "./entity";
 
-export class GameController extends EventEmitter<{ frame(deltaTime: DOMHighResTimeStamp): void }> implements IEntities {
+export class GameController
+  extends EventEmitter<{
+    tick(deltaTime: DOMHighResTimeStamp): void;
+    frame(deltaTime: DOMHighResTimeStamp): void;
+  }>
+  implements IEntities
+{
   readonly #children = new Map<string, EntityController>();
   *[Symbol.iterator](): Iterator<EntityController> {
     const queue: EntityController[] = [...this.#children.values()];
@@ -17,16 +23,17 @@ export class GameController extends EventEmitter<{ frame(deltaTime: DOMHighResTi
       if (isIterable(entity)) queue.push(...(entity as Iterable<EntityController>));
     }
   }
-  getEntity(id: string): EntityController | undefined {
-    return this.#children.get(id) ?? Iterator.from(this[Symbol.iterator]()).find((entity) => entity.id === id);
+  getEntity<Components extends Record<string, unknown> = Record<string, unknown>>(name: string): EntityController<Components> | undefined {
+    const entity = this.#children.get(name) ?? Iterator.from(this).find((entity) => entity.name === name);
+    return entity as never;
   }
   appendEntity(child: EntityController): void {
-    this.#children.set(child.id, child);
+    this.#children.set(child.name, child);
     child.parent = this;
   }
   removeEntity(child: EntityController): void {
     child.parent = null;
-    this.#children.delete(child.id);
+    this.#children.delete(child.name);
   }
   clearEntities() {
     this.#children.forEach((child) => (child.parent = null));

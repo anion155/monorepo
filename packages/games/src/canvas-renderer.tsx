@@ -1,10 +1,11 @@
 import type { Size } from "@anion155/shared/linear/size";
-import { useStableCallback } from "@anion155/shared/react";
-import { useEffect, useMemo } from "react";
+import { useFabric, useStableCallback } from "@anion155/shared/react";
+import type { ForwardedRef } from "react";
+import { useEffect } from "react";
 
 import type { Canvas2D } from "./canvas-layer";
 import { useCanvasContext } from "./canvas-layer";
-import { createEntityComponent } from "./entity";
+import { useRegisterEntityComponent } from "./entity";
 import { useGameContext } from "./game";
 
 export const CanvasRenderer = () => {
@@ -14,11 +15,10 @@ export const CanvasRenderer = () => {
     return game.on("frame", (deltaTime) => {
       canvas.clearRect(0, 0, size.w, size.h);
       for (const entity of game) {
-        const canvasComponent = CanvasRendererEntityComponent.get(entity);
-        if (canvasComponent) {
+        for (const component of entity.findComponents(CanvasRendererEntityComponent)) {
           canvas.save();
           try {
-            canvasComponent.render(canvas, size, deltaTime);
+            component.render(canvas, size, deltaTime);
           } finally {
             canvas.restore();
           }
@@ -29,13 +29,27 @@ export const CanvasRenderer = () => {
   return null;
 };
 
-export type CanvasRendererEntityComponent = {
-  render(canvas: Canvas2D, canvasSize: Size, deltaTime: number): void;
+type CanvasRendererRender = {
+  (canvas: Canvas2D, canvasSize: Size, deltaTime: number): void;
 };
-export const CanvasRendererEntityComponent = createEntityComponent(
-  "CanvasRenderer",
-  (props: CanvasRendererEntityComponent): CanvasRendererEntityComponent => {
-    const render = useStableCallback(props.render);
-    return useMemo(() => ({ render }), [render]);
-  },
-);
+
+type CanvasRendererEntityComponentProps = {
+  ref?: ForwardedRef<CanvasRendererEntityComponent>;
+  name?: string;
+  render: CanvasRendererRender;
+};
+const CanvasRendererEntityComponentRegister = ({ ref, render, name }: CanvasRendererEntityComponentProps) => {
+  const stableRender = useStableCallback(render);
+  const component = useFabric(() => new CanvasRendererEntityComponent(stableRender, name), [name, stableRender]);
+  useRegisterEntityComponent(component, ref);
+  return null;
+};
+
+export class CanvasRendererEntityComponent {
+  constructor(
+    readonly render: CanvasRendererRender,
+    readonly name = "canvasRenderer",
+  ) {}
+
+  static Register = CanvasRendererEntityComponentRegister;
+}
