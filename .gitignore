@@ -10,3 +10,7 @@ packages/*/.env.*
 # Build
 
 packages/*/dist
+
+# MacOS
+
+.DS_Store

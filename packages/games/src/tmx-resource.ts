@@ -9,10 +9,7 @@ import { SpritesResource } from "./sprites-resource";
 import type { TMXMap, TMXTileLayer } from "./tmx";
 
 export class TMXResource {
-  static fromFile: {
-    (filePath: string): Promise<TMXResource>;
-    new (filePath: string): Promise<TMXResource>;
-  } = async function fromFile(filePath: string) {
+  static async fromFile(filePath: string) {
     const response = await fetch(filePath);
     const tmx = (await response.json()) as TMXMap;
     const images: HTMLImageElement[] = [];
@@ -21,7 +18,7 @@ export class TMXResource {
       images.push(await loadImage(filePath.substring(0, filePath.lastIndexOf("/")) + "/" + tileset.image));
     }
     return new TMXResource(tmx, images);
-  } as never;
+  }
 
   readonly sprites: readonly SpritesResource[];
   readonly gids: readonly number[];
@@ -75,12 +72,14 @@ export class TMXResource {
 
   readonly globalIndexes = new Map.withFabric((globalIndex: number) => {
     const spritesIndex = this.sprites.findIndex((_, index) => globalIndex >= this.gids[index]);
+    if (spritesIndex < 0) return undefined;
     const spriteIndex = globalIndex - this.gids[spritesIndex];
     return [spritesIndex, spriteIndex] as const;
   });
   readonly asImageResources = new Map.withFabric((globalIndex: number) => {
-    const [spritesIndex, spriteIndex] = this.globalIndexes.emplace(globalIndex);
-    return this.sprites[spritesIndex].asImageResources.emplace(spriteIndex);
+    const indexes = this.globalIndexes.emplace(globalIndex);
+    if (!indexes) return undefined;
+    return this.sprites[indexes[0]].asImageResources.emplace(indexes[1]);
   });
 
   renderMap(canvas: Canvas2D, tileSize: Size = this.tileSize) {
@@ -92,12 +91,15 @@ export class TMXResource {
         const data = this.dataMap.emplace(layer);
         for (let y = layer.y ?? 0; y < layer.height; y += 1) {
           for (let x = layer.x ?? 0; x < layer.width; x += 1) {
-            const [spritesIndex, spriteIndex] = this.globalIndexes.emplace(data[y * layer.height + x]);
+            const indexes = this.globalIndexes.emplace(data[y * layer.height + x]);
+            if (!indexes) continue;
             const dest = new Rect(x * tileSize.w, y * tileSize.h, tileSize.w, tileSize.h);
-            this.sprites[spritesIndex].renderSprite(canvas, spriteIndex, dest);
+            this.sprites[indexes[0]].renderSprite(canvas, indexes[1], dest);
           }
         }
         canvas.restore();
+      } else if (layer.type === "objectgroup") {
+        // TODO
       } else {
         TODO(`TMX: layer type '${layer.type}' is not supported`);
       }

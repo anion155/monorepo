@@ -40,3 +40,12 @@ export class SpritesResource extends ImageResource {
     return new ImageResource(this.image, this.bounds[index]);
   });
 }
+
+// export class SpritesAnimation<Variants extends string> {
+//   constructor(readonly sprites: SpritesResource, config: Record<Variants, >) {}
+
+//   render(canvas: CanvasDrawImage, deltaTime: DOMHighResTimeStamp, variant: , dest: Point | Rect) {
+
+//     this.sprites.renderSprite(canvas, index, dest);
+//   }
+// }

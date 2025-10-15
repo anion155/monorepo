@@ -18,7 +18,7 @@ export class GameController
   *[Symbol.iterator](): Iterator<EntityController> {
     const queue: EntityController[] = [...this.#children.values()];
     while (queue.length > 0) {
-      const entity = queue.pop()!;
+      const entity = queue.shift()!;
       yield entity;
       if (isIterable(entity)) queue.push(...(entity as Iterable<EntityController>));
     }
