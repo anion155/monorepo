@@ -27,7 +27,7 @@ export type VectorConstructor<N extends number> = {
     a: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
     b: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
     project: (a: number, b: number) => number,
-  ): Vector<N>;
+  ): InstanceType<VC>;
 };
 
 /** Readonly tuple of numbers, can be used as base for types like Point. */

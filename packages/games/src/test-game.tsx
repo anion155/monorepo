@@ -19,7 +19,7 @@ import { Entity } from "./entity";
 import { GameProvider, useGameContext } from "./game";
 import { PositionEntityComponent } from "./position";
 import * as styles from "./test-game.css";
-import { createTMXResource } from "./tmx-resource";
+import { TMXResource } from "./tmx-resource";
 
 export const TestGame = () => {
   return (
@@ -76,7 +76,7 @@ const Spinner = (props: EntityProps<SpinnerEntityComponents>) => {
   );
 };
 
-const MapResource = new Action(() => createTMXResource(GrassMapPath));
+const MapResource = new Action(() => new TMXResource.fromFile(GrassMapPath));
 const Map = (props: EntityProps) => {
   const game = useGameContext();
   const camera = game.getEntity<CameraEntityComponents>("camera")?.components.position;
@@ -90,7 +90,7 @@ const Map = (props: EntityProps) => {
           canvas.save();
           canvas.translate(canvasSize.w / 2, canvasSize.h / 2);
           if (camera) canvas.translate(-camera.value.x, -camera.value.y);
-          map.render(canvas, new Size(32, 32));
+          map.renderMap(canvas, new Size(32, 32));
           canvas.restore();
         }}
       />

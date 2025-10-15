@@ -1,6 +1,6 @@
 import { Point } from "@anion155/shared/linear/point";
 import { Rect } from "@anion155/shared/linear/rect";
-import { Size } from "@anion155/shared/linear/size";
+import type { Size } from "@anion155/shared/linear/size";
 
 export const loadImage = async (src: string) => {
   const image = new Image();
@@ -12,13 +12,23 @@ export const loadImage = async (src: string) => {
   return image;
 };
 
-export const createImageResource = (image: HTMLImageElement) => {
-  function render(canvas: CanvasDrawImage, dest: Point | Rect): void;
-  function render(canvas: CanvasDrawImage, source: Rect, dest: Point): void;
-  function render(canvas: CanvasDrawImage, source: Point, dest: Rect): void;
-  function render(canvas: CanvasDrawImage, source: Rect, dest: Rect): void;
-  function render(canvas: CanvasDrawImage, source: Point, dest: Point, size: Size): void;
-  function render(
+export class ImageResource {
+  readonly rect: Rect;
+  constructor(
+    readonly image: Readonly<HTMLImageElement>,
+    ...params: [] | [offset: Point] | [rect: Rect]
+  ) {
+    if (!params.length) this.rect = new Rect([0, 0], image);
+    else if (params[0] instanceof Point) this.rect = new Rect(params[0], image);
+    else this.rect = params[0];
+  }
+
+  renderImage(canvas: CanvasDrawImage, dest: Point | Rect): void;
+  renderImage(canvas: CanvasDrawImage, source: Rect, dest: Point): void;
+  renderImage(canvas: CanvasDrawImage, source: Point, dest: Rect): void;
+  renderImage(canvas: CanvasDrawImage, source: Rect, dest: Rect): void;
+  renderImage(canvas: CanvasDrawImage, source: Point, dest: Point, size: Size): void;
+  renderImage(
     canvas: CanvasDrawImage,
     ...params:
       | [dest: Point | Rect]
@@ -27,8 +37,10 @@ export const createImageResource = (image: HTMLImageElement) => {
       | [source: Rect, dest: Rect]
       | [source: Point, dest: Point, size: Size]
   ): void {
+    const { rect } = this;
     if (params.length === 3) {
-      canvas.drawImage(image, params[0].x, params[0].y, params[2].w, params[2].h, params[1].x, params[1].y, params[2].w, params[2].h);
+      const [source, dest, size] = params;
+      canvas.drawImage(this.image, rect.x + source.x, rect.y + source.y, size.w, size.h, dest.x, dest.y, size.w, size.h);
     } else if (params.length === 2) {
       const [source, dest] = params;
       let sourceSize: Size | undefined;
@@ -37,47 +49,13 @@ export const createImageResource = (image: HTMLImageElement) => {
       else sourceSize = (dest as Rect).size;
       if (dest instanceof Rect) destSize = dest.size;
       else destSize = (source as Rect).size;
-      canvas.drawImage(image, source.x, source.y, sourceSize.w, sourceSize.h, dest.x, dest.y, destSize.w, destSize.h);
+      canvas.drawImage(this.image, rect.x + source.x, rect.y + source.y, sourceSize.w, sourceSize.h, dest.x, dest.y, destSize.w, destSize.h);
     } else if (params[0] instanceof Rect) {
-      canvas.drawImage(image, params[0].x, params[0].y, params[0].w, params[0].h);
+      const [dest] = params;
+      canvas.drawImage(this.image, rect.x, rect.y, rect.w, rect.h, dest.x, dest.y, dest.w, dest.h);
     } else {
-      canvas.drawImage(image, params[0].x, params[0].y);
+      const [dest] = params;
+      canvas.drawImage(this.image, rect.x, rect.y, rect.w, rect.h, dest.x, dest.y, rect.w, rect.h);
     }
   }
-  return { image, render };
-};
-export type ImageResource = ReturnType<typeof createImageResource>;
-
-export const createSpritesResource = (
-  image: HTMLImageElement,
-  maybeBounds: { spriteSize: Size; size?: Size; offset?: Point; gaps?: Size } | Rect[],
-) => {
-  let bounds: Rect[];
-  if (Array.isArray(maybeBounds)) {
-    bounds = maybeBounds;
-  } else {
-    const {
-      spriteSize,
-      size = new Size(Math.trunc(image.width / spriteSize.w), Math.trunc(image.height / spriteSize.h)),
-      offset = new Point(0, 0),
-      gaps = new Size(0, 0),
-    } = maybeBounds;
-    bounds = [];
-    for (let y = 0; y < size.h; y += 1) {
-      for (let x = 0; x < size.w; x += 1) {
-        bounds.push(
-          new Rect(offset.x + x * (spriteSize.w + gaps.w) - gaps.w, offset.y + y * (spriteSize.h + gaps.h) - gaps.h, spriteSize.w, spriteSize.h),
-        );
-      }
-    }
-  }
-
-  function renderSprite(canvas: CanvasDrawImage, maybeIndex: number | Point, dest: Point | Rect) {
-    const index = typeof maybeIndex === "number" ? maybeIndex : maybeIndex.y * cols + maybeIndex.x;
-    const source = bounds[index];
-    const destSize = dest instanceof Rect ? dest.size : source.size;
-    canvas.drawImage(image, source.x, source.y, source.w, source.h, dest.x, dest.y, destSize.w, destSize.h);
-  }
-  return { ...createImageResource(image), renderSprite };
-};
-export type SpritesResource = ReturnType<typeof createSpritesResource>;
+}
