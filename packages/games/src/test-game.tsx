@@ -7,12 +7,11 @@ import { useActionAwait } from "@anion155/shared/react/use-action";
 import * as Keys from "keycode-js";
 import { Suspense, useEffect, useRef } from "react";
 
-import GrassMapPath from "@/assets/grass_tileset_map.tmj?url";
+import TestMapPath from "@/assets/test_map/test_map.tmj?url";
 import { Loop } from "@/atoms/loop";
 
 import { CanvasLayer } from "./canvas-layer";
 import { CanvasRenderer, CanvasRendererEntityComponent } from "./canvas-renderer";
-import { cssColors } from "./css-colors";
 import { EntitiesOrdered } from "./entities-ordered";
 import type { EntityProps } from "./entity";
 import { Entity } from "./entity";
@@ -30,11 +29,12 @@ export const TestGame = () => {
           <CanvasLayer width="800" height="600" className={styles.canvas}>
             <CanvasRenderer />
           </CanvasLayer>
-          <Camera name="camera" />
           <Suspense fallback={<Spinner name="spinner" />}>
             <EntitiesOrdered>
+              <Background />
               <Map name="map" />
-              <Test />
+              <Player name="player" />
+              <Camera name="camera" components={{ position: "player" }} />
             </EntitiesOrdered>
           </Suspense>
         </GameProvider>
@@ -76,7 +76,20 @@ const Spinner = (props: EntityProps<SpinnerEntityComponents>) => {
   );
 };
 
-const MapResource = new Action(() => new TMXResource.fromFile(GrassMapPath));
+const Background = (props: EntityProps) => {
+  return (
+    <Entity {...props}>
+      <CanvasRendererEntityComponent.Register
+        render={(canvas, canvasSize) => {
+          canvas.fillStyle = "black";
+          canvas.fillRect(0, 0, canvasSize.w, canvasSize.h);
+        }}
+      />
+    </Entity>
+  );
+};
+
+const MapResource = new Action(() => TMXResource.fromFile(TestMapPath));
 const Map = (props: EntityProps) => {
   const game = useGameContext();
   const camera = game.getEntity<CameraEntityComponents>("camera")?.components.position;
@@ -85,13 +98,9 @@ const Map = (props: EntityProps) => {
     <Entity {...props}>
       <CanvasRendererEntityComponent.Register
         render={(canvas, canvasSize) => {
-          canvas.fillStyle = cssColors.black;
-          canvas.fillRect(0, 0, canvasSize.w, canvasSize.h);
-          canvas.save();
           canvas.translate(canvasSize.w / 2, canvasSize.h / 2);
           if (camera) canvas.translate(-camera.value.x, -camera.value.y);
           map.renderMap(canvas, new Size(32, 32));
-          canvas.restore();
         }}
       />
     </Entity>
@@ -102,6 +111,17 @@ type CameraEntityComponents = {
   position: PositionEntityComponent;
 };
 const Camera = (props: EntityProps<CameraEntityComponents>) => {
+  return (
+    <Entity {...props}>
+      <PositionEntityComponent.Register />
+    </Entity>
+  );
+};
+
+type PlayerEntityComponents = {
+  position: PositionEntityComponent;
+};
+const Player = (props: EntityProps<PlayerEntityComponents>) => {
   const ref = useRef<PositionEntityComponent>(null);
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -128,10 +148,14 @@ const Camera = (props: EntityProps<CameraEntityComponents>) => {
   return (
     <Entity {...props}>
       <PositionEntityComponent.Register ref={ref} />
+      <CanvasRendererEntityComponent.Register
+        render={(canvas, canvasSize) => {
+          const position = ref.current?.value;
+          if (!position) return;
+          canvas.fillStyle = "red";
+          canvas.fillRect(position.x - 5, position.y - 5, 10, 10);
+        }}
+      />
     </Entity>
   );
-};
-
-const Test = (props: EntityProps) => {
-  return <Entity {...props}></Entity>;
 };

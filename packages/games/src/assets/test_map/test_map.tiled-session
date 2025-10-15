@@ -1,0 +1,52 @@
+{
+    "activeFile": "test_map.tmj",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "test_map.tmj": {
+            "scale": 1.13740234375,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 200.4567699836868,
+                "y": 312.5543058298274
+            }
+        },
+        "test_map.tmj#Grass tileset": {
+            "scaleInDock": 1
+        },
+        "test_map.tmj#Things tileset": {
+            "scaleInDock": 1
+        },
+        "test_map.tmx": {
+            "scale": 1.13740234375,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 200.4567699836868,
+                "y": 312.5543058298274
+            }
+        },
+        "test_map.tmx#Grass tileset": {
+            "scaleInDock": 1
+        },
+        "test_map.tmx#Things tileset": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.imagePath": "/Users/anion/Sources/anion155/monorepo/packages/games/src/assets/test_map",
+    "map.lastUsedFormat": "json",
+    "openFiles": [
+        "test_map.tmj"
+    ],
+    "project": "test_map.tiled-project",
+    "recentFiles": [
+        "test_map.tmj",
+        "test_map.tmx"
+    ],
+    "tileset.embedInMap": true,
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}

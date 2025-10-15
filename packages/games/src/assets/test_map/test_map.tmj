@@ -173,18 +173,41 @@
          "width":32,
          "x":0,
          "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":5,
+         "name":"Objects",
+         "objects":[
+                {
+                 "gid":305,
+                 "height":16,
+                 "id":1,
+                 "name":"torch-1",
+                 "rotation":0,
+                 "type":"torch",
+                 "visible":true,
+                 "width":16,
+                 "x":208,
+                 "y":304
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
         }],
- "nextlayerid":5,
- "nextobjectid":1,
+ "nextlayerid":6,
+ "nextobjectid":2,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.10.2",
+ "tiledversion":"1.11.2",
  "tileheight":16,
  "tilesets":[
         {
          "columns":16,
          "firstgid":1,
-         "image":"grass_tileset_16x16.png",
+         "image":"grass.png",
          "imageheight":256,
          "imagewidth":256,
          "margin":0,
@@ -388,6 +411,19 @@
                          "wangid":[0, 3, 0, 3, 0, 3, 0, 0]
                         }]
                 }]
+        }, 
+        {
+         "columns":12,
+         "firstgid":257,
+         "image":"things.png",
+         "imageheight":128,
+         "imagewidth":192,
+         "margin":0,
+         "name":"Things tileset",
+         "spacing":0,
+         "tilecount":96,
+         "tileheight":16,
+         "tilewidth":16
         }],
  "tilewidth":16,
  "type":"map",
