@@ -1,9 +1,10 @@
-import { AbortError } from "./abort";
-import { createErrorClass, DeveloperError } from "./errors";
-import { EventEmitter } from "./event-emitter";
-import { compare } from "./misc";
+import { AbortError } from "../abort";
+import { createErrorClass, DeveloperError } from "../errors";
+import { EventEmitter } from "../event-emitter";
+import { compare } from "../misc";
 
 export type ActionContext = {
+  action: Action<unknown[], unknown>;
   signal: AbortSignal;
 };
 
@@ -90,7 +91,7 @@ export class Action<Params extends unknown[], Result> extends EventEmitter<{
         this.#rejected(reason, params);
       };
       this.#running = { status: "pending", params, abort };
-      const promise = this.#callback.call({ signal: controller.signal }, ...params);
+      const promise = this.#callback.call({ action: this, signal: controller.signal }, ...params);
       this.#running.promise = promise;
       this.emit("running", this.#running);
       this.emit("updated", this.state);

@@ -2,10 +2,10 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { waitFor } from "@testing-library/react";
 import { Suspense } from "react";
 
-import { Action, InvalidActionState } from "../action";
 import { createErrorClass } from "../errors";
-import { ErrorBoundary } from "./error-boundary";
-import { act, render, renderHook } from "./test-utils/render";
+import { ErrorBoundary } from "../react/error-boundary";
+import { act, render, renderHook } from "../react/test-utils/render";
+import { Action, InvalidActionState } from "./action";
 import { useActionAwait, useActionCall, useActionResultState, useActionRunningState, useActionState } from "./use-action";
 
 describe("Action hooks", () => {

@@ -1,12 +1,12 @@
 import type { ComponentProps, DependencyList, FunctionComponent } from "react";
 import { use, useEffect, useRef, useState } from "react";
 
-import type { ActionCallback, ActionRunningStatePending } from "../action";
-import { Action, InvalidActionState } from "../action";
 import { compare } from "../misc";
-import { useDeepMemo } from "./use-deep-memo";
-import { useRenderEffect } from "./use-render-effect";
-import { useStableCallback } from "./use-stable-callback";
+import { useDeepMemo } from "../react/use-deep-memo";
+import { useRenderEffect } from "../react/use-render-effect";
+import { useStableCallback } from "../react/use-stable-callback";
+import type { ActionCallback, ActionRunningStatePending } from "./action";
+import { Action, InvalidActionState } from "./action";
 
 export const useActionRunningState = <Params extends unknown[], Result>(action: Action<Params, Result>) => {
   const [state, setState] = useState(action.running);

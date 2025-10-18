@@ -1,13 +1,13 @@
-import "./global/abort";
-import "./global/promise";
+import "../global/abort";
+import "../global/promise";
 
 import { describe, it, jest } from "@jest/globals";
 import expect from "expect";
 
-import { AbortError } from "./abort";
+import { AbortError } from "../abort";
+import { doThrow } from "../do";
+import { createErrorClass } from "../errors";
 import { Action, ActionRunningStatePending, InvalidActionState } from "./action";
-import { doThrow } from "./do";
-import { createErrorClass } from "./errors";
 
 describe("class Action", () => {
   class TestError extends createErrorClass("TestError") {}
