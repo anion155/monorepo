@@ -152,11 +152,11 @@ export class OrderedMap<Key, Value> {
     }
   }
   /** Iterate over entries [key, value]. */
-  get entries(): IterableIterator<[Key, Value]> {
+  entries(): IterableIterator<[Key, Value]> {
     return this[Symbol.iterator]();
   }
   /** Iterate over values. */
-  get values(): IterableIterator<Value> {
+  values(): IterableIterator<Value> {
     return this[Symbol.iterator]().map(([, value]) => value);
   }
 }

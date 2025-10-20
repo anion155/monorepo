@@ -142,11 +142,11 @@ describe("class OrderedMap", () => {
       ["b", 2],
     ]);
     expect([...map.keys]).toEqual(["a", "b"]);
-    expect([...map.entries]).toEqual([
+    expect([...map.entries()]).toEqual([
       ["a", 1],
       ["b", 2],
     ]);
-    expect([...map.values]).toEqual([1, 2]);
+    expect([...map.values()]).toEqual([1, 2]);
   });
 
   it("should set at index", () => {
