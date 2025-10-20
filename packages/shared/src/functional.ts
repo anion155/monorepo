@@ -167,12 +167,11 @@ export function wrapCallable<Source extends Callable<never, unknown>, Wrapped ex
  * }) }
  * context.method()
  */
-export function liftContext<Fn extends Functor<[never, ...never], unknown>>(fn: Fn) {
-  type FnInferred = InferFunctor<Fn>;
-  type Params = TupleUnshift<FnInferred["Params"]>;
-  return wrapCallable<Fn, Method<Params[0], Params[1], FnInferred["Result"]>>(fn, (callFn, _, getContext) => (...params) => {
+export function liftContext<Context, Params extends unknown[], Result, Hoisted>(fn: { (context: Context, ...params: Params): Result } & Hoisted) {
+  /** FIXME: remade {@link wrapCallable} in same manner */
+  return wrapCallable(fn, (callFn, _, getContext) => (...params) => {
     return callFn([getContext(), ...params] as never, null);
-  });
+  }) as Method<Context, Params, Result> & Omit<Hoisted, never>;
 }
 
 export type Curried<C extends Functor<never, unknown>> = C & { curried: C };
