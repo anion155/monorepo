@@ -1,7 +1,8 @@
 import type { Scheduler } from "./scheduler";
 import { asyncScheduler } from "./scheduler";
 
-export class EventEmitter<Events extends Record<string, (...params: never) => void> = Record<string, (...params: unknown[]) => void>> {
+export type AnyEventsMap<Params extends unknown[] = unknown[]> = Record<string, (...params: Params) => void>;
+export class EventEmitter<Events extends AnyEventsMap<never> = AnyEventsMap> {
   #listeners = new Map<keyof Events, Set<(...params: never) => void>>();
   #scheduler: Scheduler;
 
@@ -36,8 +37,9 @@ export class EventEmitter<Events extends Record<string, (...params: never) => vo
 
   /** Emits {@link event}. Uses {@link scheduler} to schedule listeners. */
   emit<Event extends keyof Events>(event: Event, ...params: Parameters<Events[Event]>) {
-    const listeners = this.#listeners.get(event)?.values().toArray();
-    if (!listeners) return;
+    const listenersSet = this.#listeners.get(event);
+    if (!listenersSet?.size) return;
+    const listeners = [...listenersSet];
     this.#scheduler.schedule(() => listeners.forEach((listener) => listener(...(params as never))));
   }
 
