@@ -31,19 +31,19 @@ export class Point extends Vector(2, "Point") implements PointObject {
 
   /** Creates new Point by adding this's scalars to {@link other} vector's scalars. */
   add(other: PointValue | number) {
-    return Point.project(this, other, (a, b) => a + b);
+    return Point.operate(this, other, (a, b) => a + b);
   }
   /** Creates new Point by subtracting {@link other} vector's scalars from this's scalars. */
   sub(other: PointValue | number) {
-    return Point.project(this, other, (a, b) => a - b);
+    return Point.operate(this, other, (a, b) => a - b);
   }
   /** Creates new Point by multiplying this's scalars to {@link other} vector's scalars. */
   mul(other: PointValue | number) {
-    return Point.project(this, other, (a, b) => a * b);
+    return Point.operate(this, other, (a, b) => a * b);
   }
   /** Creates new Point by dividing this's scalars by {@link other} vector's scalars. */
   div(other: PointValue | number) {
-    return Point.project(this, other, (a, b) => a / b);
+    return Point.operate(this, other, (a, b) => a / b);
   }
 }
 

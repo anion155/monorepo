@@ -31,6 +31,14 @@ describe("Vector(length)", () => {
     }
   });
 
+  it("should spread vector", () => {
+    const TestPoint = Vector(2, "TestPoint");
+    const point = new TestPoint(1, 2);
+    const fn = (a: number, b: number) => a + b;
+    expect([...point]).toStrictEqual([1, 2]);
+    expect(fn(...point._)).toBe(3);
+  });
+
   it("should not let change length", () => {
     const TestPoint = Vector(2, "TestPoint");
     const point = new TestPoint(1, 2);
@@ -50,15 +58,24 @@ describe("Vector(length)", () => {
     }).toStrictThrow(new TypeError("Cannot assign to read only property '1' of object '[object TestPoint]'"));
   });
 
-  it("Vector.project() should require parseParams() static method", () => {
-    const TestPoint = Vector(2, "TestPoint");
-    const a = new TestPoint(1, 2);
-    const b = new TestPoint(2, 3);
-    // @ts-expect-error - incorrect types
-    expect(() => TestPoint.project(a, b, (a, b) => a + b)).toStrictThrow(new TypeError("this.parseParams is not a function"));
+  it("Vector.project() should project vector", () => {
+    class TestPoint extends Vector(2, "TestPoint") {
+      static parseParams(point: TestPoint) {
+        return point;
+      }
+    }
+    const point = new TestPoint(1, 2);
+    expect(TestPoint.project(point, (value) => value * 2)).toStrictEqual(new TestPoint(2, 4));
   });
 
-  it("Vector.project should project vector with operator", () => {
+  it("Vector.project() should require parseParams() static method", () => {
+    const TestPoint = Vector(2, "TestPoint");
+    const point = new TestPoint(1, 2);
+    // @ts-expect-error - incorrect types
+    expect(() => TestPoint.project(point, (value) => value * 2)).toStrictThrow(new TypeError("this.parseParams is not a function"));
+  });
+
+  it("Vector.operate() should project vector with operator", () => {
     class TestPoint extends Vector(2, "TestPoint") {
       static parseParams(point: TestPoint) {
         return point;
@@ -66,6 +83,14 @@ describe("Vector(length)", () => {
     }
     const a = new TestPoint(1, 2);
     const b = new TestPoint(2, 3);
-    expect(TestPoint.project(a, b, (a, b) => a + b)).toStrictEqual(new TestPoint(3, 5));
+    expect(TestPoint.operate(a, b, (a, b) => a + b)).toStrictEqual(new TestPoint(3, 5));
+  });
+
+  it("Vector.operate() should require parseParams() static method", () => {
+    const TestPoint = Vector(2, "TestPoint");
+    const a = new TestPoint(1, 2);
+    const b = new TestPoint(2, 3);
+    // @ts-expect-error - incorrect types
+    expect(() => TestPoint.operate(a, b, (a, b) => a + b)).toStrictThrow(new TypeError("this.parseParams is not a function"));
   });
 });
