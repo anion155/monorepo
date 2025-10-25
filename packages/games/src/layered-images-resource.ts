@@ -11,7 +11,7 @@ export type ImageLayer = {
 export class LayeredImagesResource {
   constructor(readonly layers: Array<ImageLayer | null>) {}
 
-  render(ctx: CanvasDrawImage & CanvasState & CanvasTransform, ...params: SourceDestParams) {
+  renderImage(ctx: CanvasDrawImage & CanvasState & CanvasTransform, ...params: SourceDestParams) {
     for (const layer of this.layers) {
       if (!layer) continue;
       const { source, dest } = parseSourceDestArg(new Rect(layer.offset, layer.image), ...params);

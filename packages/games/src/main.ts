@@ -294,7 +294,8 @@ class TiledMap extends Entity {
       return this.entity as TiledMap;
     }
     render({ ctx }: CanvasRendererContext, _deltaTime: DOMHighResTimeStamp): void {
-      this.#entity.#resource?.render(ctx, new Point(0));
+      if (!this.#entity.resource) return;
+      this.#entity.#resource?.renderMap(ctx, { tileSize: this.#entity.tileSize });
     }
   })(this, "renderer");
 }
@@ -375,12 +376,12 @@ class TestGame extends Game {
   constructor(root: HTMLDivElement) {
     super({ name: "test" });
     this.loop = new LoopEntityComponent({ frame: 1000 / 60 }, this, "loop");
-    const tileSize = new Size(20, 20);
+    const tileSize = new Size(32, 32);
     this.canvasRenderer = new CanvasRendererLayer({ root, size: [800, 600], name: "renderer", parent: this });
     this.map = new TiledMap({ filePath: TestMapPath, name: "map", parent: this, tileSize });
     this.camera = new Camera({ name: "camera", parent: this });
     this.canvasRenderer.offset.bind(() => this.camera.position.value);
-    this.player = new Player({ position: [20, 15], name: "player", parent: this });
+    this.player = new Player({ position: [16, 16], name: "player", parent: this });
     this.camera.position.bind(() => Point.mul(this.player.position.value, tileSize));
   }
 

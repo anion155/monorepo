@@ -1,6 +1,8 @@
 import { DeveloperError, TODO } from "@anion155/shared";
+import type { PointValue } from "@anion155/shared/linear/point";
 import { Point } from "@anion155/shared/linear/point";
 import { Rect } from "@anion155/shared/linear/rect";
+import type { SizeValue } from "@anion155/shared/linear/size";
 import { Size } from "@anion155/shared/linear/size";
 
 import type { ImageLayer } from "./layered-images-resource";
@@ -546,11 +548,11 @@ export type TMXPoint = {
 };
 
 export class TMXResource extends LayeredImagesResource {
-  static async parse(tmx: TMXMap, path: string) {
+  static async parse(map: TMXMap, path: string) {
     const sprites: SpritesResource[] = [];
     const gids: number[] = [];
-    for (let index = 0; index < tmx.tilesets.length; index += 1) {
-      const tileset = tmx.tilesets[index];
+    for (let index = 0; index < map.tilesets.length; index += 1) {
+      const tileset = map.tilesets[index];
       if (!tileset.image) throw new DeveloperError("TMX: tileset without image is not suppoerted");
       const image = await loadImage(path + "/" + tileset.image);
       const {
@@ -572,7 +574,7 @@ export class TMXResource extends LayeredImagesResource {
       gids.push(firstgid);
       sprites.push(sprite);
     }
-    const tileSize = new Size(tmx.tilewidth, tmx.tileheight);
+    const tileSize = new Size(map.tilewidth, map.tileheight);
 
     const dataMap = new WeakMap.withFabric((layer: TMXTileLayer): Uint16Array => {
       const encoding = layer.encoding ?? "csv";
@@ -594,13 +596,13 @@ export class TMXResource extends LayeredImagesResource {
     });
 
     const layers: Array<ImageLayer | null> = [];
-    for (const layer of tmx.layers) {
+    for (const layer of map.layers) {
       if (!layer.visible || layer.opacity === 0) {
         layers.push(null);
         continue;
       }
       if (layer.type === "tilelayer") {
-        const canvas = new OffscreenCanvas(tmx.width * tileSize.w, tmx.height * tileSize.h);
+        const canvas = new OffscreenCanvas(layer.width * tileSize.w, layer.height * tileSize.h);
         const ctx = canvas.getContext("2d");
         if (!ctx) throw new DeveloperError("Failed to create OffscreenCanvas 2D context");
         if (layer.opacity !== undefined) ctx.globalAlpha = layer.opacity;
@@ -615,7 +617,7 @@ export class TMXResource extends LayeredImagesResource {
         }
         const blob = await canvas.convertToBlob({ type: "image/png", quality: 1 });
         const image = await loadImage(URL.createObjectURL(blob));
-        layers.push({ image, offset: new Point(0) });
+        layers.push({ image, offset: new Point(layer.offsetx ?? 0, layer.offsety ?? 0) });
       } else if (layer.type === "objectgroup") {
         // TODO
         layers.push(null);
@@ -623,11 +625,44 @@ export class TMXResource extends LayeredImagesResource {
         TODO(`TMX: layer type '${layer.type}' is not supported`);
       }
     }
-    return new TMXResource(layers);
+    const combined: Array<ImageLayer | null> = [];
+    for (let index = 0; index < layers.length; index += 1) {
+      const current = layers[index];
+      const prev = combined[combined.length - 1];
+      if (!prev || !current) {
+        combined.push(current);
+      } else {
+        const rect = new Rect(current.offset, current.image).expandBy([prev.offset, prev.image]);
+        const canvas = new OffscreenCanvas(rect.w, rect.h);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new DeveloperError("Failed to create OffscreenCanvas 2D context");
+        ctx.drawImage(prev.image, ...prev.offset.sub(rect)._);
+        ctx.drawImage(current.image, ...current.offset.sub(rect)._);
+        const blob = await canvas.convertToBlob({ type: "image/png", quality: 1 });
+        const image = await loadImage(URL.createObjectURL(blob));
+        combined[combined.length - 1] = { image, offset: rect.position };
+      }
+    }
+    return new TMXResource(map, combined);
   }
 
   static async load(filepath: string) {
     const tmx = await loadJSON<TMXMap>(filepath);
     return await this.parse(tmx, filepath.substring(0, filepath.lastIndexOf("/")));
+  }
+
+  constructor(
+    readonly map: TMXMap,
+    layers: Array<ImageLayer | null>,
+  ) {
+    super(layers);
+  }
+
+  renderMap(ctx: CanvasDrawImage & CanvasState & CanvasTransform, { offset = [0, 0], tileSize }: { offset?: PointValue; tileSize?: SizeValue } = {}) {
+    if (tileSize) {
+      super.renderImage(ctx, new Rect(offset, Size.mul(tileSize, this.map)));
+    } else {
+      super.renderImage(ctx, Point.parseValue(offset));
+    }
   }
 }
