@@ -3,7 +3,6 @@ import { Point } from "@anion155/shared/linear/point";
 import { Rect } from "@anion155/shared/linear/rect";
 import { Size } from "@anion155/shared/linear/size";
 
-import type { Canvas2D } from "./canvas-layer";
 import { loadImage } from "./image-resource";
 import { SpritesResource } from "./sprites-resource";
 import type { TMXMap, TMXTileLayer } from "./tmx";
@@ -82,7 +81,7 @@ export class TMXResource {
     return this.sprites[indexes[0]].asImageResources.emplace(indexes[1]);
   });
 
-  renderMap(ctx: Canvas2D, tileSize: Size = this.tileSize) {
+  renderMap(ctx: CanvasState & CanvasCompositing & CanvasDrawImage, tileSize: Size = this.tileSize) {
     for (const layer of this.tmx.layers) {
       if (!layer.visible || layer.opacity === 0) continue;
       if (layer.type === "tilelayer") {

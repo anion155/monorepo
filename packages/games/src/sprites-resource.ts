@@ -32,10 +32,10 @@ export class SpritesResource extends ImageResource {
     }
   }
 
-  renderSprite(canvas: CanvasDrawImage, index: number, dest: Point | Rect) {
+  renderSprite(ctx: CanvasDrawImage, index: number, dest: Point | Rect) {
     const source = this.bounds[index];
     const destSize = dest instanceof Rect ? dest.size : source.size;
-    canvas.drawImage(this.image, source.x, source.y, source.w, source.h, dest.x, dest.y, destSize.w, destSize.h);
+    ctx.drawImage(this.image, source.x, source.y, source.w, source.h, dest.x, dest.y, destSize.w, destSize.h);
   }
 
   readonly asImageResources = new Map.withFabric((index: number) => {
