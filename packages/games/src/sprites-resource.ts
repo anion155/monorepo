@@ -1,3 +1,5 @@
+import "@anion155/shared/global";
+
 import { Point } from "@anion155/shared/linear/point";
 import { Rect } from "@anion155/shared/linear/rect";
 import { Size } from "@anion155/shared/linear/size";

@@ -82,22 +82,22 @@ export class TMXResource {
     return this.sprites[indexes[0]].asImageResources.emplace(indexes[1]);
   });
 
-  renderMap(canvas: Canvas2D, tileSize: Size = this.tileSize) {
+  renderMap(ctx: Canvas2D, tileSize: Size = this.tileSize) {
     for (const layer of this.tmx.layers) {
       if (!layer.visible || layer.opacity === 0) continue;
       if (layer.type === "tilelayer") {
-        canvas.save();
-        if (layer.opacity !== undefined) canvas.globalAlpha = layer.opacity;
+        ctx.save();
+        if (layer.opacity !== undefined) ctx.globalAlpha = layer.opacity;
         const data = this.dataMap.emplace(layer);
         for (let y = layer.y ?? 0; y < layer.height; y += 1) {
           for (let x = layer.x ?? 0; x < layer.width; x += 1) {
             const indexes = this.globalIndexes.emplace(data[y * layer.height + x]);
             if (!indexes) continue;
             const dest = new Rect(x * tileSize.w, y * tileSize.h, tileSize.w, tileSize.h);
-            this.sprites[indexes[0]].renderSprite(canvas, indexes[1], dest);
+            this.sprites[indexes[0]].renderSprite(ctx, indexes[1], dest);
           }
         }
-        canvas.restore();
+        ctx.restore();
       } else if (layer.type === "objectgroup") {
         // TODO
       } else {

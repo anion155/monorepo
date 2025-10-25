@@ -1,3 +1,3 @@
-import { base, jest, react, typescript } from "@anion155/configs/eslint.config";
+import { base, jest, typescript } from "@anion155/configs/eslint.config";
 
-export default [...base, ...typescript, ...jest, ...react];
+export default [...base, ...typescript, ...jest];
