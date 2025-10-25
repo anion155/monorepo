@@ -285,7 +285,7 @@ class TiledMap extends Entity {
     return this.#resource;
   }
   protected async _initialize(stack: AsyncDisposableStack): Promise<void> {
-    this.#resource = await TMXResource.fromFile(this.filePath);
+    this.#resource = await TMXResource.load(this.filePath);
     stack.append(() => (this.#resource = null));
   }
 
@@ -293,9 +293,8 @@ class TiledMap extends Entity {
     get #entity(): TiledMap {
       return this.entity as TiledMap;
     }
-
     render({ ctx }: CanvasRendererContext, _deltaTime: DOMHighResTimeStamp): void {
-      this.#entity.#resource?.renderMap(ctx);
+      this.#entity.#resource?.render(ctx, new Point(0));
     }
   })(this, "renderer");
 }

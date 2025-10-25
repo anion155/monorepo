@@ -3,14 +3,35 @@ import type { RectValue } from "@anion155/shared/linear/rect";
 import { Rect } from "@anion155/shared/linear/rect";
 import type { Size } from "@anion155/shared/linear/size";
 
-export const loadImage = async (src: string) => {
-  const image = new Image();
-  await new Promise<void>((resolve, reject) => {
-    image.onload = () => resolve();
-    image.onerror = (event) => reject(typeof event === "string" ? new Error(event) : new Error());
-    image.src = src;
-  });
-  return image;
+export type SourceDestParams =
+  | [dest: Point | Rect]
+  | [source: Rect, dest: Point]
+  | [source: Point, dest: Rect]
+  | [source: Rect, dest: Rect]
+  | [source: Point, dest: Point, size: Size];
+export const parseSourceDestArg = (wholeSource: Rect, ...params: SourceDestParams): { source: Rect; dest: Rect } => {
+  if (params.length === 3) {
+    const [source, dest, size] = params;
+    return { source: new Rect(wholeSource.x + source.x, wholeSource.y + source.y, size.w, size.h), dest: new Rect(dest.x, dest.y, size.w, size.h) };
+  } else if (params.length === 2) {
+    const [source, dest] = params;
+    let sourceSize: Size | undefined;
+    let destSize: Size | undefined;
+    if (source instanceof Rect) sourceSize = source.size;
+    else sourceSize = (dest as Rect).size;
+    if (dest instanceof Rect) destSize = dest.size;
+    else destSize = (source as Rect).size;
+    return {
+      source: new Rect(wholeSource.x + source.x, wholeSource.y + source.y, sourceSize.w, sourceSize.h),
+      dest: new Rect(dest.x, dest.y, destSize.w, destSize.h),
+    };
+  } else if (params[0] instanceof Rect) {
+    const [dest] = params;
+    return { source: wholeSource, dest };
+  } else {
+    const [dest] = params;
+    return { source: wholeSource, dest: new Rect(dest.x, dest.y, wholeSource.w, wholeSource.h) };
+  }
 };
 
 export class ImageResource {
@@ -24,39 +45,8 @@ export class ImageResource {
     else this.rect = Rect.parseValue(params[0]);
   }
 
-  renderImage(ctx: CanvasDrawImage, dest: Point | Rect): void;
-  renderImage(ctx: CanvasDrawImage, source: Rect, dest: Point): void;
-  renderImage(ctx: CanvasDrawImage, source: Point, dest: Rect): void;
-  renderImage(ctx: CanvasDrawImage, source: Rect, dest: Rect): void;
-  renderImage(ctx: CanvasDrawImage, source: Point, dest: Point, size: Size): void;
-  renderImage(
-    ctx: CanvasDrawImage,
-    ...params:
-      | [dest: Point | Rect]
-      | [source: Rect, dest: Point]
-      | [source: Point, dest: Rect]
-      | [source: Rect, dest: Rect]
-      | [source: Point, dest: Point, size: Size]
-  ): void {
-    const { rect } = this;
-    if (params.length === 3) {
-      const [source, dest, size] = params;
-      ctx.drawImage(this.image, rect.x + source.x, rect.y + source.y, size.w, size.h, dest.x, dest.y, size.w, size.h);
-    } else if (params.length === 2) {
-      const [source, dest] = params;
-      let sourceSize: Size | undefined;
-      let destSize: Size | undefined;
-      if (source instanceof Rect) sourceSize = source.size;
-      else sourceSize = (dest as Rect).size;
-      if (dest instanceof Rect) destSize = dest.size;
-      else destSize = (source as Rect).size;
-      ctx.drawImage(this.image, rect.x + source.x, rect.y + source.y, sourceSize.w, sourceSize.h, dest.x, dest.y, destSize.w, destSize.h);
-    } else if (params[0] instanceof Rect) {
-      const [dest] = params;
-      ctx.drawImage(this.image, rect.x, rect.y, rect.w, rect.h, dest.x, dest.y, dest.w, dest.h);
-    } else {
-      const [dest] = params;
-      ctx.drawImage(this.image, rect.x, rect.y, rect.w, rect.h, dest.x, dest.y, rect.w, rect.h);
-    }
+  renderImage(ctx: CanvasDrawImage, ...params: SourceDestParams): void {
+    const { source, dest } = parseSourceDestArg(this.rect, ...params);
+    ctx.drawImage(this.image, source.x, source.y, source.w, source.h, dest.x, dest.y, dest.w, dest.h);
   }
 }
