@@ -29,21 +29,25 @@ export class Point extends Vector(2, "Point") implements PointObject {
     return this[1];
   }
 
-  /** Creates new Point by adding this's scalars to {@link other} vector's scalars. */
-  add(other: PointValue | number) {
-    return Point.operate(this, other, (a, b) => a + b);
+  /** Creates new Vector by adding this's scalars to {@link other}'s scalars. */
+  add(other: PointValue) {
+    return Point.add(this, other);
   }
-  /** Creates new Point by subtracting {@link other} vector's scalars from this's scalars. */
-  sub(other: PointValue | number) {
-    return Point.operate(this, other, (a, b) => a - b);
+  /** Creates new Vector by subtracting {@link other}'s scalars from this's scalars. */
+  sub(other: PointValue) {
+    return Point.sub(this, other);
   }
-  /** Creates new Point by multiplying this's scalars to {@link other} vector's scalars. */
-  mul(other: PointValue | number) {
-    return Point.operate(this, other, (a, b) => a * b);
+  /** Creates new Vector by multiplying this's scalars with {@link other}'s scalars. */
+  mul(other: PointValue) {
+    return Point.mul(this, other);
   }
-  /** Creates new Point by dividing this's scalars by {@link other} vector's scalars. */
-  div(other: PointValue | number) {
-    return Point.operate(this, other, (a, b) => a / b);
+  /** Creates new Vector by dividing this's scalars by {@link other}'s scalars. */
+  div(other: PointValue) {
+    return Point.div(this, other);
+  }
+  /** Creates new Vector with remainders of dividing this's scalars by {@link other}'s scalars. */
+  mod(other: PointValue) {
+    return Point.mod(this, other);
   }
 }
 
