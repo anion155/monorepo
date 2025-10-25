@@ -1,5 +1,6 @@
-import type { VectorArray } from "../vector";
-import { Vector } from "../vector";
+import { cached } from "../decorators";
+import type { InferVectorValue, VectorArray } from "../vector";
+import { parseVectorValue, Vector } from "../vector";
 
 export type PointObject = { readonly x: number; readonly y: number };
 
@@ -13,18 +14,19 @@ export class Point extends Vector(2, "Point") implements PointObject {
     return params[0];
   }
   static parseValue(value: PointValue): Point {
-    if (value instanceof Point) return value;
-    return new Point(...this.parseParams(value));
+    return parseVectorValue(2, this, value);
   }
   constructor(...params: [point: PointObject | VectorArray<2> | number] | [x: number, y: number]) {
     super(...Point.parseParams(...params));
   }
 
   /** Alias for `point[0]` */
+  @cached
   get x() {
     return this[0];
   }
   /** Alias for `point[1]` */
+  @cached
   get y() {
     return this[1];
   }
@@ -50,7 +52,5 @@ export class Point extends Vector(2, "Point") implements PointObject {
     return Point.mod(this, other);
   }
 }
-
 export type PointParams = ConstructorParameters<typeof Point>;
-
-export type PointValue = Point | Extract<PointParams, { length: 1 }>[0];
+export type PointValue = InferVectorValue<2, typeof Point>;

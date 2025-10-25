@@ -1,6 +1,6 @@
 import { cached } from "../decorators";
-import type { VectorArray } from "../vector";
-import { Vector } from "../vector";
+import type { InferVectorValue, VectorArray } from "../vector";
+import { parseVectorValue, Vector } from "../vector";
 import type { PointObject, PointValue } from "./point";
 import { Point } from "./point";
 import type { SizeObject, SizeShortObject, SizeValue } from "./size";
@@ -18,8 +18,7 @@ export class Rect extends Vector(4, "Rect") implements PointObject, SizeObject, 
     return params[0];
   }
   static parseValue(value: RectValue): Rect {
-    if (value instanceof Rect) return value;
-    return new Rect(...this.parseParams(value));
+    return parseVectorValue(4, this, value);
   }
   constructor(
     ...params: [rect: RectObject | VectorArray<4>] | [point: PointValue, size: SizeValue] | [x: number, y: number, width: number, height: number]
@@ -28,26 +27,33 @@ export class Rect extends Vector(4, "Rect") implements PointObject, SizeObject, 
   }
 
   /** Alias for `size[0]` */
+  @cached
   get x() {
     return this[0];
   }
   /** Alias for `size[1]` */
+  @cached
   get y() {
     return this[1];
   }
+
   /** Alias for `size[2]` */
+  @cached
   get w() {
     return this[2];
   }
   /** Alias for `size[2]` */
+  @cached
   get width() {
     return this[2];
   }
   /** Alias for `size[3]` */
+  @cached
   get h() {
     return this[3];
   }
   /** Alias for `size[3]` */
+  @cached
   get height() {
     return this[3];
   }
@@ -63,8 +69,16 @@ export class Rect extends Vector(4, "Rect") implements PointObject, SizeObject, 
   get size() {
     return new Size(this);
   }
+
+  /** Expands this rect with {@link other} rect. */
+  expandBy(other: RectValue) {
+    const _other = Rect.parseValue(other);
+    const x = Math.min(this.x, _other.x);
+    const y = Math.min(this.y, _other.y);
+    const w = Math.max(this.x + this.w, _other.x + _other.w) - x;
+    const h = Math.max(this.y + this.h, _other.y + _other.h) - y;
+    return new Rect(x, y, w, h);
+  }
 }
-
 export type RectParams = ConstructorParameters<typeof Rect>;
-
-export type RectValue = Extract<RectParams, { length: 1 }>[0];
+export type RectValue = InferVectorValue<4, typeof Rect>;

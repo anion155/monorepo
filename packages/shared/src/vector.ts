@@ -16,57 +16,52 @@ export type Vector<N extends number> = VectorArray<N> & {
   readonly _: VectorArray<N>;
 };
 
-type VectorArrayConstructor<N extends number> = Constructor<[...VectorArray<N>], Vector<N>> & {
-  parseParams(other: VectorArray<N>): VectorArray<N>;
-  parseParams(...params: never): VectorArray<N>;
+export type InferVectorValue<N extends number, VC extends Constructor<never, VectorArray<N>>> =
+  | InstanceType<VC>
+  | Extract<ConstructorParameters<VC>, { length: 1 }>[0]
+  | Exclude<ConstructorParameters<VC>, { length: 1 }>;
+export const parseVectorValue = <N extends number, VC extends Constructor<never, VectorArray<N>>>(
+  length: N,
+  VC: VC,
+  value: InferVectorValue<N, VC>,
+): InstanceType<VC> => {
+  if (value instanceof VC) return value as never;
+  if (Array.isArray(value) && value.length > 1) return new VC(...(value as never)) as never;
+  // @ts-expect-error - conflicted typings
+  return new VC(value) as never;
 };
+
+type ParseVectorConstructor<N extends number> = Constructor<never, Vector<N>> & {
+  parseValue(param: never): Vector<N>;
+};
+type InferVectorParseValue<N extends number, VC extends ParseVectorConstructor<N>> = Extract<Parameters<VC["parseValue"]>, { length: 1 }>[0];
 /** Class constructor for {@link Vector} */
 export type VectorConstructor<N extends number> = {
   new (...values: VectorArray<N>): Vector<N>;
   prototype: Vector<N>;
 
   /** Projects vectors's scalars with {@link project}. */
-  projectScalars<VC extends VectorArrayConstructor<N>, Vectors extends Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0][]>(
+  projectScalars<VC extends ParseVectorConstructor<N>, Vectors extends InferVectorParseValue<N, VC>[]>(
     this: VC,
     ...params: [...points: Vectors, project: NoInfer<(...params: [...values: VectorArray<Vectors["length"]>, index: number]) => number>]
   ): VectorArray<N>;
 
   /** Creates new Vector by projecting vectors's scalars with {@link project}. */
-  project<VC extends VectorArrayConstructor<N>, Vectors extends Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0][]>(
+  project<VC extends ParseVectorConstructor<N>, Vectors extends InferVectorParseValue<N, VC>[]>(
     this: VC,
     ...params: [...points: Vectors, project: NoInfer<(...params: [...values: VectorArray<Vectors["length"]>, index: number]) => number>]
   ): InstanceType<VC>;
 
   /** Creates new Vector by adding {@link a}'s scalars to {@link b}'s scalars. */
-  add<VC extends VectorArrayConstructor<N>>(
-    this: VC,
-    a: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-    b: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-  ): InstanceType<VC>;
+  add<VC extends ParseVectorConstructor<N>>(this: VC, a: InferVectorParseValue<N, VC>, b: InferVectorParseValue<N, VC>): InstanceType<VC>;
   /** Creates new Vector by subtracting {@link b}'s scalars from {@link a}'s scalars. */
-  sub<VC extends VectorArrayConstructor<N>>(
-    this: VC,
-    a: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-    b: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-  ): InstanceType<VC>;
+  sub<VC extends ParseVectorConstructor<N>>(this: VC, a: InferVectorParseValue<N, VC>, b: InferVectorParseValue<N, VC>): InstanceType<VC>;
   /** Creates new Vector by multiplying {@link a}'s scalars with {@link b}'s scalars. */
-  mul<VC extends VectorArrayConstructor<N>>(
-    this: VC,
-    a: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-    b: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-  ): InstanceType<VC>;
+  mul<VC extends ParseVectorConstructor<N>>(this: VC, a: InferVectorParseValue<N, VC>, b: InferVectorParseValue<N, VC>): InstanceType<VC>;
   /** Creates new Vector by dividing {@link a}'s scalars by {@link b}'s scalars. */
-  div<VC extends VectorArrayConstructor<N>>(
-    this: VC,
-    a: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-    b: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-  ): InstanceType<VC>;
+  div<VC extends ParseVectorConstructor<N>>(this: VC, a: InferVectorParseValue<N, VC>, b: InferVectorParseValue<N, VC>): InstanceType<VC>;
   /** Creates new Vector with remainders of dividing {@link a}'s scalars by {@link b}'s scalars. */
-  mod<VC extends VectorArrayConstructor<N>>(
-    this: VC,
-    a: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-    b: Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0],
-  ): InstanceType<VC>;
+  mod<VC extends ParseVectorConstructor<N>>(this: VC, a: InferVectorParseValue<N, VC>, b: InferVectorParseValue<N, VC>): InstanceType<VC>;
 };
 
 /** Readonly tuple of numbers, can be used as base for types like Point. */
@@ -93,9 +88,9 @@ export const Vector = <N extends number>(length: N, name: string = `Vector(${len
 
   fabric.prototype = prototype;
 
-  function projectScalars(this: VectorArrayConstructor<N>, ...params: [...vectors: unknown[], project: (value: number) => number]) {
+  function projectScalars(this: ParseVectorConstructor<N>, ...params: [...vectors: unknown[], project: (value: number) => number]) {
     const project = params.pop() as (value: number) => number;
-    const vectors = params.map((vector) => this.parseParams(vector as never));
+    const vectors = params.map((param) => this.parseValue(param as never));
     return Array.from({ length }, (_, index) => {
       // @ts-expect-error - complicated type
       return project(...vectors.map((vector) => vector[index]), index);
@@ -103,29 +98,29 @@ export const Vector = <N extends number>(length: N, name: string = `Vector(${len
   }
   fabric.projectScalars = projectScalars;
 
-  function project(this: VectorArrayConstructor<N>, ...params: [...vectors: unknown[], project: (value: number) => number]) {
-    return new this(...projectScalars.call(this, ...params));
+  function project(this: ParseVectorConstructor<N>, ...params: [...vectors: unknown[], project: (value: number) => number]) {
+    return this.parseValue(projectScalars.call(this, ...params));
   }
   fabric.project = project;
 
   /* eslint-disable @typescript-eslint/no-unsafe-return */
-  fabric.add = function add(this: VectorArrayConstructor<N>, a: unknown, b: unknown) {
+  fabric.add = function add(this: ParseVectorConstructor<N>, a: unknown, b: unknown) {
     // @ts-expect-error - complicated type
     return project.call(this, a, b, (a, b) => a + b);
   };
-  fabric.sub = function sub(this: VectorArrayConstructor<N>, a: unknown, b: unknown) {
+  fabric.sub = function sub(this: ParseVectorConstructor<N>, a: unknown, b: unknown) {
     // @ts-expect-error - complicated type
     return project.call(this, a, b, (a, b) => a - b);
   };
-  fabric.mul = function mul(this: VectorArrayConstructor<N>, a: unknown, b: unknown) {
+  fabric.mul = function mul(this: ParseVectorConstructor<N>, a: unknown, b: unknown) {
     // @ts-expect-error - complicated type
     return project.call(this, a, b, (a, b) => a * b);
   };
-  fabric.div = function div(this: VectorArrayConstructor<N>, a: unknown, b: unknown) {
+  fabric.div = function div(this: ParseVectorConstructor<N>, a: unknown, b: unknown) {
     // @ts-expect-error - complicated type
     return project.call(this, a, b, (a, b) => a / b);
   };
-  fabric.mod = function mod(this: VectorArrayConstructor<N>, a: unknown, b: unknown) {
+  fabric.mod = function mod(this: ParseVectorConstructor<N>, a: unknown, b: unknown) {
     // @ts-expect-error - complicated type
     return project.call(this, a, b, (a, b) => a % b);
   };

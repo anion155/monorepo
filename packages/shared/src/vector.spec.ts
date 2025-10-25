@@ -60,8 +60,8 @@ describe("Vector(length)", () => {
 
   function createPointClass() {
     return class TestPoint extends Vector(2, "TestPoint") {
-      static parseParams(point: TestPoint) {
-        return point;
+      static parseValue(value: TestPoint | [x: number, y: number]) {
+        return value instanceof TestPoint ? value : new TestPoint(...value);
       }
     };
   }
@@ -86,7 +86,7 @@ describe("Vector(length)", () => {
     const TestPoint = Vector(2, "TestPoint");
     const point = new TestPoint(1, 2);
     // @ts-expect-error - incorrect types
-    expect(() => TestPoint.project(point, (value) => value * 2)).toStrictThrow(new TypeError("this.parseParams is not a function"));
+    expect(() => TestPoint.project(point, (value) => value * 2) as never).toStrictThrow(new TypeError("this.parseValue is not a function"));
   });
 
   it("Vector.add() should add a vector to b", () => {

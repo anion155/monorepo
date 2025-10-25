@@ -51,4 +51,12 @@ describe("Rect", () => {
     const first = rect.size;
     expect(rect.size).toBe(first);
   });
+
+  it(".expandBy() should expand rect by other rect", () => {
+    let rect = new Rect(1, 2, 3, 4);
+    rect = rect.expandBy([0, 0, 5, 7]);
+    expect({ ...rect }).toStrictEqual({ ...new Rect(0, 0, 5, 7) });
+    rect = new Rect(1, 2, 3, 4).expandBy([3, 3, 1, 1]);
+    expect({ ...rect }).toStrictEqual({ ...new Rect(1, 2, 3, 4) });
+  });
 });
