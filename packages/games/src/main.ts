@@ -12,13 +12,11 @@ import { Size } from "@anion155/shared/linear/size";
 import { OrderedMap } from "@anion155/shared/ordered-map";
 import type { SchedulerCancelable } from "@anion155/shared/scheduler";
 import { immidiateScheduler, rafScheduler } from "@anion155/shared/scheduler";
-import { SignalState } from "@anion155/signals";
+import { SignalBinding } from "@anion155/signals";
 import { nanoid } from "nanoid/non-secure";
 
 import TestMapPath from "@/assets/test_map/test_map.tmj?url";
 
-import { loadImage } from "./image-resource";
-import type { TMXMap } from "./tmx";
 import { TMXResource } from "./tmx-resource";
 
 class Resource<Events extends AnyEventsMap<never> = Record<never, unknown>> extends EventEmitter<
@@ -211,18 +209,18 @@ type CanvasRendererContext = {
 type CanvasRendererLayerParams = EntityParams & {
   root: HTMLDivElement;
   size: SizeValue;
-  cameraName: string;
+  offset?: PointComponentArg;
 };
 class CanvasRendererLayer extends Entity {
   readonly root: HTMLDivElement;
   readonly size: Size;
-  readonly cameraName: string;
+  readonly offset: PointComponent;
 
-  constructor({ root, size, cameraName, ...entityParams }: CanvasRendererLayerParams) {
+  constructor({ root, size, offset, ...entityParams }: CanvasRendererLayerParams) {
     super(entityParams);
     this.root = root;
     this.size = Size.parseValue(size);
-    this.cameraName = cameraName;
+    this.offset = new PointComponent(offset ?? [0, 0], this, "offset");
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -251,12 +249,8 @@ class CanvasRendererLayer extends Entity {
   render(context: CanvasRendererContext, deltaTime: DOMHighResTimeStamp) {
     const { ctx, game, size } = context;
     ctx.clearRect(0, 0, size.w, size.h);
-    const camera = Game.getGame(this).children.get(this.cameraName) as Camera | undefined;
-    if (!camera || !(camera instanceof Camera)) return;
     ctx.save();
-    ctx.translate(
-      ...Point.project(size, camera.position.value, camera.scale.value, (size, position, scale) => size / 2 - Math.trunc(position * scale))._,
-    );
+    ctx.translate(...Point.project(size, this.offset.value, (size, position) => size / 2 - position)._);
     for (const entity of game) {
       for (const component of entity.eachComponents(CanvasRendererEntityComponent)) {
         ctx.save();
@@ -291,14 +285,7 @@ class TiledMap extends Entity {
     return this.#resource;
   }
   protected async _initialize(stack: AsyncDisposableStack): Promise<void> {
-    const response = await fetch(this.filePath);
-    const tmx = (await response.json()) as TMXMap;
-    const images: HTMLImageElement[] = [];
-    for (const tileset of tmx.tilesets) {
-      if (!tileset.image) throw new DeveloperError("TMX: tileset without image is not suppoerted");
-      images.push(await loadImage(this.filePath.substring(0, this.filePath.lastIndexOf("/")) + "/" + tileset.image));
-    }
-    this.#resource = new TMXResource(tmx, images);
+    this.#resource = await TMXResource.fromFile(this.filePath);
     stack.append(() => (this.#resource = null));
   }
 
@@ -308,14 +295,14 @@ class TiledMap extends Entity {
     }
 
     render({ ctx }: CanvasRendererContext, _deltaTime: DOMHighResTimeStamp): void {
-      this.#entity.#resource?.renderMap(ctx, this.#entity.tileSize);
+      this.#entity.#resource?.renderMap(ctx);
     }
   })(this, "renderer");
 }
 
-class BindingComponent<Value> extends SignalState<Value> implements EntityComponent {
+class BindingComponent<Value> extends SignalBinding<Value> implements EntityComponent {
   constructor(
-    value: Value,
+    value: Value | { (): Value },
     readonly entity: Entity,
     readonly name: string = nanoid(),
   ) {
@@ -323,16 +310,43 @@ class BindingComponent<Value> extends SignalState<Value> implements EntityCompon
     entity.registerComponent(this);
   }
 }
-
-type CameraParams = EntityParams & { position: PointValue; scale?: SizeValue };
-class Camera extends Entity {
-  readonly position: BindingComponent<Point>;
-  readonly scale: BindingComponent<Size>;
-  constructor({ position, scale = new Size(1, 1), ...entityParams }: CameraParams) {
-    super(entityParams);
-    this.position = new BindingComponent(Point.parseValue(position), this, "position");
-    this.scale = new BindingComponent(Size.parseValue(scale), this, "scale");
+type PointComponentArg = PointValue | { (): PointValue };
+class PointComponent extends BindingComponent<Point> {
+  constructor(value: PointComponentArg, entity: Entity, name?: string) {
+    super(typeof value === "function" ? () => Point.parseValue(value()) : Point.parseValue(value), entity, name);
+    entity.registerComponent(this);
   }
+}
+
+type CameraParams = EntityParams & {
+  position?: PointComponentArg;
+};
+class Camera extends Entity {
+  readonly position: PointComponent;
+  constructor({ position, ...entityParams }: CameraParams) {
+    super(entityParams);
+    this.position = new PointComponent(position ?? [0, 0], this, "position");
+  }
+}
+
+type PlayerParams = EntityParams & {
+  position: PointComponentArg;
+};
+class Player extends Entity {
+  readonly position: PointComponent;
+  constructor({ position, ...entityParams }: PlayerParams) {
+    super(entityParams);
+    this.position = new PointComponent(position, this, "position");
+  }
+
+  readonly renderer = new (class PlayerRenderer extends CanvasRendererEntityComponent {
+    get #entity() {
+      return this.entity as Player;
+    }
+    render({ ctx }: CanvasRendererContext, _deltaTime: DOMHighResTimeStamp): void {
+      ctx.translate(...this.#entity.position.value._);
+    }
+  })(this, "renderer");
 }
 
 type GameParams = OmitHelper<EntityParams, "parent">;
@@ -357,33 +371,39 @@ class TestGame extends Game {
   readonly loop: Loop<"frame">;
   readonly canvasRenderer: CanvasRendererLayer;
   readonly map: TiledMap;
+  readonly player: Player;
   readonly camera: Camera;
   constructor(root: HTMLDivElement) {
     super({ name: "test" });
     this.loop = new LoopEntityComponent({ frame: 1000 / 60 }, this, "loop");
     const tileSize = new Size(20, 20);
-    this.canvasRenderer = new CanvasRendererLayer({ root, size: [800, 600], name: "renderer", parent: this, cameraName: "camera" });
+    this.canvasRenderer = new CanvasRendererLayer({ root, size: [800, 600], name: "renderer", parent: this });
     this.map = new TiledMap({ filePath: TestMapPath, name: "map", parent: this, tileSize });
-    this.camera = new Camera({ position: [20, 15], scale: tileSize, name: "camera", parent: this });
+    this.camera = new Camera({ name: "camera", parent: this });
+    this.canvasRenderer.offset.bind(() => this.camera.position.value);
+    this.player = new Player({ position: [20, 15], name: "player", parent: this });
+    this.camera.position.bind(() => Point.mul(this.player.position.value, tileSize));
   }
 
   protected async _initialize(stack: AsyncDisposableStack): Promise<void> {
     await super._initialize(stack);
     stack.append(this.loop.start());
-    const startPos = this.camera.position.value;
+
+    const path = new Size(2);
+    const startPos = this.player.position.value.sub(Size.div(path, 2));
     const startTime = performance.now();
     stack.append(
       this.loop.on("tick", () => {
         const overallProgress = ((performance.now() - startTime) % 4000) / 1000;
         const progress = overallProgress % 1;
         if (overallProgress < 1) {
-          this.camera.position.value = startPos.add([progress * 10, 0]);
+          this.player.position.value = startPos.add([progress * path.w, 0]);
         } else if (overallProgress < 2) {
-          this.camera.position.value = startPos.add([10, progress * 10]);
+          this.player.position.value = startPos.add([path.w, progress * path.h]);
         } else if (overallProgress < 3) {
-          this.camera.position.value = startPos.add([10 - progress * 10, 10]);
+          this.player.position.value = startPos.add([path.w - progress * path.w, path.h]);
         } else if (overallProgress < 4) {
-          this.camera.position.value = startPos.add([0, 10 - progress * 10]);
+          this.player.position.value = startPos.add([0, path.h - progress * path.h]);
         }
       }),
     );
@@ -400,4 +420,6 @@ async function main() {
   Object.assign(globalThis, { game });
   await game.initialize();
 }
-await main();
+await main().catch((error) => {
+  console.error("Game crashed:", error);
+});

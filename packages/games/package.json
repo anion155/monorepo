@@ -11,6 +11,7 @@
     "@anion155/proposal-explicit-resource-management": "workspace:*",
     "@anion155/proposal-iterator-helpers": "workspace:*",
     "@anion155/shared": "workspace:*",
+    "@anion155/signals": "workspace:*",
     "keycode-js": "^3.1.0",
     "nanoid": "^5.1.6",
     "vite": "^7.1.7"
