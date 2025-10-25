@@ -66,6 +66,14 @@ describe("Vector(length)", () => {
     };
   }
 
+  it("Vector.projectScalars() should project vector's scalars", () => {
+    const TestPoint = createPointClass();
+    const a = new TestPoint(1, 2);
+    const b = new TestPoint(2, 3);
+    expect(TestPoint.projectScalars(a, (value) => value * 2)).toStrictEqual([2, 4]);
+    expect(TestPoint.projectScalars(a, b, (a, b) => a + b)).toStrictEqual([3, 5]);
+  });
+
   it("Vector.project() should project vector", () => {
     const TestPoint = createPointClass();
     const a = new TestPoint(1, 2);

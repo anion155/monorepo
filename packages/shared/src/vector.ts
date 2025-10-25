@@ -25,6 +25,12 @@ export type VectorConstructor<N extends number> = {
   new (...values: VectorArray<N>): Vector<N>;
   prototype: Vector<N>;
 
+  /** Projects vectors's scalars with {@link project}. */
+  projectScalars<VC extends VectorArrayConstructor<N>, Vectors extends Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0][]>(
+    this: VC,
+    ...params: [...points: Vectors, project: NoInfer<(...params: [...values: VectorArray<Vectors["length"]>, index: number]) => number>]
+  ): VectorArray<N>;
+
   /** Creates new Vector by projecting vectors's scalars with {@link project}. */
   project<VC extends VectorArrayConstructor<N>, Vectors extends Extract<Parameters<VC["parseParams"]>, { length: 1 }>[0][]>(
     this: VC,
@@ -87,15 +93,18 @@ export const Vector = <N extends number>(length: N, name: string = `Vector(${len
 
   fabric.prototype = prototype;
 
-  function project(this: VectorArrayConstructor<N>, ...params: [...vectors: unknown[], project: (value: number) => number]) {
+  function projectScalars(this: VectorArrayConstructor<N>, ...params: [...vectors: unknown[], project: (value: number) => number]) {
     const project = params.pop() as (value: number) => number;
     const vectors = params.map((vector) => this.parseParams(vector as never));
-    return new this(
-      ...(Array.from({ length }, (_, index) => {
-        // @ts-expect-error - complicated type
-        return project(...vectors.map((vector) => vector[index]), index);
-      }) as never),
-    );
+    return Array.from({ length }, (_, index) => {
+      // @ts-expect-error - complicated type
+      return project(...vectors.map((vector) => vector[index]), index);
+    }) as never;
+  }
+  fabric.projectScalars = projectScalars;
+
+  function project(this: VectorArrayConstructor<N>, ...params: [...vectors: unknown[], project: (value: number) => number]) {
+    return new this(...projectScalars.call(this, ...params));
   }
   fabric.project = project;
 
