@@ -12,6 +12,7 @@ import { Size } from "@anion155/shared/linear/size";
 import { OrderedMap } from "@anion155/shared/ordered-map";
 import type { SchedulerCancelable } from "@anion155/shared/scheduler";
 import { immidiateScheduler, rafScheduler } from "@anion155/shared/scheduler";
+import { SignalState } from "@anion155/signals";
 import { nanoid } from "nanoid/non-secure";
 
 import TestMapPath from "@/assets/test_map/test_map.tmj?url";
@@ -253,8 +254,9 @@ class CanvasRendererLayer extends Entity {
     const camera = Game.getGame(this).children.get(this.cameraName) as Camera | undefined;
     if (!camera || !(camera instanceof Camera)) return;
     ctx.save();
-    const position = Point.project(camera.position.value.mul(camera.scale.value), Math.trunc);
-    ctx.translate(...position._);
+    ctx.translate(
+      ...Point.project(size, camera.position.value, camera.scale.value, (size, position, scale) => size / 2 - Math.trunc(position * scale))._,
+    );
     for (const entity of game) {
       for (const component of entity.eachComponents(CanvasRendererEntityComponent)) {
         ctx.save();
@@ -311,56 +313,25 @@ class TiledMap extends Entity {
   })(this, "renderer");
 }
 
-interface IValueComponent<Value> extends AutoEntityComponent<{ changed(next: Value): void }> {
-  value: Value;
-}
-class ValueComponent<Value> extends AutoEntityComponent<{ changed(next: Value): void }> implements IValueComponent<Value> {
-  #value!: Value;
-  get value(): Value {
-    return this.#value;
-  }
-  set value(next: Value) {
-    this.#value = next;
-    this.emit("changed", next);
-  }
-
-  constructor(value: Value, entity: Entity, name?: string) {
-    super(entity, name);
-    this.value = value;
-  }
-}
-
-class PositionComponent extends AutoEntityComponent<{ changed(next: Point): void }> implements IValueComponent<Point> {
-  #state!: ["value", Point] | ["binding", PositionComponent, () => void];
-  get value(): Point {
-    let current = this.#state;
-    while (current[0] === "binding") current = current[1].#state;
-    return current[1];
-  }
-  set value(next: PointValue | PositionComponent) {
-    if (next instanceof PositionComponent) {
-      this.#state = ["binding", next, () => {}];
-      this.#state[2] = next.on("changed", (next) => this.emit("changed", next));
-    } else {
-      this.#state = ["value", Point.parseValue(next)];
-    }
-    this.emit("changed", this.value);
-  }
-
-  constructor(value: PointValue | PositionComponent, entity: Entity, name?: string) {
-    super(entity, name);
-    this.value = value;
+class BindingComponent<Value> extends SignalState<Value> implements EntityComponent {
+  constructor(
+    value: Value,
+    readonly entity: Entity,
+    readonly name: string = nanoid(),
+  ) {
+    super(value);
+    entity.registerComponent(this);
   }
 }
 
 type CameraParams = EntityParams & { position: PointValue; scale?: SizeValue };
 class Camera extends Entity {
-  readonly position: PositionComponent;
-  readonly scale: ValueComponent<Size>;
+  readonly position: BindingComponent<Point>;
+  readonly scale: BindingComponent<Size>;
   constructor({ position, scale = new Size(1, 1), ...entityParams }: CameraParams) {
     super(entityParams);
-    this.position = new PositionComponent(position, this, "position");
-    this.scale = new ValueComponent(Size.parseValue(scale), this, "scale");
+    this.position = new BindingComponent(Point.parseValue(position), this, "position");
+    this.scale = new BindingComponent(Size.parseValue(scale), this, "scale");
   }
 }
 
@@ -393,25 +364,26 @@ class TestGame extends Game {
     const tileSize = new Size(20, 20);
     this.canvasRenderer = new CanvasRendererLayer({ root, size: [800, 600], name: "renderer", parent: this, cameraName: "camera" });
     this.map = new TiledMap({ filePath: TestMapPath, name: "map", parent: this, tileSize });
-    this.camera = new Camera({ position: [5, 5], scale: tileSize, name: "camera", parent: this });
+    this.camera = new Camera({ position: [20, 15], scale: tileSize, name: "camera", parent: this });
   }
 
   protected async _initialize(stack: AsyncDisposableStack): Promise<void> {
     await super._initialize(stack);
     stack.append(this.loop.start());
-    const start = performance.now();
+    const startPos = this.camera.position.value;
+    const startTime = performance.now();
     stack.append(
       this.loop.on("tick", () => {
-        const overallProgress = ((performance.now() - start) % 4000) / 1000;
+        const overallProgress = ((performance.now() - startTime) % 4000) / 1000;
         const progress = overallProgress % 1;
         if (overallProgress < 1) {
-          this.camera.position.value = new Point(progress * 10, 0);
+          this.camera.position.value = startPos.add([progress * 10, 0]);
         } else if (overallProgress < 2) {
-          this.camera.position.value = new Point(10, progress * 10);
+          this.camera.position.value = startPos.add([10, progress * 10]);
         } else if (overallProgress < 3) {
-          this.camera.position.value = new Point(10 - progress * 10, 10);
+          this.camera.position.value = startPos.add([10 - progress * 10, 10]);
         } else if (overallProgress < 4) {
-          this.camera.position.value = new Point(0, 10 - progress * 10);
+          this.camera.position.value = startPos.add([0, 10 - progress * 10]);
         }
       }),
     );
