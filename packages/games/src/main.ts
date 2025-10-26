@@ -14,7 +14,7 @@ import { Size } from "@anion155/shared/linear/size";
 import { OrderedMap } from "@anion155/shared/ordered-map";
 import type { SchedulerCancelable } from "@anion155/shared/scheduler";
 import { immidiateScheduler, rafScheduler } from "@anion155/shared/scheduler";
-import { SignalBinding, SignalReadonlyComputed } from "@anion155/signals";
+import { SignalBinding, SignalReadonlyComputed, SignalState } from "@anion155/signals";
 import { nanoid } from "nanoid/non-secure";
 
 import CharactersPath from "@/assets/characters.png?url";
@@ -269,16 +269,16 @@ abstract class CanvasRendererEntityComponent extends AutoEntityComponent {
 
 type TiledMapParams = EntityParams & {
   filePath: string;
-  tileSize?: SizeValue;
+  tileSize?: SizeComponentArg;
 };
 class TiledMap extends Entity {
   readonly filePath: string;
-  readonly tileSize?: Size;
+  readonly tileSize: SizeComponent;
 
   constructor({ filePath, tileSize, ...entityParams }: TiledMapParams) {
     super(entityParams);
     this.filePath = filePath;
-    this.tileSize = tileSize !== undefined ? Size.parseValue(tileSize) : undefined;
+    this.tileSize = new SizeComponent(tileSize ?? 0, this, "tileSize");
   }
 
   #resource: TMXResource | null = null;
@@ -296,7 +296,7 @@ class TiledMap extends Entity {
     }
     render({ ctx }: CanvasRendererContext, _deltaTime: DOMHighResTimeStamp): void {
       if (!this.#entity.resource) return;
-      this.#entity.#resource?.renderMap(ctx, { tileSize: this.#entity.tileSize });
+      this.#entity.#resource?.renderMap(ctx, { tileSize: this.#entity.tileSize.value });
     }
   })(this, "renderer");
 }
@@ -335,6 +335,37 @@ class Camera extends Entity {
   }
 }
 
+type AnimationConfig = number | [duration: number, frames: number[]];
+type AnimationsConfig<Names extends string> = { [Name in Names]: AnimationConfig };
+type MovingAnimationConfig = AnimationsConfig<MovingDirection> & Partial<AnimationsConfig<`${MovingDirection}-${MovingSpeed | "stand"}`>>;
+type MovingState = { direction: MovingDirection; moving: false | MovingSpeed };
+class MovingAnimation {
+  #last: (MovingState & { start: number }) | null = null;
+  interpolate(config: MovingAnimationConfig, state: MovingState) {
+    const now = performance.now();
+    if (!this.#last || this.#last.direction !== state.direction || this.#last.moving !== state.moving) {
+      this.#last = { ...state, start: now };
+    }
+    let animation: AnimationConfig = config[`${state.direction}-${state.moving || "stand"}`] ?? config[state.direction];
+    if (!state.moving) {
+      animation = config[`${state.direction}-stand`] ?? config[state.direction];
+    } else if (state.moving === "walk") {
+      animation = config[`${state.direction}-walk`] ?? config[state.direction];
+    } else if (state.moving === "run") {
+      animation = config[`${state.direction}-run`] ?? config[`${state.direction}-walk`] ?? config[state.direction];
+    }
+    let index: number;
+    if (typeof animation === "number") {
+      index = animation;
+    } else {
+      const duration = animation[0];
+      const frame = Math.trunc((((now - this.#last.start) % duration) / duration) * animation[1].length);
+      index = animation[1][frame];
+    }
+    return index;
+  }
+}
+
 class PlayerRenderer extends CanvasRendererEntityComponent {
   get #entity() {
     return this.entity as Player;
@@ -348,55 +379,67 @@ class PlayerRenderer extends CanvasRendererEntityComponent {
     super(entity, name);
   }
 
+  #animation = new MovingAnimation();
   render({ ctx }: CanvasRendererContext, _deltaTime: DOMHighResTimeStamp): void {
-    const { position, positionScale, size, direction } = this.#entity;
-    ctx.translate(
-      ...Point.project(position.value, positionScale.value, size.value, (position, positionOnMap, size) => position * positionOnMap - size / 2)._,
-    );
-    const index = { towards: 1, away: 10, left: 4, right: 7 }[direction];
-    this.sprites.renderSprite(ctx, index, new Rect(0, size.value));
+    const { position, positionScale, spriteScale, spriteConfig, state } = this.#entity;
+    ctx.translate(...Point.mul(position.value, positionScale.value)._);
+    const index = this.#animation.interpolate(spriteConfig, state);
+    const size = Size.mul(this.sprites.bounds[index].size, spriteScale.value);
+    this.sprites.renderSprite(ctx, index, new Rect([-size.w / 2, 0], size));
   }
 }
 
 type PlayerParams = EntityParams & {
   position: PointComponentArg;
   positionScale: SizeComponentArg;
-  size?: SizeComponentArg;
+  sprites: string | SpritesResource;
+  spriteScale?: SizeComponentArg;
+  spriteConfig: MovingAnimationConfig;
 };
 class Player extends Entity {
   readonly position: PointComponent;
   readonly positionScale: SizeComponent;
   readonly positionOnMap: SignalReadonlyComputed<Point>;
-  readonly size: SizeComponent;
-  constructor({ position, positionScale, size, ...entityParams }: PlayerParams) {
+  readonly sprites: string | SpritesResource;
+  readonly spriteScale: SizeComponent;
+  readonly spriteConfig: MovingAnimationConfig;
+  constructor({ position, positionScale, sprites, spriteScale, spriteConfig, ...entityParams }: PlayerParams) {
     super(entityParams);
     this.position = new PointComponent(position, this, "position");
     this.positionScale = new SizeComponent(positionScale ?? 1, this, "positionScale");
     this.positionOnMap = new SignalReadonlyComputed(() => {
       return this.position.value.mul(this.positionScale.value);
     });
-    this.size = new SizeComponent(size ?? 0, this, "size");
+    this.sprites = sprites;
+    this.spriteScale = new SizeComponent(spriteScale ?? 1, this, "size");
+    this.spriteConfig = spriteConfig;
   }
 
   renderer: PlayerRenderer | null = null;
 
   protected async _initialize(stack: AsyncDisposableStack) {
-    const image = await loadImage(CharactersPath);
-    const spriteSize = new Size(16);
-    const sprites = new SpritesResource(image, { spriteSize, size: new Size(3, 4) });
-    if (!this.size.value.w || !this.size.value.h) this.size.value = spriteSize;
+    let sprites: SpritesResource;
+    if (typeof this.sprites === "string") {
+      const image = await loadImage(CharactersPath);
+      sprites = new SpritesResource(image, { spriteSize: new Size(16), size: new Size(3, 4) });
+    } else {
+      sprites = this.sprites;
+    }
     this.renderer = new PlayerRenderer(sprites, this, "renderer");
     stack.append(() => (this.renderer = null));
   }
 
-  #direction: MovingDirection = "towards";
-  get direction() {
-    return this.#direction;
+  #state: MovingState = { direction: "towards", moving: false };
+  get state() {
+    return this.#state;
   }
   makeStep({ directions, speed }: { directions: MovingDirection[]; speed: MovingSpeed }, deltaTime: DOMHighResTimeStamp) {
-    if (!directions.length) return;
+    if (!directions.length) {
+      this.#state.moving = false;
+      return;
+    }
     const deltaPos = (deltaTime / 1000) * (speed === "run" ? 6 : 3);
-    this.#direction = directions[0];
+    this.#state = { direction: directions[0], moving: speed };
     if (directions[0] === "towards") this.position.update((pos) => pos.add([0, deltaPos]));
     else if (directions[0] === "away") this.position.update((pos) => pos.add([0, -deltaPos]));
     else if (directions[0] === "left") this.position.update((pos) => pos.add([-deltaPos, 0]));
@@ -465,10 +508,14 @@ type UserInputActionConfig<Actions extends string, Inputs extends string> = { [I
 class UserInputAction<Actions extends string, Inputs extends string> {
   #held: Actions[] = [];
   get current(): Actions[] {
+    if (this.defaultAction && !this.#held.length) return [this.defaultAction];
     return this.#held;
   }
 
-  constructor(public config: UserInputActionConfig<Actions, Inputs>) {}
+  constructor(
+    public config: UserInputActionConfig<Actions, Inputs>,
+    readonly defaultAction: Actions | null = null,
+  ) {}
 
   onInputDown(input: Inputs) {
     const action = this.config[input];
@@ -499,10 +546,13 @@ class MovingControlls {
     [Keys.CODE_D]: "right",
     [Keys.CODE_RIGHT]: "right",
   });
-  readonly speed = new UserInputAction<MovingSpeed, KeysCode>({
-    [Keys.CODE_SHIFT_LEFT]: "run",
-    [Keys.CODE_SHIFT_RIGHT]: "run",
-  });
+  readonly speed = new UserInputAction<MovingSpeed, KeysCode>(
+    {
+      [Keys.CODE_SHIFT_LEFT]: "run",
+      [Keys.CODE_SHIFT_RIGHT]: "run",
+    },
+    "walk",
+  );
   readonly #actions = [this.directions, this.speed];
 
   get current() {
@@ -559,12 +609,29 @@ class TestGame extends Game {
   constructor(root: HTMLDivElement) {
     super({ name: "test" });
     this.loop = new LoopEntityComponent({ frame: 1000 / 60 }, this, "loop");
-    const tileSize = new Size(32);
+    const tileSize = new SignalState(new Size(32));
     this.canvasRenderer = new CanvasRendererLayer({ root, size: [800, 600], name: "renderer", parent: this });
-    this.map = new TiledMap({ filePath: TestMapPath, name: "map", parent: this, tileSize });
+    this.map = new TiledMap({ filePath: TestMapPath, name: "map", parent: this, tileSize: () => tileSize.value });
     this.camera = new Camera({ name: "camera", parent: this });
     this.canvasRenderer.offset.bind(() => this.camera.position.value);
-    this.player = new Player({ position: 16, positionScale: tileSize, size: 48, name: "player", parent: this });
+    this.player = new Player({
+      position: 16,
+      positionScale: () => tileSize.value,
+      sprites: CharactersPath,
+      spriteScale: 48 / 16,
+      spriteConfig: {
+        towards: 1,
+        away: 10,
+        left: 4,
+        right: 7,
+        "towards-walk": [500, [1, 0, 1, 2]],
+        "away-walk": [500, [10, 9, 10, 11]],
+        "left-walk": [500, [4, 3, 4, 5]],
+        "right-walk": [500, [7, 6, 7, 8]],
+      },
+      name: "player",
+      parent: this,
+    });
     this.camera.position.bind(() => this.player.positionOnMap.value);
     this.userInput = new UserInput();
     this.movingController = new MovingControlls(this.userInput);
