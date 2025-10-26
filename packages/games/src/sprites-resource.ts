@@ -1,25 +1,26 @@
 import "@anion155/shared/global";
 
+import type { PointValue } from "@anion155/shared/linear/point";
 import { Point } from "@anion155/shared/linear/point";
 import { Rect } from "@anion155/shared/linear/rect";
+import type { SizeValue } from "@anion155/shared/linear/size";
 import { Size } from "@anion155/shared/linear/size";
 
 import { ImageResource } from "./image-resource";
 
+export type SpritesResourceTiledConfig = { spriteSize: SizeValue; size?: SizeValue; offset?: PointValue; gaps?: SizeValue };
 export class SpritesResource extends ImageResource {
   readonly bounds: readonly Rect[];
 
-  constructor(image: Readonly<HTMLImageElement>, maybeBounds: { spriteSize: Size; size?: Size; offset?: Point; gaps?: Size } | Rect[]) {
+  constructor(image: Readonly<HTMLImageElement>, maybeBounds: SpritesResourceTiledConfig | Rect[]) {
     super(image);
     if (Array.isArray(maybeBounds)) {
       this.bounds = maybeBounds;
     } else {
-      const {
-        spriteSize,
-        size = new Size(Math.trunc(image.width / spriteSize.w), Math.trunc(image.height / spriteSize.h)),
-        offset = new Point(0, 0),
-        gaps = new Size(0, 0),
-      } = maybeBounds;
+      const spriteSize = Size.parseValue(maybeBounds.spriteSize);
+      const size = Size.parseValue(maybeBounds.size ?? [Math.trunc(image.width / spriteSize.w), Math.trunc(image.height / spriteSize.h)]);
+      const offset = Point.parseValue(maybeBounds.offset ?? 0);
+      const gaps = Size.parseValue(maybeBounds.gaps ?? 0);
       const bounds = [];
       for (let y = 0; y < size.h; y += 1) {
         for (let x = 0; x < size.w; x += 1) {

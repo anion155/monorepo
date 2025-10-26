@@ -22,6 +22,7 @@ import TestMapPath from "@/assets/test_map/test_map.tmj?url";
 
 import { Keys, type KeysCode } from "./keycodes";
 import { loadImage } from "./load";
+import type { SpritesResourceTiledConfig } from "./sprites-resource";
 import { SpritesResource } from "./sprites-resource";
 import { TMXResource } from "./tmx-resource";
 
@@ -389,10 +390,11 @@ class PlayerRenderer extends CanvasRendererEntityComponent {
   }
 }
 
+type SpritesResourceArg = { image: string } & ExclusiveUnion<{ bounds: Rect[] }, SpritesResourceTiledConfig>;
 type PlayerParams = EntityParams & {
   position: PointComponentArg;
   positionScale: SizeComponentArg;
-  sprites: string | SpritesResource;
+  sprites: SpritesResourceArg | SpritesResource;
   spriteScale?: SizeComponentArg;
   spriteConfig: MovingAnimationConfig;
 };
@@ -400,7 +402,7 @@ class Player extends Entity {
   readonly position: PointComponent;
   readonly positionScale: SizeComponent;
   readonly positionOnMap: SignalReadonlyComputed<Point>;
-  readonly sprites: string | SpritesResource;
+  readonly sprites: SpritesResourceArg | SpritesResource;
   readonly spriteScale: SizeComponent;
   readonly spriteConfig: MovingAnimationConfig;
   constructor({ position, positionScale, sprites, spriteScale, spriteConfig, ...entityParams }: PlayerParams) {
@@ -419,11 +421,11 @@ class Player extends Entity {
 
   protected async _initialize(stack: AsyncDisposableStack) {
     let sprites: SpritesResource;
-    if (typeof this.sprites === "string") {
-      const image = await loadImage(CharactersPath);
-      sprites = new SpritesResource(image, { spriteSize: new Size(16), size: new Size(3, 4) });
-    } else {
+    if (this.sprites instanceof SpritesResource) {
       sprites = this.sprites;
+    } else {
+      const image = await loadImage(this.sprites.image);
+      sprites = new SpritesResource(image, this.sprites.bounds ?? this.sprites);
     }
     this.renderer = new PlayerRenderer(sprites, this, "renderer");
     stack.append(() => (this.renderer = null));
@@ -617,7 +619,7 @@ class TestGame extends Game {
     this.player = new Player({
       position: 16,
       positionScale: () => tileSize.value,
-      sprites: CharactersPath,
+      sprites: { image: CharactersPath, offset: [0, 16 * 4], spriteSize: 16, size: [3, 4] },
       spriteScale: 48 / 16,
       spriteConfig: {
         towards: 1,
@@ -662,7 +664,7 @@ class TestGame extends Game {
 
     stack.append(await this.userInput.initializer.run());
     stack.append(await this.movingController.initializer.run());
-    stack.append(this.loop.on("frame", (deltaTime) => this.player.makeStep(this.movingController.current, deltaTime)));
+    stack.append(this.loop.on("tick", (deltaTime) => this.player.makeStep(this.movingController.current, deltaTime)));
   }
 }
 
