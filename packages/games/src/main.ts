@@ -3,6 +3,7 @@ import "@anion155/proposal-iterator-helpers/global";
 
 import { assert, DeveloperError, isIterable, liftContext } from "@anion155/shared";
 import { Initializer } from "@anion155/shared/actions/initializer";
+import { bound } from "@anion155/shared/decorators";
 import type { AnyEventsMap } from "@anion155/shared/event-emitter";
 import { EventEmitter } from "@anion155/shared/event-emitter";
 import type { PointValue } from "@anion155/shared/linear/point";
@@ -17,6 +18,7 @@ import { nanoid } from "nanoid/non-secure";
 
 import TestMapPath from "@/assets/test_map/test_map.tmj?url";
 
+import { Keys, type KeysCode } from "./keycodes";
 import { TMXResource } from "./tmx-resource";
 
 class Resource<Events extends AnyEventsMap<never> = Record<never, unknown>> extends EventEmitter<
@@ -152,7 +154,7 @@ class Loop<Ticks extends string, SchedulerId = number> extends EventEmitter<
     readonly scheduler: SchedulerCancelable<SchedulerId> = rafScheduler as never,
   ) {
     super(immidiateScheduler);
-    this.config = Object.entries(config) as never;
+    this.config = Object.entries({ ...config, tick: 1 }) as never;
   }
 
   #running: false | { id: SchedulerId; last: Record<Ticks | "tick", DOMHighResTimeStamp | undefined> } = false;
@@ -161,15 +163,9 @@ class Loop<Ticks extends string, SchedulerId = number> extends EventEmitter<
     const loop = () => {
       if (!this.#running) return;
       const now = performance.now();
-      {
-        const deltaTime = this.#running.last.tick ? now - this.#running.last.tick : 0;
-        this.#running.last.tick = now;
-        // @ts-expect-error - can't exclude tick from ticks here
-        this.emit("tick", deltaTime);
-      }
       for (const [name, minDiff] of this.config) {
-        const deltaTime = this.#running.last[name] ? now - this.#running.last[name] : 0;
-        if (!this.#running.last[name] || deltaTime >= minDiff) {
+        const deltaTime = this.#running.last[name] !== undefined ? now - this.#running.last[name] : 0;
+        if (this.#running.last[name] === undefined || deltaTime >= minDiff) {
           this.#running.last[name] = now;
           // @ts-expect-error - can't exclude tick from ticks here
           this.emit(name, deltaTime);
@@ -179,7 +175,8 @@ class Loop<Ticks extends string, SchedulerId = number> extends EventEmitter<
     };
     const schedule = () => {
       const id = this.scheduler.schedule(loop);
-      this.#running = { id, last: {} as never };
+      const last = this.#running ? this.#running.last : ({} as never);
+      this.#running = { id, last };
     };
     schedule();
     return () => this.stop();
@@ -349,6 +346,132 @@ class Player extends Entity {
   })(this, "renderer");
 }
 
+class UserInput extends EventEmitter<{
+  "keydown"(code: KeysCode, event: KeyboardEvent): void;
+  "keydown_repeat"(code: KeysCode, event: KeyboardEvent): void;
+  "keyup"(code: KeysCode, event: KeyboardEvent | FocusEvent): void;
+  "change"(event: KeyboardEvent | FocusEvent): void;
+}> {
+  #pressed: KeysCode[] = [];
+
+  readonly #initializer = new Initializer(
+    liftContext(({ stack }) => {
+      document.addEventListener("blur", this.onBlur);
+      stack.append(() => document.removeEventListener("blur", this.onBlur));
+      document.addEventListener("keydown", this.onKeyDown);
+      stack.append(() => document.removeEventListener("keydown", this.onKeyDown));
+      document.addEventListener("keyup", this.onKeyUp);
+      stack.append(() => document.removeEventListener("keyup", this.onKeyUp));
+    }),
+  );
+  get initializer() {
+    return this.#initializer;
+  }
+
+  @bound
+  protected onBlur(event: FocusEvent) {
+    this.#pressed.forEach((code) => this.emit("keyup", code, event));
+    this.emit("change", event);
+    this.#pressed = [];
+  }
+
+  @bound
+  protected onKeyDown(event: KeyboardEvent) {
+    const code = event.code as KeysCode;
+    if (event.repeat || this.#pressed.includes(code)) {
+      this.emit("keydown_repeat", code, event);
+      return;
+    }
+    this.#pressed.unshift(code);
+    this.emit("keydown", code, event);
+    this.emit("change", event);
+  }
+
+  @bound
+  protected onKeyUp(event: KeyboardEvent) {
+    const code = event.code as KeysCode;
+    const index = this.#pressed.indexOf(code);
+    if (index < 0) return;
+    this.#pressed.splice(index, 1);
+    this.emit("keyup", code, event);
+    this.emit("change", event);
+  }
+
+  pressed(...codes: KeysCode[]): KeysCode[] {
+    return codes.length === 0 ? this.#pressed.slice() : this.#pressed.filter((code) => codes.includes(code));
+  }
+}
+
+type UserInputActionConfig<Actions extends string, Inputs extends string> = { [I in Inputs]?: Actions };
+
+class UserInputAction<Actions extends string, Inputs extends string> {
+  #held: Actions[] = [];
+  get current(): Actions[] {
+    return this.#held;
+  }
+
+  constructor(public config: UserInputActionConfig<Actions, Inputs>) {}
+
+  onInputDown(input: Inputs) {
+    const action = this.config[input];
+    if (!action) return;
+    this.#held.unshift(action);
+  }
+  onInputUp(input: Inputs) {
+    const action = this.config[input];
+    if (!action) return;
+    const index = this.#held.indexOf(action);
+    if (index < 0) return;
+    this.#held.splice(index, 1);
+  }
+}
+
+type MovingDirection = "away" | "towards" | "left" | "right";
+type MovingSpeed = "run" | "walk";
+class MovingControlls {
+  constructor(readonly userInput: UserInput) {}
+
+  readonly direction = new UserInputAction<MovingDirection, KeysCode>({
+    [Keys.CODE_S]: "towards",
+    [Keys.CODE_DOWN]: "towards",
+    [Keys.CODE_W]: "away",
+    [Keys.CODE_UP]: "away",
+    [Keys.CODE_A]: "left",
+    [Keys.CODE_LEFT]: "left",
+    [Keys.CODE_D]: "right",
+    [Keys.CODE_RIGHT]: "right",
+  });
+  readonly speed = new UserInputAction<MovingSpeed, KeysCode>({
+    [Keys.CODE_SHIFT_LEFT]: "run",
+    [Keys.CODE_SHIFT_RIGHT]: "run",
+  });
+  readonly #actions = [this.direction, this.speed];
+
+  get current() {
+    return { direction: this.direction.current, speed: this.speed.current[0] };
+  }
+
+  readonly #initializer = new Initializer(
+    liftContext(({ stack }) => {
+      stack.append(this.userInput.on("keydown", this.onKeyboardDown));
+      stack.append(this.userInput.on("keyup", this.onKeyboardUp));
+    }),
+  );
+  get initializer() {
+    return this.#initializer;
+  }
+
+  @bound
+  protected onKeyboardDown(code: KeysCode) {
+    this.#actions.forEach((action) => action.onInputDown(code));
+  }
+
+  @bound
+  protected onKeyboardUp(code: KeysCode) {
+    this.#actions.forEach((action) => action.onInputUp(code));
+  }
+}
+
 type GameParams = OmitHelper<EntityParams, "parent">;
 abstract class Game extends EntityHolder {
   static getGame(from: Entity) {
@@ -373,6 +496,8 @@ class TestGame extends Game {
   readonly map: TiledMap;
   readonly player: Player;
   readonly camera: Camera;
+  readonly userInput: UserInput;
+  readonly movingController: MovingControlls;
   constructor(root: HTMLDivElement) {
     super({ name: "test" });
     this.loop = new LoopEntityComponent({ frame: 1000 / 60 }, this, "loop");
@@ -383,28 +508,43 @@ class TestGame extends Game {
     this.canvasRenderer.offset.bind(() => this.camera.position.value);
     this.player = new Player({ position: [16, 16], name: "player", parent: this });
     this.camera.position.bind(() => Point.mul(this.player.position.value, tileSize));
+    this.userInput = new UserInput();
+    this.movingController = new MovingControlls(this.userInput);
   }
 
   protected async _initialize(stack: AsyncDisposableStack): Promise<void> {
     await super._initialize(stack);
     stack.append(this.loop.start());
 
-    const path = new Size(2);
-    const startPos = this.player.position.value.sub(Size.div(path, 2));
-    const startTime = performance.now();
+    // const path = new Size(2);
+    // const startPos = this.player.position.value.sub(Size.div(path, 2));
+    // const startTime = performance.now();
+    // stack.append(
+    //   this.loop.on("tick", () => {
+    //     const overallProgress = ((performance.now() - startTime) % 4000) / 1000;
+    //     const progress = overallProgress % 1;
+    //     if (overallProgress < 1) {
+    //       this.player.position.value = startPos.add([progress * path.w, 0]);
+    //     } else if (overallProgress < 2) {
+    //       this.player.position.value = startPos.add([path.w, progress * path.h]);
+    //     } else if (overallProgress < 3) {
+    //       this.player.position.value = startPos.add([path.w - progress * path.w, path.h]);
+    //     } else if (overallProgress < 4) {
+    //       this.player.position.value = startPos.add([0, path.h - progress * path.h]);
+    //     }
+    //   }),
+    // );
+
+    stack.append(await this.userInput.initializer.run());
+    stack.append(await this.movingController.initializer.run());
     stack.append(
-      this.loop.on("tick", () => {
-        const overallProgress = ((performance.now() - startTime) % 4000) / 1000;
-        const progress = overallProgress % 1;
-        if (overallProgress < 1) {
-          this.player.position.value = startPos.add([progress * path.w, 0]);
-        } else if (overallProgress < 2) {
-          this.player.position.value = startPos.add([path.w, progress * path.h]);
-        } else if (overallProgress < 3) {
-          this.player.position.value = startPos.add([path.w - progress * path.w, path.h]);
-        } else if (overallProgress < 4) {
-          this.player.position.value = startPos.add([0, path.h - progress * path.h]);
-        }
+      this.loop.on("frame", (deltaTime) => {
+        const direction = this.movingController.direction.current;
+        const deltaPos = (deltaTime / 1000) * 2;
+        if (direction[0] === "towards") this.player.position.update((pos) => pos.add([0, deltaPos]));
+        else if (direction[0] === "away") this.player.position.update((pos) => pos.add([0, -deltaPos]));
+        else if (direction[0] === "left") this.player.position.update((pos) => pos.add([-deltaPos, 0]));
+        else if (direction[0] === "right") this.player.position.update((pos) => pos.add([deltaPos, 0]));
       }),
     );
   }
