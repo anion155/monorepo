@@ -4,6 +4,7 @@ import { Rect } from "@anion155/shared/linear/rect";
 import type { Size } from "@anion155/shared/linear/size";
 
 export type SourceDestParams =
+  | []
   | [dest: Point | Rect]
   | [source: Rect, dest: Point]
   | [source: Point, dest: Rect]
@@ -25,12 +26,15 @@ export const parseSourceDestArg = (wholeSource: Rect, ...params: SourceDestParam
       source: new Rect(wholeSource.x + source.x, wholeSource.y + source.y, sourceSize.w, sourceSize.h),
       dest: new Rect(dest.x, dest.y, destSize.w, destSize.h),
     };
-  } else if (params[0] instanceof Rect) {
-    const [dest] = params;
-    return { source: wholeSource, dest };
-  } else {
+  } else if (params.length === 1) {
+    if (params[0] instanceof Rect) {
+      const [dest] = params;
+      return { source: wholeSource, dest };
+    }
     const [dest] = params;
     return { source: wholeSource, dest: new Rect(dest.x, dest.y, wholeSource.w, wholeSource.h) };
+  } else {
+    return { source: wholeSource, dest: new Rect(0, 0, wholeSource.w, wholeSource.h) };
   }
 };
 

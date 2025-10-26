@@ -8,17 +8,21 @@ import type { AnyEventsMap } from "@anion155/shared/event-emitter";
 import { EventEmitter } from "@anion155/shared/event-emitter";
 import type { PointValue } from "@anion155/shared/linear/point";
 import { Point } from "@anion155/shared/linear/point";
+import { Rect } from "@anion155/shared/linear/rect";
 import type { SizeValue } from "@anion155/shared/linear/size";
 import { Size } from "@anion155/shared/linear/size";
 import { OrderedMap } from "@anion155/shared/ordered-map";
 import type { SchedulerCancelable } from "@anion155/shared/scheduler";
 import { immidiateScheduler, rafScheduler } from "@anion155/shared/scheduler";
-import { SignalBinding } from "@anion155/signals";
+import { SignalBinding, SignalReadonlyComputed } from "@anion155/signals";
 import { nanoid } from "nanoid/non-secure";
 
+import CharactersPath from "@/assets/characters.png?url";
 import TestMapPath from "@/assets/test_map/test_map.tmj?url";
 
 import { Keys, type KeysCode } from "./keycodes";
+import { loadImage } from "./load";
+import { SpritesResource } from "./sprites-resource";
 import { TMXResource } from "./tmx-resource";
 
 class Resource<Events extends AnyEventsMap<never> = Record<never, unknown>> extends EventEmitter<
@@ -311,7 +315,12 @@ type PointComponentArg = PointValue | { (): PointValue };
 class PointComponent extends BindingComponent<Point> {
   constructor(value: PointComponentArg, entity: Entity, name?: string) {
     super(typeof value === "function" ? () => Point.parseValue(value()) : Point.parseValue(value), entity, name);
-    entity.registerComponent(this);
+  }
+}
+type SizeComponentArg = SizeValue | { (): SizeValue };
+class SizeComponent extends BindingComponent<Size> {
+  constructor(value: SizeComponentArg, entity: Entity, name?: string) {
+    super(typeof value === "function" ? () => Size.parseValue(value()) : Size.parseValue(value), entity, name);
   }
 }
 
@@ -326,24 +335,73 @@ class Camera extends Entity {
   }
 }
 
+class PlayerRenderer extends CanvasRendererEntityComponent {
+  get #entity() {
+    return this.entity as Player;
+  }
+
+  constructor(
+    readonly sprites: SpritesResource,
+    entity: Entity,
+    name?: string,
+  ) {
+    super(entity, name);
+  }
+
+  render({ ctx }: CanvasRendererContext, _deltaTime: DOMHighResTimeStamp): void {
+    const { position, positionScale, size, direction } = this.#entity;
+    ctx.translate(
+      ...Point.project(position.value, positionScale.value, size.value, (position, positionOnMap, size) => position * positionOnMap - size / 2)._,
+    );
+    const index = { towards: 1, away: 10, left: 4, right: 7 }[direction];
+    this.sprites.renderSprite(ctx, index, new Rect(0, size.value));
+  }
+}
+
 type PlayerParams = EntityParams & {
   position: PointComponentArg;
+  positionScale: SizeComponentArg;
+  size?: SizeComponentArg;
 };
 class Player extends Entity {
   readonly position: PointComponent;
-  constructor({ position, ...entityParams }: PlayerParams) {
+  readonly positionScale: SizeComponent;
+  readonly positionOnMap: SignalReadonlyComputed<Point>;
+  readonly size: SizeComponent;
+  constructor({ position, positionScale, size, ...entityParams }: PlayerParams) {
     super(entityParams);
     this.position = new PointComponent(position, this, "position");
+    this.positionScale = new SizeComponent(positionScale ?? 1, this, "positionScale");
+    this.positionOnMap = new SignalReadonlyComputed(() => {
+      return this.position.value.mul(this.positionScale.value);
+    });
+    this.size = new SizeComponent(size ?? 0, this, "size");
   }
 
-  readonly renderer = new (class PlayerRenderer extends CanvasRendererEntityComponent {
-    get #entity() {
-      return this.entity as Player;
-    }
-    render({ ctx }: CanvasRendererContext, _deltaTime: DOMHighResTimeStamp): void {
-      ctx.translate(...this.#entity.position.value._);
-    }
-  })(this, "renderer");
+  renderer: PlayerRenderer | null = null;
+
+  protected async _initialize(stack: AsyncDisposableStack) {
+    const image = await loadImage(CharactersPath);
+    const spriteSize = new Size(16);
+    const sprites = new SpritesResource(image, { spriteSize, size: new Size(3, 4) });
+    if (!this.size.value.w || !this.size.value.h) this.size.value = spriteSize;
+    this.renderer = new PlayerRenderer(sprites, this, "renderer");
+    stack.append(() => (this.renderer = null));
+  }
+
+  #direction: MovingDirection = "towards";
+  get direction() {
+    return this.#direction;
+  }
+  makeStep({ directions, speed }: { directions: MovingDirection[]; speed: MovingSpeed }, deltaTime: DOMHighResTimeStamp) {
+    if (!directions.length) return;
+    const deltaPos = (deltaTime / 1000) * (speed === "run" ? 6 : 3);
+    this.#direction = directions[0];
+    if (directions[0] === "towards") this.position.update((pos) => pos.add([0, deltaPos]));
+    else if (directions[0] === "away") this.position.update((pos) => pos.add([0, -deltaPos]));
+    else if (directions[0] === "left") this.position.update((pos) => pos.add([-deltaPos, 0]));
+    else if (directions[0] === "right") this.position.update((pos) => pos.add([deltaPos, 0]));
+  }
 }
 
 class UserInput extends EventEmitter<{
@@ -431,7 +489,7 @@ type MovingSpeed = "run" | "walk";
 class MovingControlls {
   constructor(readonly userInput: UserInput) {}
 
-  readonly direction = new UserInputAction<MovingDirection, KeysCode>({
+  readonly directions = new UserInputAction<MovingDirection, KeysCode>({
     [Keys.CODE_S]: "towards",
     [Keys.CODE_DOWN]: "towards",
     [Keys.CODE_W]: "away",
@@ -445,10 +503,10 @@ class MovingControlls {
     [Keys.CODE_SHIFT_LEFT]: "run",
     [Keys.CODE_SHIFT_RIGHT]: "run",
   });
-  readonly #actions = [this.direction, this.speed];
+  readonly #actions = [this.directions, this.speed];
 
   get current() {
-    return { direction: this.direction.current, speed: this.speed.current[0] };
+    return { directions: this.directions.current, speed: this.speed.current[0] };
   }
 
   readonly #initializer = new Initializer(
@@ -501,13 +559,13 @@ class TestGame extends Game {
   constructor(root: HTMLDivElement) {
     super({ name: "test" });
     this.loop = new LoopEntityComponent({ frame: 1000 / 60 }, this, "loop");
-    const tileSize = new Size(32, 32);
+    const tileSize = new Size(32);
     this.canvasRenderer = new CanvasRendererLayer({ root, size: [800, 600], name: "renderer", parent: this });
     this.map = new TiledMap({ filePath: TestMapPath, name: "map", parent: this, tileSize });
     this.camera = new Camera({ name: "camera", parent: this });
     this.canvasRenderer.offset.bind(() => this.camera.position.value);
-    this.player = new Player({ position: [16, 16], name: "player", parent: this });
-    this.camera.position.bind(() => Point.mul(this.player.position.value, tileSize));
+    this.player = new Player({ position: 16, positionScale: tileSize, size: 48, name: "player", parent: this });
+    this.camera.position.bind(() => this.player.positionOnMap.value);
     this.userInput = new UserInput();
     this.movingController = new MovingControlls(this.userInput);
   }
@@ -537,16 +595,7 @@ class TestGame extends Game {
 
     stack.append(await this.userInput.initializer.run());
     stack.append(await this.movingController.initializer.run());
-    stack.append(
-      this.loop.on("frame", (deltaTime) => {
-        const direction = this.movingController.direction.current;
-        const deltaPos = (deltaTime / 1000) * 2;
-        if (direction[0] === "towards") this.player.position.update((pos) => pos.add([0, deltaPos]));
-        else if (direction[0] === "away") this.player.position.update((pos) => pos.add([0, -deltaPos]));
-        else if (direction[0] === "left") this.player.position.update((pos) => pos.add([-deltaPos, 0]));
-        else if (direction[0] === "right") this.player.position.update((pos) => pos.add([deltaPos, 0]));
-      }),
-    );
+    stack.append(this.loop.on("frame", (deltaTime) => this.player.makeStep(this.movingController.current, deltaTime)));
   }
 }
 

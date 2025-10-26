@@ -3,7 +3,7 @@ declare module "*.png" {
   export default publicPath;
 }
 
-declare module "*.tmj?url" {
+declare module "*?url" {
   const publicPath: string;
   export default publicPath;
 }
