@@ -120,6 +120,7 @@ interface IEntityHolder {
   [Symbol.iterator](): Iterable<Entity>;
   each(): Iterable<Entity>;
   append(entity: Entity): this;
+  eachEntitiesWith<T extends Constructable<never, unknown>>(type: T): Iterable<InferConstructable<T>["Instance"]>;
 }
 class EntityHolder<Events extends AnyEventsMap<never> = Record<never, unknown>> extends Entity<Events> implements IEntityHolder {
   readonly children = new OrderedMap<string, Entity>();
@@ -147,6 +148,11 @@ class EntityHolder<Events extends AnyEventsMap<never> = Record<never, unknown>> 
   append(entity: Entity): this {
     this.children.push(entity.name, entity);
     return this;
+  }
+  *eachEntitiesWith<T extends Constructable<never, unknown>>(type: T): Generator<InferConstructable<T>["Instance"]> {
+    for (const entity of this) {
+      yield* entity.eachComponents(type);
+    }
   }
 }
 
@@ -203,6 +209,99 @@ class LoopEntityComponent<Ticks extends string> extends Loop<Ticks> implements E
   }
 }
 
+abstract class UserInputEntityComponent extends AutoEntityComponent {
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  onKeyDown(code: KeysCode, event: KeyboardEvent): void {}
+  onKeyDownRepeat(code: KeysCode, event: KeyboardEvent): void {}
+  onKeyUp(code: KeysCode, event: KeyboardEvent | FocusEvent): void {}
+  onChange(event: KeyboardEvent | FocusEvent): void {}
+  /* eslint-enable @typescript-eslint/no-unused-vars */
+}
+
+class UserInput extends Entity {
+  #pressed: KeysCode[] = [];
+  pressed(...codes: KeysCode[]): KeysCode[] {
+    return codes.length === 0 ? this.#pressed.slice() : this.#pressed.filter((code) => codes.includes(code));
+  }
+
+  protected _initialize(stack: AsyncDisposableStack) {
+    document.addEventListener("blur", this.onBlur);
+    stack.append(() => document.removeEventListener("blur", this.onBlur));
+    document.addEventListener("keydown", this.onKeyDown);
+    stack.append(() => document.removeEventListener("keydown", this.onKeyDown));
+    document.addEventListener("keyup", this.onKeyUp);
+    stack.append(() => document.removeEventListener("keyup", this.onKeyUp));
+    return Promise.resolve();
+  }
+
+  protected emitKeyboard<Event extends Extract<keyof UserInputEntityComponent, `on${string}`>>(
+    event: Event,
+    ...params: Parameters<UserInputEntityComponent[Event]>
+  ) {
+    Game.getGame(this)
+      .eachEntitiesWith(UserInputEntityComponent)
+      // @ts-expect-error - strange types
+      .forEach((component) => component[event](...params));
+  }
+
+  @bound
+  protected onBlur(event: FocusEvent) {
+    this.#pressed.forEach((code) => this.emitKeyboard("onKeyUp", code, event));
+    this.emitKeyboard("onChange", event);
+    this.#pressed = [];
+  }
+
+  @bound
+  protected onKeyDown(event: KeyboardEvent) {
+    const code = event.code as KeysCode;
+    if (event.repeat || this.#pressed.includes(code)) {
+      this.emitKeyboard("onKeyDownRepeat", code, event);
+      return;
+    }
+    this.#pressed.unshift(code);
+    this.emitKeyboard("onKeyDown", code, event);
+    this.emitKeyboard("onChange", event);
+  }
+
+  @bound
+  protected onKeyUp(event: KeyboardEvent) {
+    const code = event.code as KeysCode;
+    const index = this.#pressed.indexOf(code);
+    if (index < 0) return;
+    this.#pressed.splice(index, 1);
+    this.emitKeyboard("onKeyUp", code, event);
+    this.emitKeyboard("onChange", event);
+  }
+}
+
+type UserInputActionConfig<Actions extends string, Inputs extends string> = { [I in Inputs]?: Actions };
+
+class UserInputAction<Actions extends string, Inputs extends string> {
+  #held: Actions[] = [];
+  get current(): Actions[] {
+    if (this.defaultAction && !this.#held.length) return [this.defaultAction];
+    return this.#held;
+  }
+
+  constructor(
+    public config: UserInputActionConfig<Actions, Inputs>,
+    readonly defaultAction: Actions | null = null,
+  ) {}
+
+  onInputDown(input: Inputs) {
+    const action = this.config[input];
+    if (!action) return;
+    this.#held.unshift(action);
+  }
+  onInputUp(input: Inputs) {
+    const action = this.config[input];
+    if (!action) return;
+    const index = this.#held.indexOf(action);
+    if (index < 0) return;
+    this.#held.splice(index, 1);
+  }
+}
+
 type CanvasRendererContext = {
   ctx: CanvasRenderingContext2D;
   size: Size;
@@ -253,12 +352,10 @@ class CanvasRendererLayer extends Entity {
     ctx.clearRect(0, 0, size.w, size.h);
     ctx.save();
     ctx.translate(...Point.project(size, this.offset.value, (size, position) => size / 2 - position)._);
-    for (const entity of game) {
-      for (const component of entity.eachComponents(CanvasRendererEntityComponent)) {
-        ctx.save();
-        component.render(context, deltaTime);
-        ctx.restore();
-      }
+    for (const component of game.eachEntitiesWith(CanvasRendererEntityComponent)) {
+      ctx.save();
+      component.render(context, deltaTime);
+      ctx.restore();
     }
     ctx.restore();
   }
@@ -338,6 +435,9 @@ class Camera extends Entity {
 
 type AnimationConfig = number | [duration: number, frames: number[]];
 type AnimationsConfig<Names extends string> = { [Name in Names]: AnimationConfig };
+
+type MovingDirection = "away" | "towards" | "left" | "right";
+type MovingSpeed = "run" | "walk";
 type MovingAnimationConfig = AnimationsConfig<MovingDirection> & Partial<AnimationsConfig<`${MovingDirection}-${MovingSpeed | "stand"}`>>;
 type MovingState = { direction: MovingDirection; moving: false | MovingSpeed };
 class MovingAnimation {
@@ -366,11 +466,43 @@ class MovingAnimation {
     return index;
   }
 }
+class MovingControlls extends UserInputEntityComponent {
+  readonly directions = new UserInputAction<MovingDirection, KeysCode>({
+    [Keys.CODE_S]: "towards",
+    [Keys.CODE_DOWN]: "towards",
+    [Keys.CODE_W]: "away",
+    [Keys.CODE_UP]: "away",
+    [Keys.CODE_A]: "left",
+    [Keys.CODE_LEFT]: "left",
+    [Keys.CODE_D]: "right",
+    [Keys.CODE_RIGHT]: "right",
+  });
+  readonly speed = new UserInputAction<MovingSpeed, KeysCode>(
+    {
+      [Keys.CODE_SHIFT_LEFT]: "run",
+      [Keys.CODE_SHIFT_RIGHT]: "run",
+    },
+    "walk",
+  );
+  readonly #actions = [this.directions, this.speed];
+
+  get current() {
+    return { directions: this.directions.current, speed: this.speed.current[0] };
+  }
+
+  onKeyDown(code: KeysCode) {
+    this.#actions.forEach((action) => action.onInputDown(code));
+  }
+  onKeyUp(code: KeysCode) {
+    this.#actions.forEach((action) => action.onInputUp(code));
+  }
+}
 
 class PlayerRenderer extends CanvasRendererEntityComponent {
   get #entity() {
     return this.entity as Player;
   }
+  #animation: MovingAnimation;
 
   constructor(
     readonly sprites: SpritesResource,
@@ -378,9 +510,9 @@ class PlayerRenderer extends CanvasRendererEntityComponent {
     name?: string,
   ) {
     super(entity, name);
+    this.#animation = new MovingAnimation();
   }
 
-  #animation = new MovingAnimation();
   render({ ctx }: CanvasRendererContext, _deltaTime: DOMHighResTimeStamp): void {
     const { position, positionScale, spriteScale, spriteConfig, state } = this.#entity;
     ctx.translate(...Point.mul(position.value, positionScale.value)._);
@@ -405,6 +537,7 @@ class Player extends Entity {
   readonly sprites: SpritesResourceArg | SpritesResource;
   readonly spriteScale: SizeComponent;
   readonly spriteConfig: MovingAnimationConfig;
+  readonly movingControlls: MovingControlls;
   constructor({ position, positionScale, sprites, spriteScale, spriteConfig, ...entityParams }: PlayerParams) {
     super(entityParams);
     this.position = new PointComponent(position, this, "position");
@@ -415,11 +548,20 @@ class Player extends Entity {
     this.sprites = sprites;
     this.spriteScale = new SizeComponent(spriteScale ?? 1, this, "size");
     this.spriteConfig = spriteConfig;
+    this.movingControlls = new MovingControlls(this, "movingControlls");
   }
 
-  renderer: PlayerRenderer | null = null;
+  #renderer: PlayerRenderer | null = null;
+  get renderer() {
+    return this.#renderer;
+  }
 
   protected async _initialize(stack: AsyncDisposableStack) {
+    stack.append(await this.movingControlls.initializer.run());
+    const loop = Game.getGame(this).findComponent(LoopEntityComponent);
+    if (!loop) throw new DeveloperError("Failed to find game's loop");
+    stack.append(loop.on("tick", (deltaTime) => this.makeStep(this.movingControlls.current, deltaTime)));
+
     let sprites: SpritesResource;
     if (this.sprites instanceof SpritesResource) {
       sprites = this.sprites;
@@ -427,8 +569,8 @@ class Player extends Entity {
       const image = await loadImage(this.sprites.image);
       sprites = new SpritesResource(image, this.sprites.bounds ?? this.sprites);
     }
-    this.renderer = new PlayerRenderer(sprites, this, "renderer");
-    stack.append(() => (this.renderer = null));
+    this.#renderer = new PlayerRenderer(sprites, this, "renderer");
+    stack.append(() => (this.#renderer = null));
   }
 
   #state: MovingState = { direction: "towards", moving: false };
@@ -446,139 +588,6 @@ class Player extends Entity {
     else if (directions[0] === "away") this.position.update((pos) => pos.add([0, -deltaPos]));
     else if (directions[0] === "left") this.position.update((pos) => pos.add([-deltaPos, 0]));
     else if (directions[0] === "right") this.position.update((pos) => pos.add([deltaPos, 0]));
-  }
-}
-
-class UserInput extends EventEmitter<{
-  "keydown"(code: KeysCode, event: KeyboardEvent): void;
-  "keydown_repeat"(code: KeysCode, event: KeyboardEvent): void;
-  "keyup"(code: KeysCode, event: KeyboardEvent | FocusEvent): void;
-  "change"(event: KeyboardEvent | FocusEvent): void;
-}> {
-  #pressed: KeysCode[] = [];
-
-  readonly #initializer = new Initializer(
-    liftContext(({ stack }) => {
-      document.addEventListener("blur", this.onBlur);
-      stack.append(() => document.removeEventListener("blur", this.onBlur));
-      document.addEventListener("keydown", this.onKeyDown);
-      stack.append(() => document.removeEventListener("keydown", this.onKeyDown));
-      document.addEventListener("keyup", this.onKeyUp);
-      stack.append(() => document.removeEventListener("keyup", this.onKeyUp));
-    }),
-  );
-  get initializer() {
-    return this.#initializer;
-  }
-
-  @bound
-  protected onBlur(event: FocusEvent) {
-    this.#pressed.forEach((code) => this.emit("keyup", code, event));
-    this.emit("change", event);
-    this.#pressed = [];
-  }
-
-  @bound
-  protected onKeyDown(event: KeyboardEvent) {
-    const code = event.code as KeysCode;
-    if (event.repeat || this.#pressed.includes(code)) {
-      this.emit("keydown_repeat", code, event);
-      return;
-    }
-    this.#pressed.unshift(code);
-    this.emit("keydown", code, event);
-    this.emit("change", event);
-  }
-
-  @bound
-  protected onKeyUp(event: KeyboardEvent) {
-    const code = event.code as KeysCode;
-    const index = this.#pressed.indexOf(code);
-    if (index < 0) return;
-    this.#pressed.splice(index, 1);
-    this.emit("keyup", code, event);
-    this.emit("change", event);
-  }
-
-  pressed(...codes: KeysCode[]): KeysCode[] {
-    return codes.length === 0 ? this.#pressed.slice() : this.#pressed.filter((code) => codes.includes(code));
-  }
-}
-
-type UserInputActionConfig<Actions extends string, Inputs extends string> = { [I in Inputs]?: Actions };
-
-class UserInputAction<Actions extends string, Inputs extends string> {
-  #held: Actions[] = [];
-  get current(): Actions[] {
-    if (this.defaultAction && !this.#held.length) return [this.defaultAction];
-    return this.#held;
-  }
-
-  constructor(
-    public config: UserInputActionConfig<Actions, Inputs>,
-    readonly defaultAction: Actions | null = null,
-  ) {}
-
-  onInputDown(input: Inputs) {
-    const action = this.config[input];
-    if (!action) return;
-    this.#held.unshift(action);
-  }
-  onInputUp(input: Inputs) {
-    const action = this.config[input];
-    if (!action) return;
-    const index = this.#held.indexOf(action);
-    if (index < 0) return;
-    this.#held.splice(index, 1);
-  }
-}
-
-type MovingDirection = "away" | "towards" | "left" | "right";
-type MovingSpeed = "run" | "walk";
-class MovingControlls {
-  constructor(readonly userInput: UserInput) {}
-
-  readonly directions = new UserInputAction<MovingDirection, KeysCode>({
-    [Keys.CODE_S]: "towards",
-    [Keys.CODE_DOWN]: "towards",
-    [Keys.CODE_W]: "away",
-    [Keys.CODE_UP]: "away",
-    [Keys.CODE_A]: "left",
-    [Keys.CODE_LEFT]: "left",
-    [Keys.CODE_D]: "right",
-    [Keys.CODE_RIGHT]: "right",
-  });
-  readonly speed = new UserInputAction<MovingSpeed, KeysCode>(
-    {
-      [Keys.CODE_SHIFT_LEFT]: "run",
-      [Keys.CODE_SHIFT_RIGHT]: "run",
-    },
-    "walk",
-  );
-  readonly #actions = [this.directions, this.speed];
-
-  get current() {
-    return { directions: this.directions.current, speed: this.speed.current[0] };
-  }
-
-  readonly #initializer = new Initializer(
-    liftContext(({ stack }) => {
-      stack.append(this.userInput.on("keydown", this.onKeyboardDown));
-      stack.append(this.userInput.on("keyup", this.onKeyboardUp));
-    }),
-  );
-  get initializer() {
-    return this.#initializer;
-  }
-
-  @bound
-  protected onKeyboardDown(code: KeysCode) {
-    this.#actions.forEach((action) => action.onInputDown(code));
-  }
-
-  @bound
-  protected onKeyboardUp(code: KeysCode) {
-    this.#actions.forEach((action) => action.onInputUp(code));
   }
 }
 
@@ -607,7 +616,6 @@ class TestGame extends Game {
   readonly player: Player;
   readonly camera: Camera;
   readonly userInput: UserInput;
-  readonly movingController: MovingControlls;
   constructor(root: HTMLDivElement) {
     super({ name: "test" });
     this.loop = new LoopEntityComponent({ frame: 1000 / 60 }, this, "loop");
@@ -635,36 +643,13 @@ class TestGame extends Game {
       parent: this,
     });
     this.camera.position.bind(() => this.player.positionOnMap.value);
-    this.userInput = new UserInput();
-    this.movingController = new MovingControlls(this.userInput);
+    this.userInput = new UserInput({ parent: this, name: "userInput" });
   }
 
   protected async _initialize(stack: AsyncDisposableStack): Promise<void> {
     await super._initialize(stack);
     stack.append(this.loop.start());
-
-    // const path = new Size(2);
-    // const startPos = this.player.position.value.sub(Size.div(path, 2));
-    // const startTime = performance.now();
-    // stack.append(
-    //   this.loop.on("tick", () => {
-    //     const overallProgress = ((performance.now() - startTime) % 4000) / 1000;
-    //     const progress = overallProgress % 1;
-    //     if (overallProgress < 1) {
-    //       this.player.position.value = startPos.add([progress * path.w, 0]);
-    //     } else if (overallProgress < 2) {
-    //       this.player.position.value = startPos.add([path.w, progress * path.h]);
-    //     } else if (overallProgress < 3) {
-    //       this.player.position.value = startPos.add([path.w - progress * path.w, path.h]);
-    //     } else if (overallProgress < 4) {
-    //       this.player.position.value = startPos.add([0, path.h - progress * path.h]);
-    //     }
-    //   }),
-    // );
-
     stack.append(await this.userInput.initializer.run());
-    stack.append(await this.movingController.initializer.run());
-    stack.append(this.loop.on("tick", (deltaTime) => this.player.makeStep(this.movingController.current, deltaTime)));
   }
 }
 
