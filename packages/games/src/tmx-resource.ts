@@ -28,7 +28,8 @@ export const parseTMXMap = (map: TMX.TMXMap, path: string) => {
     const tileset = map.tilesets[index];
     if (!tileset.image) throw new DeveloperError("TMX: tileset without image is not suppoerted");
     const { firstgid = 0, columns, tilecount, tileoffset: { x: offsetx = 0, y: offsety = 0 } = {}, margin = 0, spacing = 0 } = tileset;
-    const sprite = new SpritesResource(path + "/" + tileset.image, {
+    const sprite = new SpritesResource({
+      src: path + "/" + tileset.image,
       spriteSize: tileSize,
       size: new Size(columns, Math.ceil(tilecount / columns)),
       offset: new Point(offsetx + margin, offsety + margin),
@@ -74,7 +75,13 @@ export const parseTMXMap = (map: TMX.TMXMap, path: string) => {
 };
 export type ParsedTMXMap = ReturnType<typeof parseTMXMap>;
 
+export type TMXResourceParam = string | TMXResource;
 export class TMXResource extends Resource<ParsedTMXMap & { resource: LayeredImagesResource }> {
+  static parse(resource: TMXResourceParam) {
+    if (resource instanceof TMXResource) return resource;
+    return new TMXResource(resource);
+  }
+
   static async drawTileLayer(ctx: CanvasDrawImage, layer: TMX.TMXTileLayer, { tileSize, globalIndexes, sprites, layersData }: ParsedTMXMap) {
     const data = layersData.emplace(layer);
     for (let y = layer.y ?? 0; y < layer.height; y += 1) {

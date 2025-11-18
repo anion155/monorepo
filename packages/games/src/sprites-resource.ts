@@ -11,13 +11,13 @@ import { ImageResource } from "./image-resource";
 import { Resource } from "./resource";
 
 export type SpritesResourceTiledConfig = { spriteSize: SizeValue; size?: SizeValue; offset?: PointValue; gaps?: SizeValue };
-export type SpritesResourceParam = ExclusiveUnion<{ bounds: Rect[] }, SpritesResourceTiledConfig> | Rect[];
+export type SpritesResourceParam = ExclusiveUnion<{ bounds: Rect[] }, SpritesResourceTiledConfig> & {
+  src: ImageResourceParam;
+};
 export const parseSpritesBounds = (config: SpritesResourceParam, imageSize: SizeValue) => {
   const _imageSize = Size.parseValue(imageSize);
   let bounds: Rect[];
-  if (Array.isArray(config)) {
-    bounds = config;
-  } else if (config.bounds) {
+  if (config.bounds) {
     bounds = config.bounds;
   } else {
     const spriteSize = Size.parseValue(config.spriteSize);
@@ -37,9 +37,9 @@ export const parseSpritesBounds = (config: SpritesResourceParam, imageSize: Size
 };
 
 export class SpritesResource extends Resource<{ readonly image: ImageResource; readonly bounds: readonly Rect[] }> {
-  constructor(src: ImageResourceParam, config: SpritesResourceParam) {
+  constructor(config: SpritesResourceParam) {
     super(async (stack) => {
-      const image = ImageResource.parse(src);
+      const image = ImageResource.parse(config.src);
       stack.append(await image.initialize());
       const bounds = parseSpritesBounds(config, image.source);
       return { image, bounds };

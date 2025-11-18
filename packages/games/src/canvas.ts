@@ -1,0 +1,72 @@
+import { DeveloperError } from "@anion155/shared";
+import { Point } from "@anion155/shared/linear/point";
+import type { Size } from "@anion155/shared/linear/size";
+
+import type { PointComponentArg, SizeComponentArg } from "./binding";
+import { PointComponent, SizeComponent } from "./binding";
+import type { EntityParams } from "./entity";
+import { Entity, EntityComponent } from "./entity";
+import { Game } from "./game";
+import { LoopEntityComponent } from "./loop";
+
+export type CanvasRendererContext = {
+  game: Game;
+  ctx: CanvasRenderingContext2D;
+  size: Size;
+  deltaTime: DOMHighResTimeStamp;
+};
+export type CanvasRendererLayerParams = EntityParams & {
+  root: HTMLDivElement;
+  size: SizeComponentArg;
+  offset?: PointComponentArg;
+};
+export class CanvasRendererLayer extends Entity {
+  readonly root: HTMLDivElement;
+  readonly size: SizeComponent;
+  readonly offset: PointComponent;
+
+  constructor({ root, size, offset, ...entityParams }: CanvasRendererLayerParams) {
+    super(entityParams, (stack) => {
+      const canvas = document.createElement("canvas");
+      const size = this.size.value;
+      canvas.width = size.w;
+      canvas.height = size.h;
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      canvas.style.imageRendering = "crisp-edges";
+      root.append(canvas);
+      stack.append(() => canvas.remove());
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new DeveloperError("Failed to create canvas 2d context");
+      ctx.imageSmoothingEnabled = false;
+
+      const game = Game.getGame(this);
+      stack.append(
+        LoopEntityComponent.getGameLoop(this).on("frame", (deltaTime) => {
+          this.render({ game, ctx, size, deltaTime });
+        }),
+      );
+    });
+    this.root = root;
+    this.size = new SizeComponent(size, { entity: this, name: "size" });
+    this.offset = new PointComponent(offset ?? [0, 0], { entity: this, name: "offset" });
+  }
+
+  render(context: CanvasRendererContext) {
+    const { ctx, game, size } = context;
+    ctx.clearRect(0, 0, size.w, size.h);
+    ctx.save();
+    ctx.translate(...Point.project(size, this.offset.value, (size, position) => size / 2 - position)._);
+    for (const component of game.eachEntitiesWith(CanvasRendererEntityComponent)) {
+      ctx.save();
+      component.render(context);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+}
+
+export abstract class CanvasRendererEntityComponent<Value = void> extends EntityComponent<Value> {
+  abstract render(context: CanvasRendererContext): void;
+}
