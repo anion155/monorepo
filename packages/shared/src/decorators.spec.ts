@@ -67,5 +67,15 @@ describe("decorators", () => {
       const { method } = new Test();
       expect(method()).toBe(1);
     });
+
+    it("should bound static method to class", () => {
+      class Test {
+        @bound static method() {
+          return new this();
+        }
+      }
+      const { method } = Test;
+      expect(method()).toBeInstanceOf(Test);
+    });
   });
 });

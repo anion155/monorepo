@@ -38,8 +38,9 @@ export function cached<This extends object = object, Value = unknown>(
  *  const { method } = new Test();
  *  method() === 6;
  */
-export function bound<This = unknown, Value extends (this: This, ...args: unknown[]) => unknown = (this: This, ...args: unknown[]) => unknown>(
-  _: Value,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function bound<This = unknown, Value extends (this: This, ...args: any) => unknown = (this: This, ...args: any) => unknown>(
+  method: Value,
   { kind, addInitializer, name }: ClassMethodDecoratorContext<This, Value>,
 ) {
   if (kind !== "method") return;
