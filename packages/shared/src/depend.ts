@@ -84,5 +84,10 @@ export function createDependTools<SDependent extends Dependent = Dependent, SDep
     dependents.get(dependency).delete(dependent);
   }
 
-  return { dependencies, dependents, bind, unbind, rank };
+  /** Unbinds all dependent's dependencies */
+  function clearDependecies(dependent: SDependent) {
+    dependencies.get(dependent).forEach((dependency) => unbind(dependent, dependency));
+  }
+
+  return { dependencies, dependents, bind, unbind, clearDependecies, rank };
 }

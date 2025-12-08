@@ -97,4 +97,15 @@ describe("depend tools", () => {
     expect(depend.rank(moduleC, moduleL)).toBe(1);
     expect(depend.rank(moduleC, moduleA)).toBe(2);
   });
+
+  it("should unbind all dependencies", () => {
+    const moduleA = new Module("a", []);
+    const moduleB = new Module("b", [moduleA]);
+    const moduleC = new Module("c", [moduleB, moduleA]);
+
+    depend.clearDependecies(moduleC);
+    expect(depend.rank(moduleC, moduleA)).toBe(-1);
+    expect(depend.rank(moduleC, moduleB)).toBe(-1);
+    expect(depend.rank(moduleB, moduleA)).toBe(1);
+  });
 });
