@@ -11,7 +11,8 @@
   },
   "bin": {
     "builder": "./scripts/builder.ts",
-    "typescript.config": "./scripts/typescript.config.ts"
+    "typescript.config": "./scripts/typescript.config.ts",
+    "generate.exports": "./scripts/generate.exports.ts"
   },
   "dependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.5.0",
