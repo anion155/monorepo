@@ -176,8 +176,8 @@ defineMethod(SignalReadonly.prototype, "get", function get<Value>(this: SignalRe
 });
 
 declare module "./signal-writable" {
-  interface SignalWritable<Value> {
-    set(next: NoInfer<Value>): void;
+  interface SignalWritable<Value, SetValueArg = never> {
+    set(next: NoInfer<Value> | NoInfer<SetValueArg>): void;
     set<Field extends WritableKeys<Value>>(next: NoInfer<Value[Field]>, field: Field): void;
     set<F1 extends WritableKeys<Value>, F2 extends WritableKeys<Value[F1]>>(next: NoInfer<Value[F1][F2]>, field1: F1, field2: F2): void;
     set<F1 extends WritableKeys<Value>, F2 extends WritableKeys<Value[F1]>, F3 extends WritableKeys<Value[F1][F2]>>(

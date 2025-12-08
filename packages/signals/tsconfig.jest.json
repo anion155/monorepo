@@ -1,5 +1,5 @@
 {
-  "extends": ["@anion155/shared/shared.tsconfig.jest.json", "./tsconfig.base.json"],
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2024",
     "esModuleInterop": true,

@@ -7,7 +7,7 @@ import type { SignalDependentDependency, SignalListener, SignalValue } from "./t
 export class SignalReadonlyError extends createErrorClass("SignalReadonlyError") {}
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface SignalWritableComputed<Value> extends SignalDependentDependency {}
+export interface SignalWritableComputed<Value, SetValueArg = never> extends SignalDependentDependency {}
 /**
  * By-directional computed Signal, that can be used as computed writable state.
  *
@@ -18,12 +18,15 @@ export interface SignalWritableComputed<Value> extends SignalDependentDependency
  *   sin => state.set(Math.asin(sin)),
  * );
  */
-export class SignalWritableComputed<Value> extends SignalWritable<Value> implements SignalValue<Value>, SignalListener {
+export class SignalWritableComputed<Value, SetValueArg = never>
+  extends SignalWritable<Value, SetValueArg>
+  implements SignalValue<Value>, SignalListener
+{
   #current!: Value;
   #getter: () => Value;
-  #setter: (value: Value) => void;
+  #setter: (value: Value | SetValueArg) => void;
 
-  constructor(getter: () => Value, setter: (value: Value) => void) {
+  constructor(getter: () => Value, setter: (value: Value | SetValueArg) => void) {
     super();
     depends.dependencies.stamp(this);
     depends.dependents.stamp(this);
@@ -35,12 +38,12 @@ export class SignalWritableComputed<Value> extends SignalWritable<Value> impleme
   peak() {
     return this.#current;
   }
-  protected _set(value: Value) {
+  protected _set(value: Value | SetValueArg) {
     if (value === this.#current) return;
-    this.#current = value;
     using batching = context.setupBatchingContext();
     batching.invalidate(this);
     this.#setter(value);
+    this.#current = this.#getter();
   }
 
   invalidate() {
