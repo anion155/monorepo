@@ -5,7 +5,7 @@ import type { Equal, Expect, Extends } from "./type-tests";
 /* prettier-ignore */
 const genericThenCases = <Value>(maybe: Maybe<Value>) => {
   type aCase = Expect<Equal<typeof a, Maybe<never> | Maybe<number>>>;                     const a = maybe.then(() => 5);
-  type bCase = Expect<Equal<typeof b, Promise<string>>>;                                  const b = maybe.then(() => Promise.resolve(""));
+  type bCase = Expect<Equal<typeof b, Maybe<never> | Promise<string>>>;                   const b = maybe.then(() => Promise.resolve(""));
   type cCase = Expect<Equal<typeof c, Maybe<never> | Promise<string> | Maybe<5>>>;        const c = maybe.then(() => Math.random() > 0.5 ? Promise.resolve("") : 5);
   type dCase = Expect<Equal<typeof d, Maybe<number> | MaybePromise<Value>>>;              const d = maybe.then(null, () => 5);
   type eCase = Expect<Equal<typeof e, Promise<string> | MaybePromise<Value>>>;            const e = maybe.then(null, () => Promise.resolve(""));
@@ -25,7 +25,7 @@ const genericThenCases = <Value>(maybe: Maybe<Value>) => {
 const valueThenCases = () => {
   const maybe = Maybe.resolve(new Date());
   type aCase = Expect<Equal<typeof a, Maybe<never> | Maybe<number>>>;               const a = maybe.then(() => 5);
-  type bCase = Expect<Equal<typeof b, Promise<string>>>;                            const b = maybe.then(() => Promise.resolve(""));
+  type bCase = Expect<Equal<typeof b, Maybe<never> | Promise<string>>>;             const b = maybe.then(() => Promise.resolve(""));
   type cCase = Expect<Equal<typeof c, Maybe<never> | Promise<string> | Maybe<5>>>;  const c = maybe.then(() => Math.random() > 0.5 ? Promise.resolve("") : 5);
   type dCase = Expect<Equal<typeof d, Maybe<Date> | Maybe<number>>>;                const d = maybe.then(null, () => 5);
   type eCase = Expect<Equal<typeof e, Maybe<Date> | Promise<string>>>;              const e = maybe.then(null, () => Promise.resolve(""));
@@ -45,7 +45,7 @@ const valueThenCases = () => {
 const errorThenCases = () => {
   const maybe = Maybe.reject(new Error('test'));
   type aCase = Expect<Equal<typeof a, Maybe<never> | Maybe<number>>>;               const a = maybe.then(() => 5);
-  type bCase = Expect<Equal<typeof b, Promise<string>>>;                            const b = maybe.then(() => Promise.resolve(""));
+  type bCase = Expect<Equal<typeof b, Maybe<never> | Promise<string>>>;             const b = maybe.then(() => Promise.resolve(""));
   type cCase = Expect<Equal<typeof c, Maybe<never> | Promise<string> | Maybe<5>>>;  const c = maybe.then(() => Math.random() > 0.5 ? Promise.resolve("") : 5);
   type dCase = Expect<Equal<typeof d, Maybe<never> | Maybe<number>>>;               const d = maybe.then(null, () => 5);
   type eCase = Expect<Equal<typeof e, Maybe<never> | Promise<string>>>;             const e = maybe.then(null, () => Promise.resolve(""));
@@ -73,4 +73,15 @@ async function asyncAwaitCase() {
     Expect<Extends<typeof value, number>>,
     Expect<Extends<Awaited<Maybe<Date>>, Date>>,
   ];
+}
+
+/* prettier-ignore */
+const tryCases = <Value>() => {
+  type aCase = Expect<Equal<typeof a, Maybe<number>>>;                                            const a = Maybe.try(() => 5);
+  type bCase = Expect<Equal<typeof b, Promise<number>>>;                                          const b = Maybe.try(() => Promise.resolve(5));
+  type cCase = Expect<Equal<typeof c, Maybe<number> | Promise<number>>>;                          const c = Maybe.try(() => null as never as number | Promise<number>);
+  type dCase = Expect<Equal<typeof d, MaybePromise<Value>>>;                                      const d = Maybe.try(() => null as never as Value);
+  type eCase = Expect<Equal<typeof e, Maybe<number> | Maybe<never> | Promise<number>>>;           const e = d.then(() => 5);
+  type fCase = Expect<Equal<typeof f, Maybe<number> | Maybe<string> | Promise<number | string>>>; const f = d.then(() => 5, () => '');
+  type gCase = Expect<Equal<typeof g, Promise<unknown> | Maybe<number>>>;                         const g = d.catch(() => 5);
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 
+import { doThrow } from "./do";
 import {
   cloneCallable,
   curryHelper,
@@ -126,9 +127,14 @@ describe("functional utils", () => {
   describe("liftContext()", () => {
     it("should provide context and arguments", () => {
       const mock = jest.fn((..._params: unknown[]) => "test");
-      const lifted = liftContext(mock);
+      const lifted = liftContext((...params) => mock(...params));
       expect(lifted.call({ type: "context" }, 2, "5")).toBe("test");
-      expect(mock).toHaveBeenCalledWith({ type: "context" }, 2, "5");
+      expect(mock.mock.calls).toStrictEqual([[{ type: "context" }, 2, "5"]]);
+    });
+
+    it("should handle exception", () => {
+      const lifted = liftContext(() => doThrow(new Error("test error")));
+      expect(() => lifted.call({ type: "context" })).toStrictThrow(new Error("test error"));
     });
   });
 

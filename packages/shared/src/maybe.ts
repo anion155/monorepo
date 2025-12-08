@@ -85,35 +85,18 @@ export class Maybe<Value> {
   }
 
   /**
-   * Projects current Maybe with callback into Promise.
-   * @param onfulfilled The callback to execute if the Maybe is resolved.
-   * @returns A Promise with value projected by callback.
-   */
-  then<Result1 = Value>(onfulfilled: (value: Value) => Promise<Result1>): Promise<Result1>;
-  /**
-   * Projects current Maybe with callback into Promise.
-   * @param onfulfilled The callback to execute if the Maybe is resolved.
-   * @param onrejected The callback to execute if the Maybe is rejected.
-   * @returns A Promise with value projected by callback.
-   */
-  then<Result1 = Value, Result2 = never>(
-    onfulfilled: (value: Value) => Promise<Result1>,
-    onrejected: (reason: unknown) => Promise<Result2>,
-  ): Promise<Result1 | Result2>;
-  /**
    * Projects current Maybe with callback.
    * @param onfulfilled The callback to execute if the Maybe is resolved.
    * @param onrejected The callback to execute if the Maybe is rejected.
    * @returns A Maybe if callback did not returned Promise, otherwise it returns Promise.
    */
-  then<Result1 = Value, Result2 = never>(
-    onfulfilled?: ((value: Value) => Result1) | null,
-    onrejected?: ((reason: unknown) => Result2) | null,
-  ): MaybePromise<Result1> | MaybePromise<Result2>;
-  then<Result1 = Value, Result2 = never>(
-    onfulfilled?: ((value: Value) => Result1) | null,
-    onrejected?: ((reason: unknown) => Result2) | null,
-  ): MaybePromise<Result1> | MaybePromise<Result2> {
+  then<TResult1 = Value, TResult2 = never>(
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents
+    onfulfilled?: ((value: Value) => TResult1) | undefined | null,
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-type-constituents, @typescript-eslint/no-explicit-any
+    onrejected?: ((reason: any) => TResult2) | undefined | null,
+  ): MaybePromise<TResult1> | MaybePromise<TResult2>;
+  then(onfulfilled?: ((value: Value) => unknown) | null, onrejected?: ((reason: unknown) => unknown) | null): Maybe<unknown> | Promise<unknown> {
     let handler: () => void;
     if (this.#state.status === "resolved") {
       const value = this.#state.value;

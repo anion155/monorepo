@@ -1,8 +1,8 @@
 declare global {
   /** From T, pick a set of properties whose keys are in the union K. Same as Pick<T, K> */
-  type PickHelper<T, K extends keyof T> = { [P in K]: T[P] };
+  type PickHelper<T, K extends keyof T> = Pick<T, K>;
   /** Construct a type with the properties of T except for those in type K. */
-  type OmitHelper<T, K extends keyof T> = { [P in Exclude<keyof T, K>]: T[P] };
+  type OmitHelper<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 
   /** Make all properties in T mutable */
   type Mutable<T> = {
