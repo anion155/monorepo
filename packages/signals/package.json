@@ -3,8 +3,25 @@
   "version": "0.1.0",
   "type": "module",
   "exports": {
+    "./binding": "./src/binding.ts",
+    "./computed-readonly": "./src/computed-readonly.ts",
+    "./computed-writable": "./src/computed-writable.ts",
+    "./effect-async": "./src/effect-async.ts",
+    "./effect": "./src/effect.ts",
     ".": "./src/index.ts",
-    "./react": "./src/react/index.ts"
+    "./internals": "./src/internals.ts",
+    "./react": "./src/react/index.ts",
+    "./react/signals-reactive": "./src/react/signals-reactive.ts",
+    "./react/use-signal-value": "./src/react/use-signal-value.ts",
+    "./react/use-signals-reactive": "./src/react/use-signals-reactive.ts",
+    "./react/utils/create-signals-store": "./src/react/utils/create-signals-store.ts",
+    "./react/utils": "./src/react/utils/index.ts",
+    "./signal-computed-extensions": "./src/signal-computed-extensions.ts",
+    "./signal-readonly": "./src/signal-readonly.ts",
+    "./signal-writable": "./src/signal-writable.ts",
+    "./signal": "./src/signal.ts",
+    "./state": "./src/state.ts",
+    "./types": "./src/types.ts"
   },
   "scripts": {
     "test": "jest src",
