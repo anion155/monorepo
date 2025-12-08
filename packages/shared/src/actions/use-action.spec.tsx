@@ -18,7 +18,13 @@ describe("Action hooks", () => {
 
       void action.run();
       await act(() => Promise.resolve());
-      expect(hook.result.current).toStrictEqual({ status: "pending", params: [], abort: expect.any(Function), promise: expect.any(Promise) });
+      expect(hook.result.current).toStrictEqual({
+        status: "pending",
+        params: [],
+        abort: expect.any(Function),
+        result: deferred.promise,
+        promise: expect.any(Promise),
+      });
 
       deferred.resolve("test");
       await act(() => Promise.resolve());
@@ -52,7 +58,13 @@ describe("Action hooks", () => {
 
       void action.run();
       await act(() => Promise.resolve());
-      expect(hook.result.current).toStrictEqual({ status: "pending", params: [], promise: expect.any(Promise), abort: expect.any(Function) });
+      expect(hook.result.current).toStrictEqual({
+        status: "pending",
+        params: [],
+        result: deferred.promise,
+        promise: expect.any(Promise),
+        abort: expect.any(Function),
+      });
 
       deferred.resolve("test");
       await act(() => Promise.resolve());
@@ -141,6 +153,7 @@ describe("Action hooks", () => {
         action,
         status: "pending",
         params: [1, 2],
+        result: deferred.promise,
         promise: expect.any(Promise),
         abort: expect.any(Function),
       });

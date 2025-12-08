@@ -2,25 +2,31 @@ import { AbortError } from "../abort";
 import { createErrorClass, DeveloperError } from "../errors";
 import { EventEmitter } from "../event-emitter";
 import { compare } from "../misc";
+import { isPromise } from "../promise";
 
 export type ActionContext = {
   action: Action<unknown[], unknown>;
   signal: AbortSignal;
 };
 
-export type ActionCallback<Params extends unknown[], Result> = (this: ActionContext, ...params: Params) => Promise<Result>;
+export type ActionCallback<Params extends unknown[], Result> = (this: ActionContext, ...params: Params) => Promise<Result> | Result;
 
 export type ActionRunningStateIdle = { status: "idle" };
 export type ActionRunningStatePending<Params extends unknown[], Result> = {
   status: "pending";
   params: Params;
+  result?: Promise<Result> | Result;
   promise?: Promise<Result>;
   abort: (reason?: unknown) => void;
 };
 export type ActionRunningState<Params extends unknown[], Result> = ActionRunningStateIdle | ActionRunningStatePending<Params, Result>;
 
 export type ActionResultStateRejected<Params extends unknown[]> = { status: "rejected"; params: Params; reason: unknown };
-export type ActionResultStateResolved<Params extends unknown[], Result> = { status: "resolved"; params: Params; value: Result };
+export type ActionResultStateResolved<Params extends unknown[], Result> = {
+  status: "resolved";
+  params: Params;
+  value: Result;
+};
 export type ActionResultState<Params extends unknown[], Result> = ActionResultStateRejected<Params> | ActionResultStateResolved<Params, Result>;
 
 /**
@@ -91,11 +97,10 @@ export class Action<Params extends unknown[], Result> extends EventEmitter<{
         this.#rejected(reason, params);
       };
       this.#running = { status: "pending", params, abort };
-      const promise = this.#callback.call({ action: this, signal: controller.signal }, ...params);
-      this.#running.promise = promise;
-      this.emit("running", this.#running);
-      this.emit("updated", this.state);
-      return promise.then(
+      const result = this.#callback.call({ action: this, signal: controller.signal }, ...params);
+      this.#running.result = result;
+      let promise = isPromise(result) ? result : Promise.resolve(result);
+      promise = promise.then(
         (value) => {
           if (!done) {
             done = true;
@@ -111,23 +116,39 @@ export class Action<Params extends unknown[], Result> extends EventEmitter<{
           throw reason;
         },
       );
+      this.#running.promise = promise;
+      this.emit("running", this.#running);
+      this.emit("updated", this.state);
+      return promise;
     } catch (reason) {
       done = true;
       this.#rejected(reason, params);
       throw reason;
     }
   }
-  runCached(...params: Params) {
-    if (this.#running.status === "pending") {
-      if (!this.#running.promise) throw new InvalidActionState();
-      if (compare(this.#running.params, params)) return this.#running.promise;
-    } else if (this.#result?.status === "resolved") {
-      if (compare(this.#result.params, params)) return Promise.resolve(this.#result.value);
-    }
-    return this.run(...params);
-  }
+
   cancel(reason?: unknown) {
     if (this.#running.status === "pending") this.#running.abort(reason);
+  }
+}
+
+/**
+ * Cached action wrapper, that stores action's execution state.
+ * @example
+ *  const action = new CachedAction(() => Promise.wait());
+ *  const result1 = action.run();
+ *  const result2 = action.run();
+ *  expect(result1).toBe(result2);
+ */
+export class CachedAction<Params extends unknown[], Result> extends Action<Params, Result> {
+  run(...params: Params) {
+    if (this.running.status === "pending") {
+      if (!this.running.promise) throw new InvalidActionState();
+      if (compare(this.running.params, params)) return this.running.promise;
+    } else if (this.result?.status === "resolved") {
+      if (compare(this.result.params, params)) return Promise.resolve(this.result.value);
+    }
+    return super.run(...params);
   }
 }
 

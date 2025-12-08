@@ -28,12 +28,15 @@ export const useActionState = <Params extends unknown[], Result>(action: Action<
 
 export const useActionAwait = <Params extends unknown[], Result>(action: Action<Params, Result>, ...params: Params) => {
   const state = useActionState(action);
-  if (state.status === "idle") return use(action.runCached(...params));
+  if (state.status === "idle") return use(action.run(...params));
   if (state.status === "pending") {
     if (state.promise === undefined) throw new InvalidActionState();
     return use(state.promise);
   }
-  if (!compare(state.params, params, 1)) return use(action.runCached(...params));
+  if (!compare(state.params, params, 1)) {
+    action.cancel();
+    return use(action.run(...params));
+  }
   if (state.status === "rejected") throw state.reason;
   return state.value;
 };
