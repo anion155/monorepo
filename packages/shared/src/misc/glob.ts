@@ -10,7 +10,6 @@ export class InvalidGlobPattern extends createErrorClass("InvalidGlobPattern", "
   }
 
   toString(tab: string = "") {
-    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     return `${super.toString()}:\n${tab}${this.pattern}\n${tab}${Array.from({ length: this.index }, () => " ").join("")}^`;
   }
 }

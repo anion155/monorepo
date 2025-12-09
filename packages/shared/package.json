@@ -57,6 +57,7 @@
     "./react/error-boundary": "./src/react/error-boundary.tsx",
     "./react": "./src/react/index.ts",
     "./react/merge-refs": "./src/react/merge-refs.ts",
+    "./react/renderer": "./src/react/renderer.tsx",
     "./react/selectable-context": "./src/react/selectable-context/index.tsx",
     "./react/state": "./src/react/state/index.ts",
     "./react/state/types": "./src/react/state/types.ts",
