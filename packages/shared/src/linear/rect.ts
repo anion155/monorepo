@@ -8,14 +8,15 @@ import type { NumberVectorComponents, NumberVectorParams } from "./vector";
 import { createNumberVector, VectorIteratingInvalid } from "./vector";
 
 export type RectObject = Point2DObject & SizeObject;
-export type RectValue = RectObject | (Point2DObject & SizeShortObject) | [point: Point2DValue, size: SizeValue];
+type _RectValue = RectObject | (Point2DObject & SizeShortObject) | [point: Point2DValue, size: SizeValue];
+export type RectValue = NumberVectorParams<4, _RectValue>;
 
 export interface Rect extends NumberVectorComponents<4> {}
 /** Rect class. */
 export class Rect
   extends createNumberVector(4, {
     name: "Rect",
-    parseTuple: (value: RectValue) => {
+    parseTuple: (value: _RectValue) => {
       if (Array.isArray(value)) {
         const position = Point2D.parseValue(value[0]);
         const size = Size.parseValue(value[1]);
@@ -31,12 +32,7 @@ export class Rect
   })
   implements Point2DObject, SizeObject, SizeShortObject
 {
-  constructor(
-    ...params:
-      | [rect: NumberVectorParams<4, RectValue>]
-      | [point: Point2DValue, size: SizeValue]
-      | [x: number, y: number, width: number, height: number]
-  ) {
+  constructor(...params: [rect: RectValue] | [point: Point2DValue, size: SizeValue] | [x: number, y: number, width: number, height: number]) {
     if (params.length === 2) {
       const position = Point2D.parseValue(params[0]);
       const size = Size.parseValue(params[1]);
@@ -45,36 +41,47 @@ export class Rect
     super(...params);
   }
 
-  /** Alias for `size[0]` */
+  /** Alias for `rect[0]` */
   @cached
   get x() {
     return this[0];
   }
-  /** Alias for `size[1]` */
+  /** Alias for `rect[1]` */
   @cached
   get y() {
     return this[1];
   }
 
-  /** Alias for `size[2]` */
+  /** Alias for `rect[2]` */
   @cached
   get w() {
     return this[2];
   }
-  /** Alias for `size[2]` */
+  /** Alias for `rect[2]` */
   @cached
   get width() {
     return this[2];
   }
-  /** Alias for `size[3]` */
+  /** Alias for `rect[3]` */
   @cached
   get h() {
     return this[3];
   }
-  /** Alias for `size[3]` */
+  /** Alias for `rect[3]` */
   @cached
   get height() {
     return this[3];
+  }
+
+  /** Alias for `rect[0] + rect[1]` */
+  @cached
+  get x2() {
+    return this[0] + this[2];
+  }
+  /** Alias for `rect[1] + rect[3]` */
+  @cached
+  get y2() {
+    return this[1] + this[3];
   }
 
   /** Position of the rectangle */

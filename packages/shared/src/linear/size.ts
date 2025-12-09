@@ -5,14 +5,15 @@ import { createNumberVector, VectorIteratingInvalid } from "./vector";
 
 export type SizeObject = { readonly width: number; readonly height: number };
 export type SizeShortObject = { readonly w: number; readonly h: number };
-export type SizeValue = SizeObject | SizeShortObject | number;
+type _SizeValue = SizeObject | SizeShortObject | number;
+export type SizeValue = NumberVectorParams<2, _SizeValue>;
 
 export interface Size extends NumberVectorComponents<2> {}
 /** Size class. */
 export class Size
   extends createNumberVector(2, {
     name: "Size",
-    parseTuple: (value: SizeValue) => {
+    parseTuple: (value: _SizeValue) => {
       if (typeof value === "number") return [value, value];
       if (hasTypedField(value, "width", "number") && hasTypedField(value, "height", "number")) return [value.width, value.height];
       if (hasTypedField(value, "w", "number") && hasTypedField(value, "h", "number")) return [value.w, value.h];
@@ -21,7 +22,7 @@ export class Size
   })
   implements SizeObject, SizeShortObject
 {
-  constructor(...params: [size: NumberVectorParams<2, SizeValue>] | [width: number, height: number]) {
+  constructor(...params: [size: SizeValue] | [width: number, height: number]) {
     super(...params);
   }
 

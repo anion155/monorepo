@@ -4,14 +4,15 @@ import type { NumberVectorComponents, NumberVectorParams } from "./vector";
 import { createNumberVector, VectorIteratingInvalid } from "./vector";
 
 export type Point2DObject = { readonly x: number; readonly y: number };
-export type Point2DValue = Point2DObject | number;
+type _Point2DValue = Point2DObject | number;
+export type Point2DValue = NumberVectorParams<2, _Point2DValue>;
 
 export interface Point2D extends NumberVectorComponents<2> {}
 /** Point class. */
 export class Point2D
   extends createNumberVector(2, {
     name: "Point2D",
-    parseTuple: (value: Point2DValue) => {
+    parseTuple: (value: _Point2DValue) => {
       if (typeof value === "number") return [value, value];
       if (hasTypedField(value, "x", "number") && hasTypedField(value, "y", "number")) return [value.x, value.y];
       throw new VectorIteratingInvalid("Unsupported Point2D param");
@@ -19,7 +20,7 @@ export class Point2D
   })
   implements Point2DObject
 {
-  constructor(...params: [point: NumberVectorParams<2, Point2DValue>] | [x: number, y: number]) {
+  constructor(...params: [point: Point2DValue] | [x: number, y: number]) {
     super(...params);
   }
 
