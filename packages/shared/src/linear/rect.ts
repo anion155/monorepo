@@ -1,29 +1,48 @@
 import { cached } from "../decorators";
-import type { InferVectorValue, VectorArray } from "../vector";
-import { parseVectorValue, Vector } from "../vector";
-import type { PointObject, PointValue } from "./point";
-import { Point } from "./point";
+import { is } from "../is";
+import type { Point2DObject, Point2DValue } from "./point-2d";
+import { Point2D } from "./point-2d";
 import type { SizeObject, SizeShortObject, SizeValue } from "./size";
 import { Size } from "./size";
+import type { NumberVectorComponents, NumberVectorParams } from "./vector";
+import { createNumberVector, VectorIteratingInvalid } from "./vector";
 
-export type RectObject = PointObject & SizeObject;
+export type RectObject = Point2DObject & SizeObject;
+export type RectValue = RectObject | (Point2DObject & SizeShortObject) | [point: Point2DValue, size: SizeValue];
 
+export interface Rect extends NumberVectorComponents<4> {}
 /** Rect class. */
-export class Rect extends Vector(4, "Rect") implements PointObject, SizeObject, SizeShortObject {
-  /** Parses {@link RectParams} into tuple of 4 numbers */
-  static parseParams(...params: RectParams): VectorArray<4> {
-    if (params.length === 4) return params;
-    if (params.length === 2) return [...Point.parseParams(params[0]), ...Size.parseParams(params[1])];
-    if ("x" in params[0]) return [params[0].x, params[0].y, params[0].width, params[0].height];
-    return params[0];
-  }
-  static parseValue(value: RectValue): Rect {
-    return parseVectorValue(4, this, value);
-  }
+export class Rect
+  extends createNumberVector(4, {
+    name: "Rect",
+    parseTuple: (value: RectValue) => {
+      if (Array.isArray(value)) {
+        const position = Point2D.parseValue(value[0]);
+        const size = Size.parseValue(value[1]);
+        return [position.x, position.y, size.w, size.h];
+      }
+      if (is(value, "object")) {
+        const position = Point2D.parseValue(value);
+        const size = Size.parseValue(value);
+        return [position.x, position.y, size.w, size.h];
+      }
+      throw new VectorIteratingInvalid("Unsupported Rect param");
+    },
+  })
+  implements Point2DObject, SizeObject, SizeShortObject
+{
   constructor(
-    ...params: [rect: RectObject | VectorArray<4>] | [point: PointValue, size: SizeValue] | [x: number, y: number, width: number, height: number]
+    ...params:
+      | [rect: NumberVectorParams<4, RectValue>]
+      | [point: Point2DValue, size: SizeValue]
+      | [x: number, y: number, width: number, height: number]
   ) {
-    super(...Rect.parseParams(...params));
+    if (params.length === 2) {
+      const position = Point2D.parseValue(params[0]);
+      const size = Size.parseValue(params[1]);
+      params = [[position, size]];
+    }
+    super(...params);
   }
 
   /** Alias for `size[0]` */
@@ -61,17 +80,17 @@ export class Rect extends Vector(4, "Rect") implements PointObject, SizeObject, 
   /** Position of the rectangle */
   @cached
   get position() {
-    return new Point(this);
+    return new Point2D(this.x, this.y);
   }
 
   /** Size of the rectangle */
   @cached
   get size() {
-    return new Size(this);
+    return new Size(this.w, this.h);
   }
 
   /** Expands this rect with {@link other} rect. */
-  expandBy(other: RectValue) {
+  expandBy(other: NumberVectorParams<4, RectValue>) {
     const _other = Rect.parseValue(other);
     const x = Math.min(this.x, _other.x);
     const y = Math.min(this.y, _other.y);
@@ -81,4 +100,3 @@ export class Rect extends Vector(4, "Rect") implements PointObject, SizeObject, 
   }
 }
 export type RectParams = ConstructorParameters<typeof Rect>;
-export type RectValue = InferVectorValue<4, typeof Rect>;

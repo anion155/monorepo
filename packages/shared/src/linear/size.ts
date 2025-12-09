@@ -1,25 +1,28 @@
 import { cached } from "../decorators";
-import type { InferVectorValue, VectorArray } from "../vector";
-import { parseVectorValue, Vector } from "../vector";
+import { hasTypedField } from "../is";
+import type { NumberVectorComponents, NumberVectorParams } from "./vector";
+import { createNumberVector, VectorIteratingInvalid } from "./vector";
 
 export type SizeObject = { readonly width: number; readonly height: number };
 export type SizeShortObject = { readonly w: number; readonly h: number };
+export type SizeValue = SizeObject | SizeShortObject | number;
 
+export interface Size extends NumberVectorComponents<2> {}
 /** Size class. */
-export class Size extends Vector(2, "Size") implements SizeObject, SizeShortObject {
-  /** Parses {@link SizeParams} into tuple of 2 numbers */
-  static parseParams(...params: SizeParams): VectorArray<2> {
-    if (params.length === 2) return params;
-    if (typeof params[0] === "number") return [params[0], params[0]];
-    if ("w" in params[0]) return [params[0].w, params[0].h];
-    if ("width" in params[0]) return [params[0].width, params[0].height];
-    return params[0];
-  }
-  static parseValue(value: SizeValue): Size {
-    return parseVectorValue(2, this, value);
-  }
-  constructor(...params: [size: SizeObject | SizeShortObject | VectorArray<2> | number] | [width: number, height: number]) {
-    super(...Size.parseParams(...params));
+export class Size
+  extends createNumberVector(2, {
+    name: "Size",
+    parseTuple: (value: SizeValue) => {
+      if (typeof value === "number") return [value, value];
+      if (hasTypedField(value, "width", "number") && hasTypedField(value, "height", "number")) return [value.width, value.height];
+      if (hasTypedField(value, "w", "number") && hasTypedField(value, "h", "number")) return [value.w, value.h];
+      throw new VectorIteratingInvalid("Unsupported Size param");
+    },
+  })
+  implements SizeObject, SizeShortObject
+{
+  constructor(...params: [size: NumberVectorParams<2, SizeValue>] | [width: number, height: number]) {
+    super(...params);
   }
 
   /** Alias for `size[0]` */
@@ -44,4 +47,3 @@ export class Size extends Vector(2, "Size") implements SizeObject, SizeShortObje
   }
 }
 export type SizeParams = ConstructorParameters<typeof Size>;
-export type SizeValue = InferVectorValue<2, typeof Size>;

@@ -40,9 +40,11 @@
     "./jest/run-isolated": "./src/jest/run-isolated.ts",
     "./jest/to-strict-throw": "./src/jest/to-strict-throw.ts",
     "./jest/waiter": "./src/jest/waiter.ts",
-    "./linear/point": "./src/linear/point.ts",
+    "./linear": "./src/linear/index.ts",
+    "./linear/point-2d": "./src/linear/point-2d.ts",
     "./linear/rect": "./src/linear/rect.ts",
     "./linear/size": "./src/linear/size.ts",
+    "./linear/vector": "./src/linear/vector.ts",
     "./maybe": "./src/maybe.ts",
     "./misc/compare": "./src/misc/compare.ts",
     "./misc/glob": "./src/misc/glob.ts",
@@ -77,8 +79,7 @@
     "./react/utils/use-render-dispatcher": "./src/react/utils/use-render-dispatcher.ts",
     "./scheduler": "./src/scheduler.ts",
     "./stamper": "./src/stamper.ts",
-    "./type-tests": "./src/type-tests.ts",
-    "./vector": "./src/vector.ts"
+    "./type-tests": "./src/type-tests.ts"
   },
   "scripts": {
     "test": "jest src",

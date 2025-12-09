@@ -1,8 +1,9 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { Point } from "./point";
+import { Point2D } from "./point-2d";
 import { Rect, RectParams } from "./rect";
 import { Size } from "./size";
+import { VectorIteratingInvalid } from "./vector";
 
 describe("Rect", () => {
   (
@@ -11,7 +12,27 @@ describe("Rect", () => {
         [1, 2, 3, 4],
         [1, 2, 3, 4],
       ],
+      [[[1, 2, 3, 4]], [1, 2, 3, 4]],
       [[{ x: 1, y: 2, width: 3, height: 4 }], [1, 2, 3, 4]],
+      [[{ x: 1, y: 2, w: 3, h: 4 }], [1, 2, 3, 4]],
+      [
+        [
+          [
+            { x: 1, y: 2 },
+            { width: 3, height: 4 },
+          ],
+        ],
+        [1, 2, 3, 4],
+      ],
+      [
+        [
+          [
+            { x: 1, y: 2 },
+            { w: 3, h: 4 },
+          ],
+        ],
+        [1, 2, 3, 4],
+      ],
       [
         [
           { x: 1, y: 2 },
@@ -19,7 +40,13 @@ describe("Rect", () => {
         ],
         [1, 2, 3, 4],
       ],
-      [[[1, 2, 3, 4]], [1, 2, 3, 4]],
+      [
+        [
+          { x: 1, y: 2 },
+          { w: 3, h: 4 },
+        ],
+        [1, 2, 3, 4],
+      ],
     ] as [RectParams, [number, number, number, number]][]
   ).forEach(([args, result]) =>
     it(`should instantiate Rect with ${JSON.stringify(args)}`, () => {
@@ -34,9 +61,13 @@ describe("Rect", () => {
     }),
   );
 
+  it("should handle invalid param", () => {
+    expect(() => new Rect(5 as never)).toStrictThrow(new VectorIteratingInvalid("Unsupported Rect param"));
+  });
+
   it("should construct position and size", () => {
     const rect = new Rect(1, 2, 3, 4);
-    expect(rect.position).toStrictEqual(new Point(1, 2));
+    expect(rect.position).toStrictEqual(new Point2D(1, 2));
     expect(rect.size).toStrictEqual(new Size(3, 4));
   });
 

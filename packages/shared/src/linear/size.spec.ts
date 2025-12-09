@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
 
 import { Size, SizeParams } from "./size";
+import { VectorIteratingInvalid } from "./vector";
 
 describe("Size", () => {
   (
@@ -9,9 +10,10 @@ describe("Size", () => {
         [1, 2],
         [1, 2],
       ],
+      [[[1, 2]], [1, 2]],
       [[{ w: 1, h: 2 }], [1, 2]],
       [[{ width: 1, height: 2 }], [1, 2]],
-      [[[1, 2]], [1, 2]],
+      [[1], [1, 1]],
     ] as [SizeParams, [number, number]][]
   ).forEach(([args, result]) =>
     it(`should instantiate Size with ${JSON.stringify(args)}`, () => {
@@ -23,4 +25,8 @@ describe("Size", () => {
       expect(size.height).toBe(result[1]);
     }),
   );
+
+  it("should handle invalid param", () => {
+    expect(() => new Size({} as never)).toStrictThrow(new VectorIteratingInvalid("Unsupported Size param"));
+  });
 });
