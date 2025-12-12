@@ -108,6 +108,12 @@ export class Rect
     return new Rect(x, y, w, h);
   }
 
+  /** Creates new rect offset from {@link this} to {@link offset}. */
+  offset(offset: NumberVectorParams<2, Point2DValue>) {
+    const [x, y] = Point2D.parseValue(offset);
+    return new Rect(this.x + x, this.y + y, this.w, this.h);
+  }
+
   /** Expands this rect with {@link other} rect. */
   collide(other: NumberVectorParams<4, RectValue>) {
     const _other = Rect.parseValue(other);

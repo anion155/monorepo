@@ -94,6 +94,10 @@ describe("Rect", () => {
     expect(rect.toJSON()).toStrictEqual(new Rect(0, 0, 20, 15).toJSON());
   });
 
+  it(".offset() should move rect", () => {
+    expect(new Rect(5, 5, 10, 10).offset([5, -5]).toJSON()).toStrictEqual(new Rect(10, 0, 10, 10).toJSON());
+  });
+
   it(".collide() should expand rect by other rect", () => {
     const rect1 = new Rect(0, 0, 10, 10);
     const rect2 = new Rect(5, 5, 10, 10);
