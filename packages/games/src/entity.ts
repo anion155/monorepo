@@ -67,7 +67,7 @@ export interface IEntityHolder {
   [Symbol.iterator](): Iterable<Entity>;
   each(): Iterable<Entity>;
   append(entity: Entity): this;
-  eachEntitiesWith<T extends Constructable<never, unknown>>(type: T): Iterable<InferConstructable<T>["Instance"]>;
+  eachNestedComponents<T extends Constructable<never, unknown>>(type: T): Iterable<InferConstructable<T>["Instance"]>;
 }
 export class EntityHolder<Events extends AnyEventsMap<never> = Record<never, unknown>> extends Entity<Events> implements IEntityHolder {
   readonly children = new OrderedMap<string, Entity>();
@@ -101,7 +101,7 @@ export class EntityHolder<Events extends AnyEventsMap<never> = Record<never, unk
     this.children.push(entity.name, entity);
     return this;
   }
-  *eachEntitiesWith<T extends Constructable<never, unknown>>(type: T): Generator<InferConstructable<T>["Instance"]> {
+  *eachNestedComponents<T extends Constructable<never, unknown>>(type: T): Generator<InferConstructable<T>["Instance"]> {
     for (const entity of this) {
       if (entity.initializer.state.status !== "resolved") continue;
       yield* entity.eachComponents(type);

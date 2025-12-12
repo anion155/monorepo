@@ -1,5 +1,6 @@
 import "@anion155/proposal-explicit-resource-management/global";
 import "@anion155/proposal-iterator-helpers/global";
+import "./debug";
 
 import { Size } from "@anion155/linear/size";
 import { assert } from "@anion155/shared";
@@ -36,9 +37,10 @@ class TestGame extends Game {
     this.canvasRenderer.offset.bind(() => this.camera.position.value);
     this.player = new Player({
       position: 16,
-      positionScale: () => tileSize.value,
+      scale: () => tileSize.value,
       sprites: { src: CharactersAsset, offset: [0, 16 * 4], spriteSize: 16, size: [3, 4] },
-      // spriteScale: 48 / 16,
+      size: 1,
+      bounds: [0, 0.2, 1, 0.8],
       animationConfig: {
         towards: 1,
         away: 10,
@@ -52,7 +54,7 @@ class TestGame extends Game {
       name: "player",
       parent: this,
     });
-    this.camera.position.bind(() => this.player.renderer.positionOnMap());
+    this.camera.position.bind(() => this.player.positionOnMap.value);
     this.userInput = new UserInput({ name: "userInput", parent: this });
   }
 }

@@ -58,7 +58,7 @@ export class CanvasRendererLayer extends Entity {
     ctx.clearRect(0, 0, size.w, size.h);
     ctx.save();
     ctx.translate(...Point2D.project(size, this.offset.value)((size, position) => size / 2 - position).asTuple());
-    for (const component of game.eachEntitiesWith(CanvasRendererEntityComponent)) {
+    for (const component of game.eachNestedComponents(CanvasRendererEntityComponent)) {
       ctx.save();
       component.render(context);
       ctx.restore();

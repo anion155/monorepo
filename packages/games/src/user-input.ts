@@ -36,7 +36,7 @@ export class UserInput extends Entity {
     ...params: Parameters<UserInputEntityComponent[Event]>
   ) {
     Game.getGame(this)
-      .eachEntitiesWith(UserInputEntityComponent)
+      .eachNestedComponents(UserInputEntityComponent)
       // @ts-expect-error - strange types
       .forEach((component) => component[event](...params));
   }

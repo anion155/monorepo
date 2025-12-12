@@ -1,9 +1,15 @@
 import { type Point2D, Rect } from "@anion155/linear";
+import { cached } from "@anion155/shared/decorators";
+import { SignalReadonlyComputed } from "@anion155/signals";
 
-import type { Point2DBindingArgument, SizeBindingArgument } from "./binding";
-import { Point2DComponent, SizeComponent } from "./binding";
+import type { Point2DBindingArgument, RectBindingArgument, SizeBindingArgument } from "./binding";
+import { Point2DComponent, RectComponent, SizeComponent } from "./binding";
+import { boundsMul, drawDebugBounds, drawDebugPosition } from "./bounds";
 import type { CanvasRendererContext } from "./canvas";
 import { CanvasRendererEntityComponent } from "./canvas";
+import type { CollisionResults } from "./collision";
+import { CollisionEntityComponent } from "./collision";
+import { cssColors } from "./css-colors";
 import type { EntityComponentParams, EntityParams } from "./entity";
 import { Entity } from "./entity";
 import { LoopEntityComponent } from "./loop";
@@ -16,7 +22,6 @@ export type PlayerRendererParams = OmitHelper<EntityComponentParams, "entity"> &
   entity: Player;
   sprites: SpritesResourceParam | SpritesResource;
   animationConfig: MovingAnimationConfig;
-  positionScale: SizeBindingArgument;
 };
 export class PlayerRenderer extends CanvasRendererEntityComponent {
   get #entity() {
@@ -24,13 +29,8 @@ export class PlayerRenderer extends CanvasRendererEntityComponent {
   }
   #sprites: SpritesResource;
   #animation: MovingAnimation;
-  readonly positionScale: SizeComponent;
 
-  positionOnMap() {
-    return this.#entity.position.value.mul(this.positionScale.value);
-  }
-
-  constructor({ sprites, animationConfig, positionScale, ...params }: PlayerRendererParams) {
+  constructor({ sprites, animationConfig, ...params }: PlayerRendererParams) {
     super({
       ...params,
       initialize: async (stack) => {
@@ -39,57 +39,104 @@ export class PlayerRenderer extends CanvasRendererEntityComponent {
     });
     this.#sprites = sprites instanceof SpritesResource ? sprites : new SpritesResource(sprites);
     this.#animation = new MovingAnimation(animationConfig);
-    this.positionScale = new SizeComponent({ entity: params.entity, initial: positionScale });
   }
 
   render({ ctx }: CanvasRendererContext): void {
-    ctx.translate(...this.positionOnMap().asTuple());
+    if (DEBUG.get("objectDrawSpriteBounds")) drawDebugBounds(ctx, this.#entity.spriteBoundsOnMap.value, { color: cssColors.green });
+    if (DEBUG.get("objectDrawBounds")) drawDebugBounds(ctx, this.#entity.boundsOnMap.value, { color: cssColors.red });
+    if (DEBUG.get("characterDrawPosition")) drawDebugPosition(ctx, this.#entity.positionOnMap.value);
     const index = this.#animation.interpolate(this.#entity.state);
-    const size = this.#entity.size.value ?? this.#sprites.bounds[index].size;
-    this.#sprites.renderSprite(ctx, index, new Rect([-size.w / 2, 0], size));
+    this.#sprites.renderSprite(ctx, index, this.#entity.spriteBoundsOnMap.value);
+  }
+}
+declare global {
+  interface DebugFlags {
+    objectDrawSpriteBounds: boolean;
+    objectDrawBounds: boolean;
+    characterDrawPosition: boolean;
   }
 }
 
-// declare global {
-//   interface CollisionsMap {
-//     player: { player: Player; collision: Rect };
-//   }
-// }
-// export type PlayerCollisionParams = EntityComponentParams & {
-//   bounds: RectValue;
-// };
-// export class PlayerCollision extends CollisionEntityComponent {
-//   get #entity() {
-//     return this.entity as Player;
-//   }
-//   readonly bounds: Rect;
+declare global {
+  interface CollisionsMap {
+    player: { player: Player; collision: Rect };
+  }
+}
+export type PlayerCollisionParams = EntityComponentParams;
+export class PlayerCollision extends CollisionEntityComponent {
+  get #entity() {
+    return this.entity as Player;
+  }
 
-//   constructor({ bounds, ...params }: PlayerCollisionParams) {
-//     super(params);
-//     this.bounds = Rect.parseValue(bounds);
-//   }
+  constructor({ ...params }: PlayerCollisionParams) {
+    super(params);
+  }
 
-//   *colisions() {
-//     yield this.bounds;
-//   }
-//   *collide(targetRect: Rect): CollisionResults {
-//     const collision = this.bounds.collide(targetRect);
-//     if (collision) yield { type: "player", player: this.#entity, collision };
-//   }
-// }
+  *collide(targetRect: Rect): CollisionResults {
+    const bounds = this.#entity.bounds.value;
+    const collision = bounds.collide(targetRect);
+    if (collision) yield { type: "player", player: this.#entity, collision };
+  }
+}
 
 export type PlayerParams = EntityParams &
-  Omit<PlayerRendererParams, keyof EntityComponentParams> & {
+  Omit<PlayerRendererParams, keyof EntityComponentParams> &
+  Omit<PlayerCollisionParams, keyof EntityComponentParams> & {
     position: Point2DBindingArgument;
-    size?: SizeBindingArgument<null>;
+    size: SizeBindingArgument;
+    scale?: SizeBindingArgument<null>;
+    bounds?: RectBindingArgument<null>;
   };
 export class Player extends Entity {
-  readonly renderer: PlayerRenderer;
   readonly position: Point2DComponent;
-  readonly size: SizeComponent<null>;
-  readonly movingControlls: MovingControlls;
+  readonly size: SizeComponent;
+  readonly scale: SizeComponent;
+  readonly boundsScale: RectComponent<null>;
 
-  constructor({ position, positionScale, sprites, size, animationConfig, ...entityParams }: PlayerParams) {
+  readonly renderer: PlayerRenderer;
+  readonly movingControlls: MovingControlls;
+  readonly collisions: PlayerCollision;
+
+  @cached
+  get positionOnMap() {
+    return new SignalReadonlyComputed(() => this.position.value.mul(this.scale.value));
+  }
+
+  @cached
+  get sizeOnMap() {
+    return new SignalReadonlyComputed(() => this.size.value.mul(this.scale.value));
+  }
+
+  @cached
+  get spriteBounds() {
+    return new SignalReadonlyComputed(() => {
+      const position = this.position.value;
+      const size = this.size.value;
+      return new Rect([position.x - size.w / 2, position.y - size.h], size);
+    });
+  }
+  @cached
+  get spriteBoundsOnMap() {
+    return new SignalReadonlyComputed(() => boundsMul(this.spriteBounds.value, this.scale.value));
+  }
+
+  @cached
+  get bounds() {
+    return new SignalReadonlyComputed(() => {
+      let bounds = this.spriteBounds.value;
+      if (this.boundsScale.value) {
+        const { x, y, w, h } = this.boundsScale.value;
+        bounds = new Rect(bounds.x + bounds.w * x, bounds.y + bounds.h * y, bounds.w * w, bounds.h * h);
+      }
+      return bounds;
+    });
+  }
+  @cached
+  get boundsOnMap() {
+    return new SignalReadonlyComputed(() => boundsMul(this.bounds.value, this.scale.value));
+  }
+
+  constructor({ position, size, scale, bounds, sprites, animationConfig, ...entityParams }: PlayerParams) {
     super(entityParams, (stack) => {
       stack.append(
         LoopEntityComponent.getGameLoop(this).on("tick", (deltaTime) => {
@@ -97,10 +144,14 @@ export class Player extends Entity {
         }),
       );
     });
-    this.renderer = new PlayerRenderer({ entity: this, name: "renderer", sprites, positionScale, animationConfig });
     this.position = new Point2DComponent({ entity: this, name: "position", initial: position });
     this.size = new SizeComponent({ entity: this, name: "size", initial: size });
+    this.scale = new SizeComponent({ entity: this, name: "scale", initial: scale as never, default: 1 });
+    this.boundsScale = new RectComponent({ entity: this, name: "bounds", initial: bounds });
+
+    this.renderer = new PlayerRenderer({ entity: this, name: "renderer", sprites, animationConfig });
     this.movingControlls = new MovingControlls({ entity: this, name: "movingControlls" });
+    this.collisions = new PlayerCollision({ entity: this, name: "collisions" });
   }
 
   #state: MovingState = { direction: "towards", moving: false };
@@ -110,7 +161,7 @@ export class Player extends Entity {
   makeStep({ directions, speed }: { directions: MovingDirection[]; speed: MovingSpeed }, deltaTime: DOMHighResTimeStamp) {
     if (!directions.length) {
       this.#state.moving = false;
-      return;
+      return false;
     }
     const deltaPos = (deltaTime / 1000) * (speed === "run" ? 6 : 3);
     this.#state = { direction: directions[0], moving: speed };
@@ -120,14 +171,14 @@ export class Player extends Entity {
     else if (directions[0] === "away") next = current.add([0, -deltaPos]);
     else if (directions[0] === "left") next = current.add([-deltaPos, 0]);
     else if (directions[0] === "right") next = current.add([deltaPos, 0]);
-    else return;
-    if (current.equals(next)) return;
-    // new Rect([-size.w / 2, 0], size)
-    // const collisions = CollisionEntityComponent.collide(this, new Rect())
-    // const game = Game.getGame(entity);
-    // for (const component of game.eachComponents(CollisionEntityComponent)) {
-    //   yield* component.collide(rect);
-    // }
-    // this.position.set(next);
+    else return false;
+    if (current.equals(next)) return false;
+    this.position.set(next);
+    const collisions = CollisionEntityComponent.collide(this, this.bounds.value);
+    if (!collisions.next().done) {
+      this.position.set(current);
+      return false;
+    }
+    return true;
   }
 }

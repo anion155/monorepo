@@ -1,5 +1,6 @@
 import { Point2D } from "@anion155/linear/point-2d";
 import type { Rect } from "@anion155/linear/rect";
+import { doWith } from "@anion155/shared";
 
 import type { Point2DBindingArgument, SizeBindingArgument } from "./binding";
 import { Point2DComponent, SizeComponent } from "./binding";
@@ -31,7 +32,45 @@ export class TMXMapRendererEntityComponent extends CanvasRendererEntityComponent
   }
 
   render({ ctx }: CanvasRendererContext): void {
-    this.#entity.resource.renderMap(ctx, { tileSize: this.tileSize.value, offset: this.offset.value });
+    const resource = this.#entity.resource;
+    resource.renderMap(ctx, { tileSize: this.tileSize.value, offset: this.offset.value });
+    if (DEBUG.get("tiledMapGrid"))
+      doWith(ctx as never as CanvasRenderingContext2D, (ctx) => {
+        ctx.save();
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 1;
+        const { w, h } = this.tileSize.value;
+        ctx.beginPath();
+        for (let y = 0; y < resource.map.height; y += 1) {
+          for (let x = 0; x < resource.map.width; x += 1) {
+            ctx.moveTo(x * w, y * h + h);
+            ctx.lineTo(x * w, y * h);
+            ctx.lineTo(x * w + w, y * h);
+          }
+        }
+        ctx.stroke();
+        ctx.restore();
+      });
+    if (DEBUG.get("tiledMapCoords"))
+      doWith(ctx as never as CanvasRenderingContext2D, (ctx) => {
+        ctx.save();
+        ctx.font = "8px monospace";
+        ctx.fillStyle = "black";
+        ctx.globalAlpha = 0.5;
+        const { w, h } = this.tileSize.value;
+        for (let y = 0; y < resource.map.height; y += 1) {
+          for (let x = 0; x < resource.map.width; x += 1) {
+            ctx.fillText(`[${x},${y}]`, x * w, y * h + 8);
+          }
+        }
+        ctx.restore();
+      });
+  }
+}
+declare global {
+  interface DebugFlags {
+    tiledMapGrid: boolean;
+    tiledMapCoords: boolean;
   }
 }
 
@@ -51,20 +90,22 @@ export class TMXCollisionEntityComponent extends CollisionEntityComponent<void> 
 
   *collide(targetRect: Rect): CollisionResults {
     const { map, layersData, collisions } = this.#entity.resource;
-    const leftTile = Math.floor(targetRect.x);
-    const rightTile = Math.ceil(targetRect.x2);
-    const topTile = Math.floor(targetRect.y);
-    const bottomTile = Math.ceil(targetRect.y + targetRect.h);
+    const tiles: Record<"left" | "right" | "top" | "bottom", number> = {
+      left: Math.floor(targetRect.x),
+      right: Math.floor(targetRect.x2),
+      top: Math.floor(targetRect.y),
+      bottom: Math.floor(targetRect.y2),
+    };
     for (const layer of map.layers) {
       if (layer.type !== "tilelayer") continue;
       const data = layersData.emplace(layer);
-      for (let x = leftTile; x <= rightTile; x += 1) {
-        for (let y = topTile; y <= bottomTile; y += 1) {
+      for (let x = tiles.left; x <= tiles.right; x += 1) {
+        for (let y = tiles.top; y <= tiles.bottom; y += 1) {
           const globalIndex = data[y * layer.height + x];
           const tileCollisions = collisions.get(globalIndex);
           if (!tileCollisions?.length) continue;
           for (const collisionTarget of tileCollisions) {
-            const collision = collisionTarget.collide(targetRect);
+            const collision = collisionTarget.offset([x, y]).collide(targetRect);
             if (collision) yield { type: "tile", map: this.#entity, position: new Point2D(x, y), collision };
           }
         }

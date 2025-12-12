@@ -75,7 +75,7 @@ export const parseTMXMap = (map: TMX.TMXMap, path: string) => {
         width /= tileSize.w;
         if (height === undefined) return;
         height /= tileSize.h;
-        collisions.emplace(tile.id).push(new Rect({ x, y, width, height }));
+        collisions.emplace(tile.id + tileset.firstgid).push(new Rect({ x, y, width, height }));
       });
     }),
   );
@@ -98,7 +98,7 @@ export class TMXResource extends Resource<ParsedTMXMap & { resource: LayeredImag
         const globalIndex = data[y * layer.height + x];
         const indexes = globalIndexes.emplace(globalIndex);
         if (!indexes) continue;
-        const dest = new Rect(x * tileSize.w, y * tileSize.h, tileSize.w, tileSize.h);
+        const dest = new Rect([x * tileSize.w, y * tileSize.h], tileSize);
         const sprite = sprites[indexes[0]];
         await sprite.initialize();
         sprite.renderSprite(ctx, indexes[1], dest);

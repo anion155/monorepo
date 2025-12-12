@@ -1,6 +1,8 @@
 import type { Rect } from "@anion155/linear/rect";
 
+import type { Entity } from "./entity";
 import { EntityComponent } from "./entity";
+import { Game } from "./game";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -14,13 +16,13 @@ export type CollisionResultUnion = {
 export type CollisionResults = IterableIterator<CollisionResultUnion>;
 
 export abstract class CollisionEntityComponent<Value = void> extends EntityComponent<Value> {
-  // static *collide(entity: Entity, rect: Rect): CollisionResults {
-  //   const game = Game.getGame(entity);
-  //   for (const component of game.eachComponents(CollisionEntityComponent)) {
-  //     yield* component.collide(rect);
-  //   }
-  // }
+  static *collide(entity: Entity, rect: Rect): CollisionResults {
+    const game = Game.getGame(entity);
+    for (const component of game.eachNestedComponents(CollisionEntityComponent)) {
+      if (component.entity === entity) continue;
+      yield* component.collide(rect);
+    }
+  }
 
-  // abstract colisions(): IterableIterator<Rect>;
   abstract collide(targetRect: Rect): CollisionResults;
 }
