@@ -165,16 +165,27 @@ export const createNumberVector = <N extends number, Value = never>(
     }
     /** Return JSON representation of {@link this} vector */
     toJSON() {
-      return [this.constructor.name, this.asTuple()];
+      return [this.constructor.name, this.toArray()];
+    }
+
+    /**
+     * Converts type to tuple type but without any methods of array available
+     *
+     * @example
+     * ctx.draw(...position.asTuple());
+     */
+    asTuple(): NumberTuple<N> {
+      return this as never;
     }
 
     /**
      * Converts to array, mainly for times when it has to be spread as function parameters,
      * cause Generators can't be typesafe in this case
      */
-    asTuple(): NumberTuple<N> {
+    toArray(): NumberTuple<N> {
       return Array.from(this as never) as never;
     }
+
     /** Get {@link index} scalars. */
     at(index: RangeTuple<0, N>[number]): number;
     at(index: number): undefined;

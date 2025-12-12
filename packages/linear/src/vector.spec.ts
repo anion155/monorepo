@@ -92,15 +92,24 @@ describe("Vector(length)", () => {
     expect(point.toJSON()).toStrictEqual(["TestPoint", [1, 2]]);
   });
 
-  it(".asTuple() should spread vector", () => {
+  it(".asTuple() should not change value, only type", () => {
     const TestPoint = createPointClass();
     const point = new TestPoint(1, 2);
+    expect(point.asTuple()).toBe(point);
+    expect(Array.isArray(point)).toBe(false);
     const fn = (a: number, b: number) => a + b;
-    expect([...point]).toStrictEqual([1, 2]);
     expect(fn(...point.asTuple())).toBe(3);
-    const [a, b] = point;
-    expect(a).toBe(1);
-    expect(b).toBe(2);
+  });
+
+  it(".toArray() should create array", () => {
+    const TestPoint = createPointClass();
+    const point = new TestPoint(1, 2);
+    const array = point.toArray();
+    expect(array).not.toBe(point);
+    expect(array).toStrictEqual([1, 2]);
+    expect(Array.isArray(array)).toBe(true);
+    const fn = (a: number, b: number) => a + b;
+    expect(fn(...array)).toBe(3);
   });
 
   it("[Symbol.iterator]() should return iterator", () => {
