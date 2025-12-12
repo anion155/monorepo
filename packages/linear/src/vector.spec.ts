@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { createNumberVector, NumberVectorComponents, VectorInvalid, VectorIteratingInvalid } from "./vector";
+import { createNumberVector, NumberVector, VectorInvalid, VectorIteratingInvalid } from "./vector";
 
 describe("Vector(length)", () => {
   it("should create vector class", () => {
@@ -23,7 +23,7 @@ describe("Vector(length)", () => {
   });
 
   function createPointClass() {
-    interface TestPoint extends NumberVectorComponents<2> {}
+    interface TestPoint extends NumberVector<2> {}
     class TestPoint extends createNumberVector(2, { name: "TestPoint", parseTuple: (value: number) => [value, value] }) {}
     return TestPoint;
   }

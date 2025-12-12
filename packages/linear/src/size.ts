@@ -1,7 +1,7 @@
 import { cached } from "@anion155/shared/decorators";
 import { hasTypedField } from "@anion155/shared/is";
 
-import type { NumberVectorComponents, NumberVectorParams } from "./vector";
+import type { NumberVector, NumberVectorParams } from "./vector";
 import { createNumberVector, VectorIteratingInvalid } from "./vector";
 
 export type SizeObject = { readonly width: number; readonly height: number };
@@ -9,7 +9,7 @@ export type SizeShortObject = { readonly w: number; readonly h: number };
 type _SizeValue = SizeObject | SizeShortObject | number;
 export type SizeValue = NumberVectorParams<2, _SizeValue>;
 
-export interface Size extends NumberVectorComponents<2> {}
+export interface Size extends NumberVector<2> {}
 /** Size class. */
 export class Size
   extends createNumberVector(2, {

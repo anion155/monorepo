@@ -1,14 +1,14 @@
 import { cached } from "@anion155/shared/decorators";
 import { hasTypedField } from "@anion155/shared/is";
 
-import type { NumberVectorComponents, NumberVectorParams } from "./vector";
+import type { NumberVector, NumberVectorParams } from "./vector";
 import { createNumberVector, VectorIteratingInvalid } from "./vector";
 
 export type Point2DObject = { readonly x: number; readonly y: number };
 type _Point2DValue = Point2DObject | number;
 export type Point2DValue = NumberVectorParams<2, _Point2DValue>;
 
-export interface Point2D extends NumberVectorComponents<2> {}
+export interface Point2D extends NumberVector<2> {}
 /** Point class. */
 export class Point2D
   extends createNumberVector(2, {

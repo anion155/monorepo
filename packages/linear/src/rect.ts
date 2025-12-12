@@ -6,14 +6,14 @@ import type { Point2DObject, Point2DValue } from "./point-2d";
 import { Point2D } from "./point-2d";
 import type { SizeObject, SizeShortObject, SizeValue } from "./size";
 import { Size } from "./size";
-import type { NumberVectorComponents, NumberVectorParams } from "./vector";
+import type { NumberVector, NumberVectorParams } from "./vector";
 import { createNumberVector, VectorIteratingInvalid } from "./vector";
 
 export type RectObject = Point2DObject & SizeObject;
 type _RectValue = RectObject | (Point2DObject & SizeShortObject) | [point: Point2DValue, size: SizeValue];
 export type RectValue = NumberVectorParams<4, _RectValue>;
 
-export interface Rect extends NumberVectorComponents<4> {}
+export interface Rect extends NumberVector<4> {}
 /** Rect class. */
 export class Rect
   extends createNumberVector(4, {

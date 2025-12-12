@@ -25,7 +25,7 @@ type _NumberVectorComponents<N extends number, C extends readonly 0[] = readonly
   : N extends C["length"]
     ? R
     : _NumberVectorComponents<N, readonly [...C, 0], R & { readonly [Index in C["length"]]: number }>;
-export type NumberVectorComponents<N extends number> = Omit<_NumberVectorComponents<N>, never>;
+export type NumberVector<N extends number> = Omit<_NumberVectorComponents<N>, never>;
 
 type RangeTuple<From extends number, To extends number, FromC extends 0[] = [], ToC extends number[] = []> = number extends From
   ? number[]
@@ -37,7 +37,7 @@ type RangeTuple<From extends number, To extends number, FromC extends 0[] = [], 
         : RangeTuple<From, To, FromC, [...ToC, [...FromC, ...ToC]["length"]]>
       : RangeTuple<From, To, [...FromC, 0], []>;
 
-export type NumberVectorParams<N extends number, Value = never> = NumberVectorComponents<N> | NumberTuple<N> | Value;
+export type NumberVectorParams<N extends number, Value = never> = NumberVector<N> | NumberTuple<N> | Value;
 
 /** Readonly tuple of numbers, can be used as base for types like Point. */
 export const createNumberVector = <N extends number, Value = never>(
@@ -69,10 +69,10 @@ export const createNumberVector = <N extends number, Value = never>(
   );
 
   type BaseVectorParam = SpecificNumberVector | NumberVectorParams<N, Value>;
-  type BaseVectorConstructor = { new (...params: NumberTuple<N>): SpecificNumberVector & NumberVectorComponents<N> };
+  type BaseVectorConstructor = { new (...params: NumberTuple<N>): SpecificNumberVector & NumberVector<N> };
   type VectorParam<VC extends BaseVectorConstructor> = InstanceType<VC> | NumberVectorParams<N, Value>;
 
-  function isNumberVector(vector: unknown): vector is NumberVectorComponents<N> | NumberTuple<N> {
+  function isNumberVector(vector: unknown): vector is NumberVector<N> | NumberTuple<N> {
     if (!is(vector, "object")) return false;
     if (!hasTypedField(vector, "length", "number")) return false;
     if (vector.length !== length) return false;
@@ -231,7 +231,6 @@ export const createNumberVector = <N extends number, Value = never>(
   defineProperty(SpecificNumberVector.prototype, Symbol.toStringTag, { value: name, writable: false, enumerable: false, configurable: true });
   return SpecificNumberVector;
 };
-export type NumberVector<N extends number> = NumberVectorComponents<N> & InstanceType<ReturnType<typeof createNumberVector<N>>>;
 
 export class VectorInvalid extends createErrorClass("VectorInvalid") {}
 export class VectorIteratingInvalid extends createErrorClass("VectorIteratingInvalid") {}
