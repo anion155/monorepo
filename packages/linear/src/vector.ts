@@ -74,6 +74,8 @@ export const createNumberVector = <N extends number, Value = never>(
 
   function isNumberVector(vector: unknown): vector is NumberVectorComponents<N> | NumberTuple<N> {
     if (!is(vector, "object")) return false;
+    if (!hasTypedField(vector, "length", "number")) return false;
+    if (vector.length !== length) return false;
     for (let index = 0; index < length; index += 1) {
       if (!hasTypedField(vector, index, "number")) return false;
     }

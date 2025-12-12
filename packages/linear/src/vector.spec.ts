@@ -50,8 +50,8 @@ describe("Vector(length)", () => {
     const control1 = new TestPoint(1, 2);
     const control2 = new TestPoint(1, 1);
     expect(TestPoint.parseValue(control1)).toBe(control1);
-    expect(TestPoint.parseValue({ 0: 1, 1: 2 })).toStrictEqual(control1);
-    expect(TestPoint.parseValue({ 0: 1, 1: 2 })).not.toStrictEqual(control2);
+    expect(TestPoint.parseValue({ length: 2, 0: 1, 1: 2 })).toStrictEqual(control1);
+    expect(TestPoint.parseValue({ length: 2, 0: 1, 1: 2 })).not.toStrictEqual(control2);
     expect(TestPoint.parseValue([1, 2])).toStrictEqual(control1);
     expect(TestPoint.parseValue([1, 2])).not.toStrictEqual(control2);
     expect(TestPoint.parseValue(1)).not.toStrictEqual(control1);
