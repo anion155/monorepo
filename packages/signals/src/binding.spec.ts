@@ -36,6 +36,15 @@ describe("class SignalBinding", () => {
     expect(signalB.peak()).toBe(6);
   });
 
+  it("should create bindable signal with parser", () => {
+    const signalA = new SignalBinding<string, number>(1, (arg) => String(arg));
+    expect(signalA.peak()).toBe("1");
+    signalA.set(2);
+    expect(signalA.peak()).toBe("2");
+    signalA.value = 3;
+    expect(signalA.value).toBe("3");
+  });
+
   // eslint-disable-next-line jest/expect-expect
   it("should not invalidate if there is no binding", () => {
     const signalA = new SignalBinding(1);
