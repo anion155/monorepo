@@ -1,6 +1,7 @@
-import { cached } from "../decorators";
-import { is } from "../is";
-import { updateProperties } from "../object";
+import { cached } from "@anion155/shared/decorators";
+import { is } from "@anion155/shared/is";
+import { updateProperties } from "@anion155/shared/object";
+
 import type { Point2DObject, Point2DValue } from "./point-2d";
 import { Point2D } from "./point-2d";
 import type { SizeObject, SizeShortObject, SizeValue } from "./size";

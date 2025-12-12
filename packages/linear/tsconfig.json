@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.base.json",
+  "exclude": ["dist", "coverage", "jest.config.js", "src/**/*.spec.ts"],
+  "references": [
+    {
+      "path": "./tsconfig.jest.json"
+    }
+  ]
+}

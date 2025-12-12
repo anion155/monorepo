@@ -1,0 +1,26 @@
+{
+  "name": "@anion155/linear",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./point-2d": "./src/point-2d.ts",
+    "./rect": "./src/rect.ts",
+    "./size": "./src/size.ts",
+    "./vector": "./src/vector.ts"
+  },
+  "scripts": {
+    "test": "jest src",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@anion155/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@anion155/configs": "workspace:*",
+    "@jest/globals": "^30.0.0",
+    "eslint": "^9.29.0",
+    "jest": "^30.0.2",
+    "prettier": "^3.5.3"
+  }
+}

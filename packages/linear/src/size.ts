@@ -1,5 +1,6 @@
-import { cached } from "../decorators";
-import { hasTypedField } from "../is";
+import { cached } from "@anion155/shared/decorators";
+import { hasTypedField } from "@anion155/shared/is";
+
 import type { NumberVectorComponents, NumberVectorParams } from "./vector";
 import { createNumberVector, VectorIteratingInvalid } from "./vector";
 

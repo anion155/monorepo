@@ -1,9 +1,11 @@
-import { doRun } from "../do";
-import { createErrorClass } from "../errors";
-import type { Curried } from "../functional";
-import { curryHelper, identity } from "../functional";
-import { hasTypedField, is } from "../is";
-import { appendProperty, defineProperty } from "../object";
+import "@anion155/shared/global";
+
+import { doRun } from "@anion155/shared/do";
+import { createErrorClass } from "@anion155/shared/errors";
+import type { Curried } from "@anion155/shared/functional";
+import { curryHelper, identity } from "@anion155/shared/functional";
+import { hasTypedField, is } from "@anion155/shared/is";
+import { appendProperty, defineProperty } from "@anion155/shared/object";
 
 /** Readonly tuple */
 export type Tuple<N extends number, T, R extends readonly T[] = readonly []> = number extends N
