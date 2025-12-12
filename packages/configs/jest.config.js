@@ -65,7 +65,6 @@ export const base = jestConfig({
     "@anion155/proposal-iterator-helpers/global",
     "@anion155/proposal-async-iterator-helpers/global",
     "@anion155/proposal-promise-with-resolvers/global",
-    "@anion155/shared/jest",
   ],
 });
 

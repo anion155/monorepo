@@ -35,6 +35,7 @@
     ".": "./src/index.ts",
     "./is-iterable": "./src/is-iterable.ts",
     "./is": "./src/is.ts",
+    "./jest/config": "./src/jest/config.js",
     "./jest/gc": "./src/jest/gc.ts",
     "./jest": "./src/jest/index.ts",
     "./jest/run-isolated": "./src/jest/run-isolated.ts",

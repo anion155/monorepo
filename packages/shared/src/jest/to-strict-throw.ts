@@ -68,7 +68,7 @@ expect.extend({
 declare module "expect" {
   interface Matchers<R> {
     /** Used to test error thrown by actual value, test using deep comparison. */
-    toStrictThrow(expected: Error): R;
+    toStrictThrow(expected: unknown): R;
   }
 }
 
