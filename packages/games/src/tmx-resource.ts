@@ -1,9 +1,9 @@
+import type { Point2DValue } from "@anion155/linear/point-2d";
+import { Point2D } from "@anion155/linear/point-2d";
+import { Rect } from "@anion155/linear/rect";
+import type { SizeValue } from "@anion155/linear/size";
+import { Size } from "@anion155/linear/size";
 import { DeveloperError, TODO } from "@anion155/shared";
-import type { PointValue } from "@anion155/shared/linear/point";
-import { Point } from "@anion155/shared/linear/point";
-import { Rect } from "@anion155/shared/linear/rect";
-import type { SizeValue } from "@anion155/shared/linear/size";
-import { Size } from "@anion155/shared/linear/size";
 
 import { ImageResource } from "./image-resource";
 import { type ImageLayer, LayeredImagesResource } from "./layered-images-resource";
@@ -27,12 +27,21 @@ export const parseTMXMap = (map: TMX.TMXMap, path: string) => {
   for (let index = 0; index < map.tilesets.length; index += 1) {
     const tileset = map.tilesets[index];
     if (!tileset.image) throw new DeveloperError("TMX: tileset without image is not suppoerted");
-    const { firstgid = 0, columns, tilecount, tileoffset: { x: offsetx = 0, y: offsety = 0 } = {}, margin = 0, spacing = 0 } = tileset;
+    const {
+      imagewidth,
+      imageheight,
+      firstgid = 0,
+      columns,
+      tilecount,
+      tileoffset: { x: offsetx = 0, y: offsety = 0 } = {},
+      margin = 0,
+      spacing = 0,
+    } = tileset;
     const sprite = new SpritesResource({
-      src: path + "/" + tileset.image,
+      src: [[imagewidth, imageheight], path + "/" + tileset.image],
       spriteSize: tileSize,
       size: new Size(columns, Math.ceil(tilecount / columns)),
-      offset: new Point(offsetx + margin, offsety + margin),
+      offset: new Point2D(offsetx + margin, offsety + margin),
       gaps: new Size(spacing + margin * 2, spacing + margin * 2),
     });
     gids.push(firstgid);
@@ -111,13 +120,13 @@ export class TMXResource extends Resource<ParsedTMXMap & { resource: LayeredImag
           group += 1;
         } else if (layer.type === "tilelayer") {
           const image = new ImageResource([
-            Size.mul(parsed.tileSize, layer),
+            parsed.tileSize.mul(layer),
             async (ctx) => {
               if (layer.opacity !== undefined) ctx.globalAlpha = layer.opacity;
               await TMXResource.drawTileLayer(ctx, layer, parsed);
             },
           ]);
-          layers.push({ image, offset: new Point(layer.offsetx ?? 0, layer.offsety ?? 0), group });
+          layers.push({ image, offset: new Point2D(layer.offsetx ?? 0, layer.offsety ?? 0), group });
         } else if (layer.type === "objectgroup") {
           // TODO
           group += 1;
@@ -157,7 +166,7 @@ export class TMXResource extends Resource<ParsedTMXMap & { resource: LayeredImag
     return this.initializer.value.resource;
   }
 
-  renderMap(ctx: CanvasDrawImage, { offset = [0, 0], tileSize = this.tileSize }: { offset?: PointValue; tileSize?: SizeValue } = {}) {
-    this.resource.renderImage(ctx, new Rect(offset, Size.mul(tileSize, this.map)));
+  renderMap(ctx: CanvasDrawImage, { offset = [0, 0], tileSize = this.tileSize }: { offset?: Point2DValue; tileSize?: SizeValue } = {}) {
+    this.resource.renderImage(ctx, new Rect(offset, Size.parseValue(tileSize).mul(this.map)));
   }
 }

@@ -1,5 +1,5 @@
-import type { Point } from "@anion155/shared/linear/point";
-import { Rect } from "@anion155/shared/linear/rect";
+import type { Point2D } from "@anion155/linear/point-2d";
+import { Rect } from "@anion155/linear/rect";
 
 import type { SourceDestParams } from "./image-resource";
 import { ImageResource, parseSourceDestParams } from "./image-resource";
@@ -7,7 +7,7 @@ import { Resource } from "./resource";
 
 export type ImageLayer = {
   image: ImageResource;
-  offset: Point;
+  offset: Point2D;
   group?: number;
 };
 export const combineLayers = (layers: ImageLayer[]) => {
@@ -15,8 +15,8 @@ export const combineLayers = (layers: ImageLayer[]) => {
   for (let index = 0; index < layers.length; index += 1) {
     const current = layers[index];
     const prev = combined[combined.length - 1];
-    if (current.group === prev.group) {
-      const rect = new Rect(current.offset, current.image.source).expandBy([prev.offset, prev.image.source]);
+    if (prev && current.group === prev.group) {
+      const rect = new Rect(current.offset, current.image.size).expandBy([prev.offset, prev.image.size]);
       const image = new ImageResource([
         rect,
         async (ctx) => {
@@ -26,7 +26,7 @@ export const combineLayers = (layers: ImageLayer[]) => {
           currentImage.renderImage(ctx, current.offset.sub(rect));
         },
       ]);
-      combined[combined.length - 1] = { image, offset: rect.position };
+      combined.push({ image, offset: rect.position });
     } else {
       combined.push(current);
     }

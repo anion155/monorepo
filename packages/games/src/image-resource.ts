@@ -1,18 +1,20 @@
-import type { Point } from "@anion155/shared/linear/point";
-import type { RectValue } from "@anion155/shared/linear/rect";
-import { Rect } from "@anion155/shared/linear/rect";
-import type { Size, SizeValue } from "@anion155/shared/linear/size";
+import type { Point2D } from "@anion155/linear/point-2d";
+import type { RectValue } from "@anion155/linear/rect";
+import { Rect } from "@anion155/linear/rect";
+import type { SizeValue } from "@anion155/linear/size";
+import { Size } from "@anion155/linear/size";
+import { createErrorClass, hasTypedField } from "@anion155/shared";
 
 import { Resource } from "./resource";
 import { loadImage, prepareOffscreenContext } from "./utils";
 
 export type SourceDestParams =
   | []
-  | [dest: Point | Rect]
-  | [source: Rect, dest: Point]
-  | [source: Point, dest: Rect]
+  | [dest: Point2D | Rect]
+  | [source: Rect, dest: Point2D]
+  | [source: Point2D, dest: Rect]
   | [source: Rect, dest: Rect]
-  | [source: Point, dest: Point, size: Size];
+  | [source: Point2D, dest: Point2D, size: Size];
 export const parseSourceDestParams = (original: Rect, params: SourceDestParams) => {
   if (params.length === 3) {
     const [source, dest, size] = params;
@@ -46,54 +48,75 @@ export const parseSourceDestParams = (original: Rect, params: SourceDestParams) 
 
 export type ImageSource = HTMLImageElement | HTMLCanvasElement | ImageBitmap | OffscreenCanvas;
 export type ImageResourceParam =
-  | string
+  | [size: SizeValue, string]
+  | ImageAsset
   | ImageSource
   | ImageResource
   | [size: SizeValue, { (ctx: OffscreenCanvasRenderingContext2D): Promise<void> | void }];
-export class ImageResource extends Resource<{ readonly source: Readonly<ImageSource>; readonly rect: Rect }> {
+export class ImageResource extends Resource<{ readonly source: Readonly<ImageSource>; readonly viewport: Rect }> {
   static parse(src: ImageResourceParam) {
     if (src instanceof ImageResource) return src;
     return new ImageResource(src);
   }
-  constructor(src: ImageResourceParam, predefinedRect?: RectValue) {
-    super(async (stack) => {
-      let _src;
-      if (Array.isArray(src)) {
-        const [size, draw] = src;
-        const ctx = prepareOffscreenContext(size);
-        await draw(ctx);
-        _src = ctx.canvas.transferToImageBitmap();
-      } else {
-        _src = src;
-      }
 
-      let source: Readonly<ImageSource>;
-      if (_src instanceof ImageResource) {
-        await _src.initialize();
-        source = _src.source;
-      } else if (_src instanceof ImageBitmap) {
-        const bitmap = _src;
-        stack.append(() => bitmap.close());
-        source = bitmap;
-      } else if (typeof _src === "string") {
-        source = await loadImage(_src);
-      } else {
-        source = _src;
+  #size: Size;
+  get size() {
+    return this.#size;
+  }
+
+  constructor(src: ImageResourceParam, viewport?: RectValue) {
+    let size: Size;
+    let init: (stack: AsyncDisposableStack) => Promise<ImageSource> | ImageSource;
+    if (Array.isArray(src)) {
+      size = Size.parseValue(src[0]);
+      const source = src[1];
+      if (typeof source === "function") {
+        init = async () => {
+          const [ctx, getImage] = prepareOffscreenContext(size);
+          await source(ctx);
+          return getImage();
+        };
+      } else if (typeof source === "string") {
+        init = () => loadImage(source);
       }
-      const rect = predefinedRect !== undefined ? Rect.parseValue(predefinedRect) : new Rect(0, source);
-      return { source, rect };
+    } else if (src instanceof ImageResource) {
+      size = src.#size;
+      init = async () => {
+        await src.initialize();
+        return src.source;
+      };
+    } else if (hasTypedField(src, "url", "string") && hasTypedField(src, "width", "number") && hasTypedField(src, "height", "number")) {
+      size = Size.parseValue(src);
+      init = () => loadImage(src.url);
+    } else {
+      size = new Size(src);
+      init = () => src;
+    }
+
+    super(async (stack) => {
+      const source = await init(stack);
+      if (!source) throw new ImageNotLoadedError();
+      const _viewport = viewport !== undefined ? Rect.parseValue(viewport) : new Rect(0, size);
+      return { source, viewport: _viewport };
     });
+    this.#size = size;
   }
 
   get source() {
     return this.initializer.value.source;
   }
-  get rect() {
-    return this.initializer.value.rect;
+  get viewport() {
+    return this.initializer.value.viewport;
   }
 
-  renderImage(ctx: CanvasDrawImage, ...params: SourceDestParams): void {
-    const { source, dest } = parseSourceDestParams(this.rect, params);
-    ctx.drawImage(this.source, source.x, source.y, source.w, source.h, dest.x, dest.y, dest.w, dest.h);
+  renderImage(ctx: CanvasDrawImage & CanvasImageData, ...params: SourceDestParams): void {
+    const { source, dest } = parseSourceDestParams(this.viewport, params);
+    if (this.source instanceof ImageData) {
+      ctx.drawImage(this.source, source.x, source.y, source.w, source.h, dest.x, dest.y, dest.w, dest.h);
+    } else {
+      ctx.drawImage(this.source, source.x, source.y, source.w, source.h, dest.x, dest.y, dest.w, dest.h);
+    }
   }
 }
+
+export class ImageNotLoadedError extends createErrorClass("ImageNotLoadedError") {}

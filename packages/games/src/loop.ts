@@ -50,6 +50,9 @@ export class Loop<Ticks extends string, SchedulerId = number> extends EventEmitt
   }
 }
 
+export type LoopEntityComponentParams<Ticks extends string> = EntityComponentParams & {
+  config: Record<Ticks, number>;
+};
 export class LoopEntityComponent<Ticks extends string> extends Loop<Ticks> implements IEntityComponent {
   static getGameLoop(from: Entity) {
     const game = Game.getGame(from);
@@ -61,7 +64,7 @@ export class LoopEntityComponent<Ticks extends string> extends Loop<Ticks> imple
   readonly entity: Entity;
   readonly name: string;
 
-  constructor({ entity, name = nanoid() }: EntityComponentParams, config: Record<Ticks, number>) {
+  constructor({ entity, name = nanoid(), config }: LoopEntityComponentParams<Ticks>) {
     super(config, rafScheduler);
     this.entity = entity;
     this.name = name;

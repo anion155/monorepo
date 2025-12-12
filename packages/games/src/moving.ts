@@ -9,12 +9,15 @@ export type MovingAnimationConfig = AnimationsConfig<MovingDirection> & Partial<
 export type MovingState = { direction: MovingDirection; moving: false | MovingSpeed };
 
 export class MovingAnimation {
+  constructor(readonly config: MovingAnimationConfig) {}
+
   #last: (MovingState & { start: number }) | null = null;
-  interpolate(config: MovingAnimationConfig, state: MovingState) {
+  interpolate(state: MovingState) {
     const now = performance.now();
     if (!this.#last || this.#last.direction !== state.direction || this.#last.moving !== state.moving) {
       this.#last = { ...state, start: now };
     }
+    const config = this.config;
     let animation: AnimationConfig = config[`${state.direction}-${state.moving || "stand"}`] ?? config[state.direction];
     if (!state.moving) {
       animation = config[`${state.direction}-stand`] ?? config[state.direction];

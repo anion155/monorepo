@@ -1,16 +1,16 @@
 import "@anion155/shared/global";
 
-import type { PointValue } from "@anion155/shared/linear/point";
-import { Point } from "@anion155/shared/linear/point";
-import { Rect } from "@anion155/shared/linear/rect";
-import type { SizeValue } from "@anion155/shared/linear/size";
-import { Size } from "@anion155/shared/linear/size";
+import type { Point2DValue } from "@anion155/linear/point-2d";
+import { Point2D } from "@anion155/linear/point-2d";
+import { Rect } from "@anion155/linear/rect";
+import type { SizeValue } from "@anion155/linear/size";
+import { Size } from "@anion155/linear/size";
 
 import type { ImageResourceParam } from "./image-resource";
 import { ImageResource } from "./image-resource";
 import { Resource } from "./resource";
 
-export type SpritesResourceTiledConfig = { spriteSize: SizeValue; size?: SizeValue; offset?: PointValue; gaps?: SizeValue };
+export type SpritesResourceTiledConfig = { spriteSize: SizeValue; size?: SizeValue; offset?: Point2DValue; gaps?: SizeValue };
 export type SpritesResourceParam = ExclusiveUnion<{ bounds: Rect[] }, SpritesResourceTiledConfig> & {
   src: ImageResourceParam;
 };
@@ -21,8 +21,8 @@ export const parseSpritesBounds = (config: SpritesResourceParam, imageSize: Size
     bounds = config.bounds;
   } else {
     const spriteSize = Size.parseValue(config.spriteSize);
-    const size = Size.parseValue(config.size ?? Size.project(_imageSize, spriteSize, (image, sprite) => Math.trunc(image / sprite)));
-    const offset = Point.parseValue(config.offset ?? 0);
+    const size = Size.parseValue(config.size ?? Size.project(_imageSize, spriteSize)((image, sprite) => Math.trunc(image / sprite)));
+    const offset = Point2D.parseValue(config.offset ?? 0);
     const gaps = Size.parseValue(config.gaps ?? 0);
     bounds = [];
     for (let y = 0; y < size.h; y += 1) {
@@ -52,7 +52,7 @@ export class SpritesResource extends Resource<{ readonly image: ImageResource; r
     return this.initializer.value.bounds;
   }
 
-  renderSprite(ctx: CanvasDrawImage, index: number, dest?: Point | Rect) {
+  renderSprite(ctx: CanvasDrawImage, index: number, dest?: Point2D | Rect) {
     const srect = this.bounds[index];
     this.image.renderImage(ctx, srect, dest instanceof Rect ? dest : new Rect(0, srect));
   }
@@ -61,12 +61,3 @@ export class SpritesResource extends Resource<{ readonly image: ImageResource; r
     return new ImageResource(this.image, this.bounds[index]);
   });
 }
-
-// export class SpritesAnimation<Variants extends string> {
-//   constructor(readonly sprites: SpritesResource, config: Record<Variants, >) {}
-
-//   render(canvas: CanvasDrawImage, deltaTime: DOMHighResTimeStamp, variant: , dest: Point | Rect) {
-
-//     this.sprites.renderSprite(canvas, index, dest);
-//   }
-// }

@@ -1,9 +1,9 @@
+import { Point2D } from "@anion155/linear/point-2d";
+import type { Size } from "@anion155/linear/size";
 import { DeveloperError } from "@anion155/shared";
-import { Point } from "@anion155/shared/linear/point";
-import type { Size } from "@anion155/shared/linear/size";
 
-import type { PointComponentArg, SizeComponentArg } from "./binding";
-import { PointComponent, SizeComponent } from "./binding";
+import type { Point2DBindingArgument, SizeBindingArgument } from "./binding";
+import { Point2DComponent, SizeComponent } from "./binding";
 import type { EntityParams } from "./entity";
 import { Entity, EntityComponent } from "./entity";
 import { Game } from "./game";
@@ -17,13 +17,13 @@ export type CanvasRendererContext = {
 };
 export type CanvasRendererLayerParams = EntityParams & {
   root: HTMLDivElement;
-  size: SizeComponentArg;
-  offset?: PointComponentArg;
+  size: SizeBindingArgument;
+  offset?: Point2DBindingArgument;
 };
 export class CanvasRendererLayer extends Entity {
   readonly root: HTMLDivElement;
   readonly size: SizeComponent;
-  readonly offset: PointComponent;
+  readonly offset: Point2DComponent;
 
   constructor({ root, size, offset, ...entityParams }: CanvasRendererLayerParams) {
     super(entityParams, (stack) => {
@@ -49,15 +49,15 @@ export class CanvasRendererLayer extends Entity {
       );
     });
     this.root = root;
-    this.size = new SizeComponent(size, { entity: this, name: "size" });
-    this.offset = new PointComponent(offset ?? [0, 0], { entity: this, name: "offset" });
+    this.size = new SizeComponent({ entity: this, name: "size", initial: size });
+    this.offset = new Point2DComponent({ entity: this, name: "offset", initial: offset ?? [0, 0] });
   }
 
   render(context: CanvasRendererContext) {
     const { ctx, game, size } = context;
     ctx.clearRect(0, 0, size.w, size.h);
     ctx.save();
-    ctx.translate(...Point.project(size, this.offset.value, (size, position) => size / 2 - position)._);
+    ctx.translate(...Point2D.project(size, this.offset.value)((size, position) => size / 2 - position).asTuple());
     for (const component of game.eachEntitiesWith(CanvasRendererEntityComponent)) {
       ctx.save();
       component.render(context);

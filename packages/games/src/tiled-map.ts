@@ -1,10 +1,8 @@
-import type { PointValue } from "@anion155/shared/linear/point";
-import { Point } from "@anion155/shared/linear/point";
-import type { Rect } from "@anion155/shared/linear/rect";
-import type { SizeValue } from "@anion155/shared/linear/size";
-import { Size } from "@anion155/shared/linear/size";
-import { SignalBinding } from "@anion155/signals";
+import { Point2D } from "@anion155/linear/point-2d";
+import type { Rect } from "@anion155/linear/rect";
 
+import type { Point2DBindingArgument, SizeBindingArgument } from "./binding";
+import { Point2DComponent, SizeComponent } from "./binding";
 import type { CanvasRendererContext } from "./canvas";
 import { CanvasRendererEntityComponent } from "./canvas";
 import type { CollisionResults } from "./collision";
@@ -15,21 +13,21 @@ import { TMXResource } from "./tmx-resource";
 
 export type TiledMapEntityComponentParams = OmitHelper<EntityComponentParams, "entity"> & {
   entity: TiledMap;
-  tileSize?: SizeValue;
-  offset?: PointValue;
+  tileSize?: SizeBindingArgument<null>;
+  offset?: Point2DBindingArgument<null>;
 };
 
 export class TMXMapRendererEntityComponent extends CanvasRendererEntityComponent<void> {
   get #entity() {
     return this.entity as TiledMap;
   }
-  readonly tileSize: SignalBinding<Size | undefined>;
-  readonly offset: SignalBinding<Point | undefined>;
+  readonly tileSize: SizeComponent<null>;
+  readonly offset: Point2DComponent<null>;
 
   constructor({ tileSize, offset, ...params }: TiledMapEntityComponentParams) {
     super(params);
-    this.tileSize = new SignalBinding(tileSize !== undefined ? Size.parseValue(tileSize) : undefined);
-    this.offset = new SignalBinding(offset !== undefined ? Point.parseValue(offset) : undefined);
+    this.tileSize = new SizeComponent({ entity: params.entity, initial: tileSize });
+    this.offset = new Point2DComponent({ entity: params.entity, initial: offset });
   }
 
   render({ ctx }: CanvasRendererContext): void {
@@ -39,7 +37,7 @@ export class TMXMapRendererEntityComponent extends CanvasRendererEntityComponent
 
 declare global {
   interface CollisionsMap {
-    tile: { position: Point; collision: Rect };
+    tile: { map: TiledMap; position: Point2D; collision: Rect };
   }
 }
 export class TMXCollisionEntityComponent extends CollisionEntityComponent<void> {
@@ -67,7 +65,7 @@ export class TMXCollisionEntityComponent extends CollisionEntityComponent<void> 
           if (!tileCollisions?.length) continue;
           for (const collisionTarget of tileCollisions) {
             const collision = collisionTarget.collide(targetRect);
-            if (collision) yield { type: "tile", position: new Point(x, y), collision };
+            if (collision) yield { type: "tile", map: this.#entity, position: new Point2D(x, y), collision };
           }
         }
       }
@@ -84,7 +82,9 @@ export class TiledMap extends Entity {
   readonly collision: TMXCollisionEntityComponent;
 
   constructor({ filePath, tileSize, offset, ...entityParams }: TiledMapParams) {
-    super(entityParams);
+    super(entityParams, undefined, async (stack) => {
+      stack.append(await this.resource.initialize());
+    });
     this.resource = new TMXResource(filePath);
     this.renderer = new TMXMapRendererEntityComponent({ tileSize, offset, entity: this, name: "renderer" });
     this.collision = new TMXCollisionEntityComponent({ entity: this, name: "collision" });

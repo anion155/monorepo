@@ -1,6 +1,6 @@
+import type { SizeValue } from "@anion155/linear/size";
+import { Size } from "@anion155/linear/size";
 import { DeveloperError } from "@anion155/shared";
-import type { SizeValue } from "@anion155/shared/linear/size";
-import { Size } from "@anion155/shared/linear/size";
 
 export const loadImage = async (src: string) => {
   const image = new Image();
@@ -17,7 +17,7 @@ export const prepareOffscreenContext = (size: SizeValue) => {
   const canvas = new OffscreenCanvas(_size.w, _size.h);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new DeveloperError("Failed to create OffscreenCanvas 2D context");
-  return ctx;
+  return [ctx, () => createImageBitmap(canvas)] as const;
 };
 
 export const loadJSON = async <Result>(path: string): Promise<Result> => {

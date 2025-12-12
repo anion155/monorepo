@@ -23,8 +23,13 @@ export class Entity<Events extends AnyEventsMap<never> = any> extends Resource<v
     parent?.append(this);
   }
 
-  constructor({ name = nanoid(), parent = null }: EntityParams, initialize?: (stack: AsyncDisposableStack) => Promise<void> | void) {
+  constructor(
+    { name = nanoid(), parent = null }: EntityParams,
+    initialize?: (stack: AsyncDisposableStack) => Promise<void> | void,
+    preinit?: (stack: AsyncDisposableStack) => Promise<void> | void,
+  ) {
     super(async (stack) => {
+      await preinit?.(stack);
       for (const component of this.#components) {
         if (hasTypedField(component, "initialize", "function")) {
           await component.initialize();
@@ -45,7 +50,7 @@ export class Entity<Events extends AnyEventsMap<never> = any> extends Resource<v
   }
   *eachComponents<T extends Constructable<never, unknown>>(type: T, name?: string) {
     for (const component of this.#components) {
-      if (name && component.name !== name) continue;
+      if (component.name && name && component.name !== name) continue;
       if (component instanceof type) yield component as InferConstructable<T>["Instance"];
     }
   }
@@ -67,13 +72,18 @@ export interface IEntityHolder {
 export class EntityHolder<Events extends AnyEventsMap<never> = Record<never, unknown>> extends Entity<Events> implements IEntityHolder {
   readonly children = new OrderedMap<string, Entity>();
 
-  protected async _initialize_child(child: Entity, stack: AsyncDisposableStack): Promise<void> {
-    stack.append(await child.initialize());
-  }
-  protected async _initialize(stack: AsyncDisposableStack): Promise<void> {
-    for (const child of this.children.values()) {
-      await this._initialize_child(child, stack);
-    }
+  constructor(
+    params: EntityParams,
+    initialize?: (stack: AsyncDisposableStack) => Promise<void> | void,
+    preinit?: (stack: AsyncDisposableStack) => Promise<void> | void,
+  ) {
+    super(params, async (stack) => {
+      await preinit?.(stack);
+      for (const child of this.children.values()) {
+        stack.append(await child.initialize());
+      }
+      await initialize?.(stack);
+    });
   }
 
   *[Symbol.iterator]() {
@@ -93,29 +103,38 @@ export class EntityHolder<Events extends AnyEventsMap<never> = Record<never, unk
   }
   *eachEntitiesWith<T extends Constructable<never, unknown>>(type: T): Generator<InferConstructable<T>["Instance"]> {
     for (const entity of this) {
+      if (entity.initializer.state.status !== "resolved") continue;
       yield* entity.eachComponents(type);
     }
   }
 }
 
 export type IEntityComponent = {
-  readonly entity: Entity;
-  readonly name: string;
+  readonly entity?: Entity;
+  readonly name?: string;
   initialize?: () => unknown;
   [Symbol.dispose]?: () => void;
   [Symbol.asyncDispose]?: () => void;
 };
 export type EntityComponentParams = { entity: Entity; name?: string };
-export abstract class EntityComponent<Value, Events extends AnyEventsMap<never> = Record<never, unknown>> extends Resource<Value, Events> {
+export abstract class EntityComponent<Value, Events extends AnyEventsMap<never> = Record<never, unknown>>
+  extends Resource<Value, Events>
+  implements IEntityComponent
+{
   readonly entity: Entity;
   readonly name: string;
 
-  constructor(
-    { entity, name = nanoid() }: EntityComponentParams,
-    ...[initialize]: Value extends void
-      ? [initialize?: (stack: AsyncDisposableStack) => Promise<Value> | Value]
-      : [initialize: (stack: AsyncDisposableStack) => Promise<Value> | Value]
-  ) {
+  constructor({
+    entity,
+    name = nanoid(),
+    initialize,
+  }: EntityComponentParams &
+    IfEquals<
+      Value,
+      void,
+      { initialize?: (stack: AsyncDisposableStack) => Promise<Value> | Value },
+      { initialize: (stack: AsyncDisposableStack) => Promise<Value> | Value }
+    >) {
     super((stack) => initialize?.(stack) as never);
     this.entity = entity;
     this.name = name;
