@@ -3,11 +3,14 @@ import { describe, expect, it, jest } from "@jest/globals";
 import {
   appendMethod,
   appendProperties,
+  appendPropertiesFrom,
   appendProperty,
   assignProperties,
   create,
+  createFrom,
   defineMethod,
   defineProperties,
+  definePropertiesFrom,
   defineProperty,
   getOwnProperty,
   getProperty,
@@ -39,7 +42,8 @@ describe("object utils", () => {
   describe("defineProperty()", () => {
     it("should define property in object", () => {
       const obj = {} as { a: number };
-      defineProperty(obj, "a", { value: 1 });
+      defineProperty(obj, "a", { value: 1, writable: true, enumerable: true });
+      expect(Object.getOwnPropertyDescriptor(obj, "a")).toStrictEqual({ value: 1, writable: true, enumerable: true, configurable: false });
       expect(obj.a).toBe(1);
       expect({ ...obj }).toStrictEqual({ a: 1 });
       obj.a = 2;
@@ -49,7 +53,13 @@ describe("object utils", () => {
     it("should define accessor property in object", () => {
       const obj = {} as { a: number };
       const set = jest.fn();
-      defineProperty(obj, "a", { get: () => 1, set });
+      defineProperty(obj, "a", { get: () => 1, set, enumerable: true });
+      expect(Object.getOwnPropertyDescriptor(obj, "a")).toStrictEqual({
+        get: expect.any(Function),
+        set: expect.any(Function),
+        enumerable: true,
+        configurable: false,
+      });
       expect(obj.a).toBe(1);
       expect({ ...obj }).toStrictEqual({ a: 1 });
       obj.a = 2;
@@ -62,8 +72,8 @@ describe("object utils", () => {
       const obj = {} as { test(): number };
       const test = () => 5;
       defineMethod(obj, "test", test);
+      expect(obj.test).toBe(test);
       expect(obj.test()).toBe(5);
-      expect({ ...obj }).toStrictEqual({ test });
     });
   });
 
@@ -72,23 +82,63 @@ describe("object utils", () => {
       const obj = {} as { a: number; b: number; test(): number };
       const test = () => 5;
       defineProperties(obj, {
+        a: { value: 1, writable: true, enumerable: true },
+        b: { get: () => 2, set: () => {}, enumerable: true },
+        test: { value: test, writable: true, enumerable: true },
+      });
+      expect(obj.test()).toBe(5);
+      expect({ ...obj }).toStrictEqual({ a: 1, b: 2, test });
+      expect(Object.getOwnPropertyDescriptor(obj, "a")).toStrictEqual({ configurable: false, enumerable: true, value: 1, writable: true });
+      expect(Object.getOwnPropertyDescriptor(obj, "b")).toStrictEqual({
+        configurable: false,
+        enumerable: true,
+        get: expect.any(Function),
+        set: expect.any(Function),
+      });
+    });
+
+    it("should only pass own properties", () => {
+      const obj = {} as { a: number; b: number };
+      const proto = { a: { value: 1 } };
+      const values = Object.create(proto, {}) as Record<string, PropertyDescriptor>;
+      values.b = { value: 2 };
+      defineProperties(obj, values);
+      expect(Object.getOwnPropertyDescriptor(obj, "a")).toBeUndefined();
+      expect(Object.getOwnPropertyDescriptor(obj, "b")).toStrictEqual({ configurable: false, enumerable: false, value: 2, writable: false });
+    });
+  });
+
+  describe("definePropertiesFrom()", () => {
+    it("should define properties", () => {
+      const obj = {} as { a: number; b: number; test(): number };
+      const test = () => 5;
+      definePropertiesFrom(obj, {
         a: 1,
         get b() {
           return 2;
         },
-        set b(value: number) {},
+        set b(_value) {},
         test,
       });
       expect(obj.test()).toBe(5);
       expect({ ...obj }).toStrictEqual({ a: 1, b: 2, test });
+      expect(Object.getOwnPropertyDescriptor(obj, "a")).toStrictEqual({ configurable: true, enumerable: true, value: 1, writable: true });
+      expect(Object.getOwnPropertyDescriptor(obj, "b")).toStrictEqual({
+        configurable: true,
+        enumerable: true,
+        get: expect.any(Function),
+        set: expect.any(Function),
+      });
     });
 
     it("should only pass own properties", () => {
       const obj = {} as { a: number; b: number };
       const proto = { a: 1 };
-      const values = Object.create(proto, { b: { value: 2 } }) as object;
-      defineProperties(obj, values);
+      const values = Object.create(proto, {}) as object;
+      appendProperty(values, "b", { value: 2 });
+      definePropertiesFrom(obj, values);
       expect(Object.getOwnPropertyDescriptor(obj, "a")).toBeUndefined();
+      expect(Object.getOwnPropertyDescriptor(obj, "b")).toStrictEqual({ configurable: false, enumerable: false, value: 2, writable: false });
     });
   });
 
@@ -111,7 +161,16 @@ describe("object utils", () => {
   describe("appendProperties()", () => {
     it("should append properties to the object", () => {
       const obj = {};
-      appendProperties(obj, { a: 1, test: () => 2 });
+      appendProperties(obj, { a: { value: 1 }, test: { value: () => 2 } });
+      expect(obj.a).toBe(1);
+      expect(obj.test()).toBe(2);
+    });
+  });
+
+  describe("appendPropertiesFrom()", () => {
+    it("should append properties to the object", () => {
+      const obj = {};
+      appendPropertiesFrom(obj, { a: 1, test: () => 2 });
       expect(obj.a).toBe(1);
       expect(obj.test()).toBe(2);
     });
@@ -155,7 +214,18 @@ describe("object utils", () => {
     it("should create object with proto prototype and properties from values", () => {
       const proto = { a: 1 };
       const test = () => 3;
-      const obj = create(proto, { b: 2, test });
+      const obj = create(proto, { b: { value: 2, enumerable: true }, test: { value: test, enumerable: true } });
+      expect({ ...obj }).toStrictEqual({ b: 2, test });
+      expect(obj.a).toBe(1);
+      expect(obj.test()).toBe(3);
+    });
+  });
+
+  describe("createFrom()", () => {
+    it("should create object with proto prototype and properties from values", () => {
+      const proto = { a: 1 };
+      const test = () => 3;
+      const obj = createFrom(proto, { b: 2, test });
       expect({ ...obj }).toStrictEqual({ b: 2, test });
       expect(obj.a).toBe(1);
       expect(obj.test()).toBe(3);

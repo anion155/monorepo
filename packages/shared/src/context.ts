@@ -1,4 +1,4 @@
-import { create } from "./object";
+import { createFrom } from "./object";
 
 /**
  * Utility to create context stack
@@ -77,7 +77,7 @@ export function createContextStack<Context extends object>(initial: Context) {
     const dispose = () => {
       popToCurrent();
     };
-    return create(next, { [Symbol.dispose]: dispose });
+    return createFrom(next, { [Symbol.dispose]: dispose });
   }
 
   return { current, iterator, [Symbol.iterator]: iterator, find, push, pop, setup };

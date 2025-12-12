@@ -1,14 +1,14 @@
 import "../global/disposable";
 
 import { is } from "../is";
-import { create } from "../object";
+import { createFrom } from "../object";
 import { isDisposable } from "./is-disposable";
 
 /** Creates Disposable from AsyncDisposable */
 export function disposableFrom(value: AsyncDisposable) {
   if (isDisposable(value)) return value;
   const dispose = () => value[Symbol.asyncDispose]();
-  return create(value, { [Symbol.dispose]: dispose });
+  return createFrom(value, { [Symbol.dispose]: dispose });
 }
 
 /**

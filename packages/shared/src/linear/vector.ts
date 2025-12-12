@@ -66,9 +66,9 @@ export const createNumberVector = <N extends number, Value = never>(
     },
   );
 
-  type BaseVectorParam = NumberVectorComponents<N> | NumberTuple<N> | SpecificNumberVector | Value;
+  type BaseVectorParam = SpecificNumberVector | NumberVectorParams<N, Value>;
   type BaseVectorConstructor = { new (...params: NumberTuple<N>): SpecificNumberVector & NumberVectorComponents<N> };
-  type VectorParam<VC extends BaseVectorConstructor> = InstanceType<VC> | NumberVectorComponents<N> | NumberTuple<N> | Value;
+  type VectorParam<VC extends BaseVectorConstructor> = InstanceType<VC> | NumberVectorParams<N, Value>;
 
   function isNumberVector(vector: unknown): vector is NumberVectorComponents<N> | NumberTuple<N> {
     if (!is(vector, "object")) return false;
@@ -123,11 +123,18 @@ export const createNumberVector = <N extends number, Value = never>(
       }
     }
     /** Parses value into vector instance. */
-    static parseValue<VC extends BaseVectorConstructor>(this: VC, value: VectorParam<VC>): InstanceType<VC> {
-      if (value instanceof this) return value as never;
-      if (isNumberVector(value)) return new this(...(iterator(value) as never)) as never;
-      return new this(...parseTuple(value)) as never;
-    }
+    static parseValue = Object.assign(
+      function parseValue<VC extends BaseVectorConstructor>(this: VC, value: VectorParam<VC>): InstanceType<VC> {
+        if (value instanceof this) return value as never;
+        if (isNumberVector(value)) return new this(...(iterator(value) as never)) as never;
+        return new this(...parseTuple(value)) as never;
+      },
+      {
+        bound<VC extends BaseVectorConstructor>(constr: VC) {
+          return (value: VectorParam<VC>): InstanceType<VC> => SpecificNumberVector.parseValue.call(constr, value) as never;
+        },
+      },
+    );
     /** Iterates over passed {@link vectors} scalars. */
     static iterators<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(
       this: VC,
@@ -210,20 +217,6 @@ export type NumberVector<N extends number> = NumberVectorComponents<N> & Instanc
 export class VectorInvalid extends createErrorClass("VectorInvalid") {}
 export class VectorIteratingInvalid extends createErrorClass("VectorIteratingInvalid") {}
 
-// interface Point2D extends NumberVectorComponents<2> {}
-// class Point2D extends createNumberVector(2, { parseTuple: (value: number) => [value, value] }) {}
-
-// Point2D.parseValue([1, 2]);
-// Point2D.parseValue(0);
-// Point2D.parseValue(new Point2D(1, 2));
-// Point2D.iterators(new Point2D(1, 2), 1, [1, 2]);
-// new Point2D(1, 2).add(2).equals(3);
-
-// interface Size extends NumberVectorComponents<2> {}
-// class Size extends createNumberVector(2) {}
-
-// Point2D.project()((...params) => 1);
-// Point2D.project([1, 2])((...params) => 1);
-// Point2D.project([1, 2], 3)((...params) => 1);
-// Point2D.project([1, 2], 3, new Point2D(1, 2))((...params) => 1);
-// Point2D.project([1, 2], 3, new Point2D(1, 2), new Size(2, 3))((...params) => 1);
+export const boundParseValue = <VC extends { new (...params: never): unknown; parseValue(value: never): unknown }>(constr: VC) => {
+  return (value: Parameters<VC["parseValue"]>[0]): InstanceType<VC> => constr.parseValue(value) as never;
+};

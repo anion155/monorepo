@@ -1,5 +1,15 @@
 import type { PropertyDescriptorReadonly, PropertyDescriptorWritable } from "./object";
-import { appendMethod, appendProperties, appendProperty, assignProperties, create, getOwnProperty, getProperty } from "./object";
+import {
+  appendMethod,
+  appendProperties,
+  appendPropertiesFrom,
+  appendProperty,
+  assignProperties,
+  create,
+  createFrom,
+  getOwnProperty,
+  getProperty,
+} from "./object";
 import type { Equal, Expect } from "./type-tests";
 
 const value = new (class {
@@ -60,8 +70,10 @@ const value = new (class {
 
 {
   const value = {};
-  appendProperty(value, "a", { value: 1 });
-  type Case = Expect<Equal<typeof value, { a: number }>>;
+  appendProperty(value, "a", { value: 1, writable: true });
+  appendProperty(value, "b", { value: 1, writable: false });
+  appendProperty(value, "c", { value: 1 });
+  type Case = Expect<Equal<typeof value, { a: number; readonly b: number; readonly c: number }>>;
 }
 
 {
@@ -72,16 +84,27 @@ const value = new (class {
 
 {
   const value = {};
-  appendProperties(value, { a: 1, b: (): number => 2 });
+  appendProperties(value, { a: { value: 1 }, b: { value: 1, writable: false }, c: { value: 1, writable: true }, d: { value: (): number => 2 } });
+  type Case = Expect<Equal<typeof value, { readonly a: number; readonly b: number; c: number; d: () => number }>>;
+}
+
+{
+  const value = {};
+  appendPropertiesFrom(value, { a: 1, b: (): number => 2 });
   type Case = Expect<Equal<typeof value, { a: number; b: () => number }>>;
 }
 
 {
   const value = assignProperties({ a: 1 }, { b: (): number => 2 });
-  type Case = Expect<Equal<typeof value, { a: number } & { b: () => number }>>;
+  type Case = Expect<Equal<typeof value, { a: number; b: () => number }>>;
 }
 
 {
-  const value = create({ a: 1 }, { b: (): number => 2 });
-  type Case = Expect<Equal<typeof value, { a: number } & { b: () => number }>>;
+  const value = create({ a: 1 }, { b: { value: (): number => 2 } });
+  type Case = Expect<Equal<typeof value, { a: number; b: () => number }>>;
+}
+
+{
+  const value = createFrom({ a: 1 }, { b: (): number => 2 });
+  type Case = Expect<Equal<typeof value, { a: number; b: () => number }>>;
 }
