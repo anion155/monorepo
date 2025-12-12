@@ -23,6 +23,10 @@ describe("Point2D", () => {
     }),
   );
 
+  it("should be strictly equal", () => {
+    expect(new Point2D(5, 7)).toStrictEqual(new Point2D(5, 7));
+  });
+
   it("should handle invalid param", () => {
     expect(() => new Point2D({} as never)).toStrictThrow(new VectorIteratingInvalid("Unsupported Point2D param"));
   });

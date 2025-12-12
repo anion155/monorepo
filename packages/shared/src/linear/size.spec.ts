@@ -26,6 +26,10 @@ describe("Size", () => {
     }),
   );
 
+  it("should be strictly equal", () => {
+    expect(new Size(5, 7)).toStrictEqual(new Size(5, 7));
+  });
+
   it("should handle invalid param", () => {
     expect(() => new Size({} as never)).toStrictThrow(new VectorIteratingInvalid("Unsupported Size param"));
   });

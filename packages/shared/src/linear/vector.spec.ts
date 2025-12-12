@@ -86,6 +86,12 @@ describe("Vector(length)", () => {
     expect(point.toString()).toBe("TestPoint [1, 2]");
   });
 
+  it(".toJSON() should return tuple", () => {
+    const TestPoint = createPointClass();
+    const point = new TestPoint(1, 2);
+    expect(point.toJSON()).toStrictEqual(["TestPoint", [1, 2]]);
+  });
+
   it(".asTuple() should spread vector", () => {
     const TestPoint = createPointClass();
     const point = new TestPoint(1, 2);

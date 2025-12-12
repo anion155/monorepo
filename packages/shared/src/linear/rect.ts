@@ -1,5 +1,6 @@
 import { cached } from "../decorators";
 import { is } from "../is";
+import { updateProperties } from "../object";
 import type { Point2DObject, Point2DValue } from "./point-2d";
 import { Point2D } from "./point-2d";
 import type { SizeObject, SizeShortObject, SizeValue } from "./size";
@@ -105,5 +106,17 @@ export class Rect
     const h = Math.max(this.y + this.h, _other.y + _other.h) - y;
     return new Rect(x, y, w, h);
   }
+
+  /** Expands this rect with {@link other} rect. */
+  collide(other: NumberVectorParams<4, RectValue>) {
+    const _other = Rect.parseValue(other);
+    const x = Math.max(this.x, _other.x);
+    const y = Math.max(this.y, _other.y);
+    const w = Math.min(this.x2, _other.x2) - x;
+    const h = Math.min(this.y2, _other.y2) - y;
+    if (w <= 0 || h <= 0) return null;
+    return new Rect(x, y, w, h);
+  }
 }
+updateProperties(Rect.prototype, { position: { enumerable: false }, size: { enumerable: false } });
 export type RectParams = ConstructorParameters<typeof Rect>;

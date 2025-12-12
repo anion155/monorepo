@@ -58,6 +58,8 @@ describe("Rect", () => {
       expect(rect.w).toBe(result[2]);
       expect(rect.height).toBe(result[3]);
       expect(rect.h).toBe(result[3]);
+      expect(rect.x2).toBe(result[0] + result[2]);
+      expect(rect.y2).toBe(result[1] + result[3]);
     }),
   );
 
@@ -84,10 +86,30 @@ describe("Rect", () => {
   });
 
   it(".expandBy() should expand rect by other rect", () => {
-    let rect = new Rect(1, 2, 3, 4);
-    rect = rect.expandBy([0, 0, 5, 7]);
-    expect({ ...rect }).toStrictEqual({ ...new Rect(0, 0, 5, 7) });
-    rect = new Rect(1, 2, 3, 4).expandBy([3, 3, 1, 1]);
-    expect({ ...rect }).toStrictEqual({ ...new Rect(1, 2, 3, 4) });
+    let rect = new Rect(5, 5, 10, 10);
+    rect = rect.expandBy([0, 0, 10, 10]);
+    // FIXME: toStrictEqual does not work with Rect
+    expect(rect.toJSON()).toStrictEqual(new Rect(0, 0, 15, 15).toJSON());
+    rect = rect.expandBy(new Rect(10, 0, 10, 10));
+    expect(rect.toJSON()).toStrictEqual(new Rect(0, 0, 20, 15).toJSON());
+  });
+
+  it(".collide() should expand rect by other rect", () => {
+    const rect1 = new Rect(0, 0, 10, 10);
+    const rect2 = new Rect(5, 5, 10, 10);
+    const rect3 = new Rect(10, 0, 10, 10);
+    expect(rect1.collide(rect1)!.toJSON()).toStrictEqual(rect1.toJSON());
+    expect(rect1.collide(rect2)!.toJSON()).toStrictEqual(new Rect(5, 5, 5, 5).toJSON());
+    expect(rect2.collide(rect3)!.toJSON()).toStrictEqual(new Rect(10, 5, 5, 5).toJSON());
+    expect(rect1.collide(rect3)).toStrictEqual(null);
+  });
+
+  it(".collide() should not be dependable on order", () => {
+    const rect1 = new Rect(0, 0, 10, 10);
+    const rect2 = new Rect(5, 5, 10, 10);
+    const rect3 = new Rect(10, 0, 10, 10);
+    expect(rect2.collide(rect1)!.toJSON()).toStrictEqual(new Rect(5, 5, 5, 5).toJSON());
+    expect(rect3.collide(rect2)!.toJSON()).toStrictEqual(new Rect(10, 5, 5, 5).toJSON());
+    expect(rect3.collide(rect1)).toStrictEqual(null);
   });
 });

@@ -159,6 +159,10 @@ export const createNumberVector = <N extends number, Value = never>(
     toString() {
       return `${this[Symbol.toStringTag]} [${Array.prototype.join.call(this, ", ")}]`;
     }
+    /** Return JSON representation of {@link this} vector */
+    toJSON() {
+      return [this.constructor.name, this.asTuple()];
+    }
 
     /**
      * Converts to array, mainly for times when it has to be spread as function parameters,
