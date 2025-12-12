@@ -36,6 +36,11 @@ try {
   };
   await traverseDir("src", "");
   const pkg: { exports?: Record<string, string> } = await readFile("./package.json", "utf-8").then(JSON.parse);
+  if ("extraExports" in pkg && typeof pkg.extraExports === "object" && pkg.extraExports) {
+    for (const [name, module] of Object.entries(pkg.extraExports)) {
+      exports[name] = module;
+    }
+  }
   pkg.exports = exports;
   await writeFile("./package.json", JSON.stringify(pkg, undefined, 2) + "\n");
 
