@@ -109,13 +109,9 @@ export class ImageResource extends Resource<{ readonly source: Readonly<ImageSou
     return this.initializer.value.viewport;
   }
 
-  renderImage(ctx: CanvasDrawImage & CanvasImageData, ...params: SourceDestParams): void {
+  renderImage(ctx: CanvasDrawImage, ...params: SourceDestParams): void {
     const { source, dest } = parseSourceDestParams(this.viewport, params);
-    if (this.source instanceof ImageData) {
-      ctx.drawImage(this.source, source.x, source.y, source.w, source.h, dest.x, dest.y, dest.w, dest.h);
-    } else {
-      ctx.drawImage(this.source, source.x, source.y, source.w, source.h, dest.x, dest.y, dest.w, dest.h);
-    }
+    ctx.drawImage(this.source, source.x, source.y, source.w, source.h, dest.x, dest.y, dest.w, dest.h);
   }
 }
 
