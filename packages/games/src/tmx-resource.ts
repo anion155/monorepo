@@ -106,10 +106,17 @@ export class TMXResource extends Resource<ParsedTMXMap & { resource: LayeredImag
     }
   }
 
-  constructor(filepath: string) {
+  constructor(param: string | (TMX.TMXMap & { filePath: string })) {
     super(async (stack) => {
-      const map = await loadJSON<TMX.TMXMap>(filepath);
-      const base = filepath.substring(0, filepath.lastIndexOf("/"));
+      let map: TMX.TMXMap;
+      let filePath: string;
+      if (typeof param === "string") {
+        map = await loadJSON<TMX.TMXMap>(param);
+        filePath = param;
+      } else {
+        ({ filePath, ...map } = param);
+      }
+      const base = filePath.substring(0, filePath.lastIndexOf("/"));
       const parsed = parseTMXMap(map, base);
       await Promise.all(parsed.sprites.map(async (sprite) => stack.append(await sprite.initialize())));
 

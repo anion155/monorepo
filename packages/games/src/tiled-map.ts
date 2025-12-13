@@ -11,6 +11,7 @@ import { CollisionEntityComponent } from "./collision";
 import type { EntityComponentParams, EntityParams } from "./entity";
 import { Entity } from "./entity";
 import { TMXResource } from "./tmx-resource";
+import type { TMXMap } from "./tmx-types";
 
 export type TiledMapEntityComponentParams = OmitHelper<EntityComponentParams, "entity"> & {
   entity: TiledMap;
@@ -114,19 +115,19 @@ export class TMXCollisionEntityComponent extends CollisionEntityComponent<void> 
   }
 }
 
-export type TiledMapParams = EntityParams & {
-  filePath: string;
-} & OmitHelper<TiledMapEntityComponentParams, keyof EntityComponentParams>;
+export type TiledMapParams = EntityParams &
+  ExclusiveUnion<{ filePath: string }, { map: TMXMap & { filePath: string } }> &
+  OmitHelper<TiledMapEntityComponentParams, keyof EntityComponentParams>;
 export class TiledMap extends Entity {
   readonly resource: TMXResource;
   readonly renderer: TMXMapRendererEntityComponent;
   readonly collision: TMXCollisionEntityComponent;
 
-  constructor({ filePath, tileSize, offset, ...entityParams }: TiledMapParams) {
+  constructor({ filePath, map, tileSize, offset, ...entityParams }: TiledMapParams) {
     super(entityParams, undefined, async (stack) => {
       stack.append(await this.resource.initialize());
     });
-    this.resource = new TMXResource(filePath);
+    this.resource = new TMXResource(map ?? filePath);
     this.renderer = new TMXMapRendererEntityComponent({ tileSize, offset, entity: this, name: "renderer" });
     this.collision = new TMXCollisionEntityComponent({ entity: this, name: "collision" });
   }

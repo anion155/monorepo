@@ -7,7 +7,7 @@ import { assert } from "@anion155/shared";
 import { SignalState } from "@anion155/signals";
 
 import CharactersAsset from "@/assets/characters.png?image";
-import TestMapPath from "@/assets/test_map/test_map.tmj?url";
+import TestMap from "@/assets/test_map/test_map.tmj?tmx";
 
 import { Camera } from "./camera";
 import { CanvasRendererLayer } from "./canvas";
@@ -32,7 +32,7 @@ class TestGame extends Game {
     const tileSize = new SignalState(new Size(32));
 
     this.canvasRenderer = new CanvasRendererLayer({ root, size: [800, 600], name: "renderer", parent: this });
-    this.map = new TiledMap({ filePath: TestMapPath, name: "map", parent: this, tileSize: () => tileSize.value });
+    this.map = new TiledMap({ map: TestMap, name: "map", parent: this, tileSize: () => tileSize.value });
     this.camera = new Camera({ name: "camera", parent: this });
     this.canvasRenderer.offset.bind(() => this.camera.position.value);
     this.player = new Player({

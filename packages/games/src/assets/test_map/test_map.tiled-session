@@ -9,11 +9,11 @@
             "scaleInEditor": 1.7907
         },
         "test_map.tmj": {
-            "scale": 3.39,
+            "scale": 2.79,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 317.10914454277287,
-                "y": 313.1268436578171
+                "x": 810.752688172043,
+                "y": 762.5448028673835
             }
         },
         "test_map.tmj#Grass tileset": {
@@ -24,7 +24,7 @@
         },
         "test_map.tmj#tileset": {
             "scaleInDock": 1.0264,
-            "scaleInEditor": 1
+            "scaleInEditor": 4
         },
         "test_map.tmx": {
             "scale": 1.13740234375,
