@@ -1,6 +1,5 @@
 import { Point2D } from "@anion155/linear/point-2d";
 import type { Rect } from "@anion155/linear/rect";
-import { doWith } from "@anion155/shared";
 
 import type { Point2DBindingArgument, SizeBindingArgument } from "./binding";
 import { Point2DComponent, SizeComponent } from "./binding";
@@ -32,40 +31,40 @@ export class TMXMapRendererEntityComponent extends CanvasRendererEntityComponent
     this.offset = new Point2DComponent({ entity: params.entity, initial: offset });
   }
 
-  render({ ctx }: CanvasRendererContext): void {
+  render({ ctx }: CanvasRendererContext, layer: string): void {
     const resource = this.#entity.resource;
-    resource.renderMap(ctx, { tileSize: this.tileSize.value, offset: this.offset.value });
-    if (DEBUG.get("tiledMapGrid"))
-      doWith(ctx as never as CanvasRenderingContext2D, (ctx) => {
-        ctx.save();
-        ctx.strokeStyle = "red";
-        ctx.lineWidth = 1;
-        const { w, h } = this.tileSize.value;
-        ctx.beginPath();
-        for (let y = 0; y < resource.map.height; y += 1) {
-          for (let x = 0; x < resource.map.width; x += 1) {
-            ctx.moveTo(x * w, y * h + h);
-            ctx.lineTo(x * w, y * h);
-            ctx.lineTo(x * w + w, y * h);
-          }
-        }
-        ctx.stroke();
-        ctx.restore();
-      });
-    if (DEBUG.get("tiledMapCoords"))
-      doWith(ctx as never as CanvasRenderingContext2D, (ctx) => {
-        ctx.save();
-        ctx.font = "8px monospace";
-        ctx.fillStyle = "black";
-        ctx.globalAlpha = 0.5;
-        const { w, h } = this.tileSize.value;
-        for (let y = 0; y < resource.map.height; y += 1) {
-          for (let x = 0; x < resource.map.width; x += 1) {
-            ctx.fillText(`[${x},${y}]`, x * w, y * h + 8);
-          }
-        }
-        ctx.restore();
-      });
+    resource.renderMapLayer(ctx, layer, { tileSize: this.tileSize.value, offset: this.offset.value });
+    // if (DEBUG.get("tiledMapGrid"))
+    //   doWith(ctx as never as CanvasRenderingContext2D, (ctx) => {
+    //     ctx.save();
+    //     ctx.strokeStyle = "red";
+    //     ctx.lineWidth = 1;
+    //     const { w, h } = this.tileSize.value;
+    //     ctx.beginPath();
+    //     for (let y = 0; y < resource.map.height; y += 1) {
+    //       for (let x = 0; x < resource.map.width; x += 1) {
+    //         ctx.moveTo(x * w, y * h + h);
+    //         ctx.lineTo(x * w, y * h);
+    //         ctx.lineTo(x * w + w, y * h);
+    //       }
+    //     }
+    //     ctx.stroke();
+    //     ctx.restore();
+    //   });
+    // if (DEBUG.get("tiledMapCoords"))
+    //   doWith(ctx as never as CanvasRenderingContext2D, (ctx) => {
+    //     ctx.save();
+    //     ctx.font = "8px monospace";
+    //     ctx.fillStyle = "black";
+    //     ctx.globalAlpha = 0.5;
+    //     const { w, h } = this.tileSize.value;
+    //     for (let y = 0; y < resource.map.height; y += 1) {
+    //       for (let x = 0; x < resource.map.width; x += 1) {
+    //         ctx.fillText(`[${x},${y}]`, x * w, y * h + 8);
+    //       }
+    //     }
+    //     ctx.restore();
+    //   });
   }
 }
 declare global {

@@ -17,15 +17,17 @@ export type CanvasRendererContext = {
 };
 export type CanvasRendererLayerParams = EntityParams & {
   root: HTMLDivElement;
+  layers: string[];
   size: SizeBindingArgument;
   offset?: Point2DBindingArgument;
 };
 export class CanvasRendererLayer extends Entity {
   readonly root: HTMLDivElement;
+  readonly layers: string[];
   readonly size: SizeComponent;
   readonly offset: Point2DComponent;
 
-  constructor({ root, size, offset, ...entityParams }: CanvasRendererLayerParams) {
+  constructor({ root, layers, size, offset, ...entityParams }: CanvasRendererLayerParams) {
     super(entityParams, (stack) => {
       const canvas = document.createElement("canvas");
       const size = this.size.value;
@@ -49,6 +51,7 @@ export class CanvasRendererLayer extends Entity {
       );
     });
     this.root = root;
+    this.layers = layers;
     this.size = new SizeComponent({ entity: this, name: "size", initial: size });
     this.offset = new Point2DComponent({ entity: this, name: "offset", initial: offset ?? [0, 0] });
   }
@@ -58,15 +61,23 @@ export class CanvasRendererLayer extends Entity {
     ctx.clearRect(0, 0, size.w, size.h);
     ctx.save();
     ctx.translate(...Point2D.project(size, this.offset.value)((size, position) => size / 2 - position).asTuple());
-    for (const component of game.eachNestedComponents(CanvasRendererEntityComponent)) {
-      ctx.save();
-      component.render(context);
-      ctx.restore();
+    const components = game.eachNestedComponents(CanvasRendererEntityComponent).toArray();
+    components.sort((a, b) => {
+      const aY = a.entity.findComponent(Point2DComponent, "position")?.value.y ?? 0;
+      const bY = b.entity.findComponent(Point2DComponent, "position")?.value.y ?? 0;
+      return aY - bY;
+    });
+    for (const layer of this.layers) {
+      for (const component of components) {
+        ctx.save();
+        component.render(context, layer);
+        ctx.restore();
+      }
     }
     ctx.restore();
   }
 }
 
 export abstract class CanvasRendererEntityComponent<Value = void> extends EntityComponent<Value> {
-  abstract render(context: CanvasRendererContext): void;
+  abstract render(context: CanvasRendererContext, layer: string): void;
 }

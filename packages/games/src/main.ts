@@ -31,11 +31,13 @@ class TestGame extends Game {
 
     const tileSize = new SignalState(new Size(32));
 
-    this.canvasRenderer = new CanvasRendererLayer({ root, size: [800, 600], name: "renderer", parent: this });
+    const layers = ["watter", "ground", "flowers", "fences", "objects"];
+    this.canvasRenderer = new CanvasRendererLayer({ root, layers, size: [800, 600], name: "renderer", parent: this });
     this.map = new TiledMap({ map: TestMap, name: "map", parent: this, tileSize: () => tileSize.value });
     this.camera = new Camera({ name: "camera", parent: this });
     this.canvasRenderer.offset.bind(() => this.camera.position.value);
     this.player = new Player({
+      layer: "objects",
       position: 16,
       scale: () => tileSize.value,
       sprites: { src: CharactersAsset, offset: [0, 16 * 4], spriteSize: 16, size: [3, 4] },

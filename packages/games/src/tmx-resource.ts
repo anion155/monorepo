@@ -4,9 +4,9 @@ import { Rect } from "@anion155/linear/rect";
 import type { SizeValue } from "@anion155/linear/size";
 import { Size } from "@anion155/linear/size";
 import { DeveloperError, TODO } from "@anion155/shared";
+import { OrderedMap } from "@anion155/shared/ordered-map";
 
 import { ImageResource } from "./image-resource";
-import { type ImageLayer, LayeredImagesResource } from "./layered-images-resource";
 import { Resource } from "./resource";
 import { SpritesResource } from "./sprites-resource";
 import type * as TMX from "./tmx-types";
@@ -85,7 +85,11 @@ export const parseTMXMap = (map: TMX.TMXMap, path: string) => {
 export type ParsedTMXMap = ReturnType<typeof parseTMXMap>;
 
 export type TMXResourceParam = string | TMXResource;
-export class TMXResource extends Resource<ParsedTMXMap & { resource: LayeredImagesResource }> {
+export type TMXLayerImage = {
+  image: ImageResource;
+  offset: Point2D;
+};
+export class TMXResource extends Resource<ParsedTMXMap & { layers: OrderedMap<string, TMXLayerImage> }> {
   static parse(resource: TMXResourceParam) {
     if (resource instanceof TMXResource) return resource;
     return new TMXResource(resource);
@@ -120,11 +124,10 @@ export class TMXResource extends Resource<ParsedTMXMap & { resource: LayeredImag
       const parsed = parseTMXMap(map, base);
       await Promise.all(parsed.sprites.map(async (sprite) => stack.append(await sprite.initialize())));
 
-      const layers: ImageLayer[] = [];
-      let group = 1;
+      const layers = new OrderedMap<string, TMXLayerImage>();
       for (const layer of map.layers) {
-        if (!layer.visible || layer.opacity === 0) {
-          group += 1;
+        if (!layer.visible || layer.opacity === 0 || !layer.name) {
+          // do nothimg
         } else if (layer.type === "tilelayer") {
           const image = new ImageResource([
             parsed.tileSize.mul(layer),
@@ -133,22 +136,22 @@ export class TMXResource extends Resource<ParsedTMXMap & { resource: LayeredImag
               await TMXResource.drawTileLayer(ctx, layer, parsed);
             },
           ]);
-          layers.push({ image, offset: new Point2D(layer.offsetx ?? 0, layer.offsety ?? 0), group });
+          layers.push(layer.name, { image, offset: new Point2D(layer.offsetx ?? 0, layer.offsety ?? 0) });
         } else if (layer.type === "objectgroup") {
           // TODO
-          group += 1;
         } else if (layer.type === "imagelayer") {
           // TODO
-          group += 1;
         } else {
           TODO(`TMX: layer type '${layer.type}' is not supported`);
         }
       }
-      const resource = new LayeredImagesResource(layers);
-      await resource.initialize();
-      stack.append(resource);
+      await Promise.all(
+        layers.values().map(async (layer) => {
+          stack.append(await layer.image.initialize());
+        }),
+      );
 
-      return { ...parsed, resource };
+      return { ...parsed, layers };
     });
   }
   get map() {
@@ -169,11 +172,19 @@ export class TMXResource extends Resource<ParsedTMXMap & { resource: LayeredImag
   get collisions() {
     return this.initializer.value.collisions;
   }
-  get resource() {
-    return this.initializer.value.resource;
+  get layers() {
+    return this.initializer.value.layers;
   }
 
-  renderMap(ctx: CanvasDrawImage, { offset = [0, 0], tileSize = this.tileSize }: { offset?: Point2DValue; tileSize?: SizeValue } = {}) {
-    this.resource.renderImage(ctx, new Rect(offset, Size.parseValue(tileSize).mul(this.map)));
+  renderMap(ctx: CanvasDrawImage, { offset = [0, 0], tileSize = this.tileSize }: RenderMapParams = {}) {
+    const dest = new Rect(offset, Size.parseValue(tileSize).mul(this.map));
+    this.layers.values().forEach((layer) => layer.image.renderImage(ctx, dest));
+  }
+  renderMapLayer(ctx: CanvasDrawImage, layerName: string, { offset = [0, 0], tileSize = this.tileSize }: RenderMapParams = {}) {
+    const layer = this.layers.get(layerName);
+    if (!layer) return;
+    const dest = new Rect(offset, Size.parseValue(tileSize).mul(this.map));
+    layer.image.renderImage(ctx, dest);
   }
 }
+type RenderMapParams = { offset?: Point2DValue; tileSize?: SizeValue };

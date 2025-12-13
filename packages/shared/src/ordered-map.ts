@@ -140,11 +140,11 @@ export class OrderedMap<Key, Value> {
   }
 
   /** Iterate over keys. */
-  get keys(): IterableIterator<Key> {
+  get keys() {
     return this.#order[Symbol.iterator]();
   }
   /** Iterate over entries [key, value]. */
-  *[Symbol.iterator](): Generator<[Key, Value]> {
+  *[Symbol.iterator](): Generator<[Key, Value], void, unknown> {
     for (const key of this.#order) {
       const value = this.#map.get(key);
       if (value === undefined) throw new InvalidOrderedMap();
@@ -152,11 +152,11 @@ export class OrderedMap<Key, Value> {
     }
   }
   /** Iterate over entries [key, value]. */
-  entries(): IterableIterator<[Key, Value]> {
+  entries() {
     return this[Symbol.iterator]();
   }
   /** Iterate over values. */
-  values(): IterableIterator<Value> {
+  values() {
     return this[Symbol.iterator]().map(([, value]) => value);
   }
 }

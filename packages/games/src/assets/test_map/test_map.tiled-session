@@ -6,14 +6,14 @@
     "fileStates": {
         "": {
             "scaleInDock": 1,
-            "scaleInEditor": 1.7907
+            "scaleInEditor": 1.19
         },
         "test_map.tmj": {
-            "scale": 2.79,
-            "selectedLayer": 2,
+            "scale": 11.2117,
+            "selectedLayer": 4,
             "viewCenter": {
-                "x": 810.752688172043,
-                "y": 762.5448028673835
+                "x": 311.37115691643555,
+                "y": 270.6547624356699
             }
         },
         "test_map.tmj#Grass tileset": {
@@ -23,8 +23,8 @@
             "scaleInDock": 1
         },
         "test_map.tmj#tileset": {
-            "scaleInDock": 1.0264,
-            "scaleInEditor": 4
+            "scaleInDock": 1.6637,
+            "scaleInEditor": 2.49
         },
         "test_map.tmx": {
             "scale": 1.13740234375,

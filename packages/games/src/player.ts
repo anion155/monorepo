@@ -4,12 +4,11 @@ import { SignalReadonlyComputed } from "@anion155/signals";
 
 import type { Point2DBindingArgument, RectBindingArgument, SizeBindingArgument } from "./binding";
 import { Point2DComponent, RectComponent, SizeComponent } from "./binding";
-import { boundsMul, drawDebugBounds, drawDebugPosition } from "./bounds";
+import { boundsMul } from "./bounds";
 import type { CanvasRendererContext } from "./canvas";
 import { CanvasRendererEntityComponent } from "./canvas";
 import type { CollisionResults } from "./collision";
 import { CollisionEntityComponent } from "./collision";
-import { cssColors } from "./css-colors";
 import type { EntityComponentParams, EntityParams } from "./entity";
 import { Entity } from "./entity";
 import { LoopEntityComponent } from "./loop";
@@ -20,6 +19,7 @@ import { SpritesResource } from "./sprites-resource";
 
 export type PlayerRendererParams = OmitHelper<EntityComponentParams, "entity"> & {
   entity: Player;
+  layer: string;
   sprites: SpritesResourceParam | SpritesResource;
   animationConfig: MovingAnimationConfig;
 };
@@ -41,10 +41,10 @@ export class PlayerRenderer extends CanvasRendererEntityComponent {
     this.#animation = new MovingAnimation(animationConfig);
   }
 
-  render({ ctx }: CanvasRendererContext): void {
-    if (DEBUG.get("objectDrawSpriteBounds")) drawDebugBounds(ctx, this.#entity.spriteBoundsOnMap.value, { color: cssColors.green });
-    if (DEBUG.get("objectDrawBounds")) drawDebugBounds(ctx, this.#entity.boundsOnMap.value, { color: cssColors.red });
-    if (DEBUG.get("characterDrawPosition")) drawDebugPosition(ctx, this.#entity.positionOnMap.value);
+  render({ ctx }: CanvasRendererContext, layer: string): void {
+    // if (DEBUG.get("objectDrawSpriteBounds")) drawDebugBounds(ctx, this.#entity.spriteBoundsOnMap.value, { color: cssColors.green });
+    // if (DEBUG.get("objectDrawBounds")) drawDebugBounds(ctx, this.#entity.boundsOnMap.value, { color: cssColors.red });
+    // if (DEBUG.get("characterDrawPosition")) drawDebugPosition(ctx, this.#entity.positionOnMap.value);
     const index = this.#animation.interpolate(this.#entity.state);
     this.#sprites.renderSprite(ctx, index, this.#entity.spriteBoundsOnMap.value);
   }
@@ -136,7 +136,7 @@ export class Player extends Entity {
     return new SignalReadonlyComputed(() => boundsMul(this.bounds.value, this.scale.value));
   }
 
-  constructor({ position, size, scale, bounds, sprites, animationConfig, ...entityParams }: PlayerParams) {
+  constructor({ position, size, scale, bounds, layer, sprites, animationConfig, ...entityParams }: PlayerParams) {
     super(entityParams, (stack) => {
       stack.append(
         LoopEntityComponent.getGameLoop(this).on("tick", (deltaTime) => {
@@ -149,7 +149,7 @@ export class Player extends Entity {
     this.scale = new SizeComponent({ entity: this, name: "scale", initial: scale as never, default: 1 });
     this.boundsScale = new RectComponent({ entity: this, name: "bounds", initial: bounds });
 
-    this.renderer = new PlayerRenderer({ entity: this, name: "renderer", sprites, animationConfig });
+    this.renderer = new PlayerRenderer({ entity: this, name: "renderer", layer, sprites, animationConfig });
     this.movingControlls = new MovingControlls({ entity: this, name: "movingControlls" });
     this.collisions = new PlayerCollision({ entity: this, name: "collisions" });
   }
