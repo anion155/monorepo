@@ -21,16 +21,42 @@ describe("decorators", () => {
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
+    it("should call method only once per instance", () => {
+      const spy = jest.fn(() => 5);
+      class Test {
+        @cached
+        method() {
+          return spy();
+        }
+      }
+      expect(spy).toHaveBeenCalledTimes(0);
+      const a = new Test();
+      expect(spy).toHaveBeenCalledTimes(0);
+      expect(a.method()).toBe(5);
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(a.method()).toBe(5);
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
     it("should not change prototype field", () => {
       class Test {
         @cached
         get field() {
           return 1;
         }
+        @cached
+        method() {
+          return 1;
+        }
       }
+
       const protoField = Object.getOwnPropertyDescriptor(Test.prototype, "field");
       void new Test().field;
       expect(protoField).toStrictEqual(Object.getOwnPropertyDescriptor(Test.prototype, "field"));
+
+      const protoMethod = Object.getOwnPropertyDescriptor(Test.prototype, "method");
+      void new Test().method();
+      expect(protoMethod).toStrictEqual(Object.getOwnPropertyDescriptor(Test.prototype, "method"));
     });
 
     it("should keep original emumerable state", () => {

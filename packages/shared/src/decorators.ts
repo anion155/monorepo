@@ -13,16 +13,30 @@ import { getProperty } from "./object";
  *  }
  */
 export function cached<This extends object = object, Value = unknown>(
-  getter: (this: This) => Value,
+  target: (this: This) => Value,
   context: ClassGetterDecoratorContext<This, Value>,
-) {
-  if (context.kind !== "getter") return;
-  return function (this: This): Value {
-    const value = getter.apply(this);
-    const { enumerable, configurable } = getProperty(this, context.name)!;
-    Object.defineProperty(this, context.name, { value, writable: false, enumerable, configurable });
-    return value;
-  };
+): (this: This) => Value;
+export function cached<This extends object = object, Value extends () => unknown = () => unknown>(
+  target: Value,
+  context: ClassMethodDecoratorContext<This, Value>,
+): Value;
+export function cached(target: unknown, context: ClassGetterDecoratorContext | ClassMethodDecoratorContext) {
+  if (context.kind === "getter") {
+    return function (this: object) {
+      const value = (target as (this: unknown) => unknown).apply(this);
+      const { enumerable, configurable } = getProperty(this, context.name)!;
+      Object.defineProperty(this, context.name, { value, writable: false, enumerable, configurable });
+      return value;
+    };
+  }
+  if (context.kind === "method") {
+    return function (this: object) {
+      const value = (target as (this: unknown) => never).apply(this);
+      const { enumerable, configurable } = getProperty(this, context.name)!;
+      Object.defineProperty(this, context.name, { value: () => value, writable: false, enumerable, configurable });
+      return value;
+    };
+  }
 }
 
 /**
