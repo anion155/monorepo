@@ -1,6 +1,5 @@
 {
   "folders": [
-    { "path": "packages/games" },
     { "path": "packages/signals" },
     { "path": "packages/linear" },
     { "path": "packages/shared" },

@@ -1,8 +1,0 @@
-{
-  "extends": "@anion155/configs/tsconfig.base.json",
-  "compilerOptions": {
-    "lib": ["DOM", "ESNext", "ESNext.Disposable", "ESNext.Iterator"],
-    "baseUrl": ".",
-    "paths": { "@/*": ["./src/*"] }
-  }
-}
