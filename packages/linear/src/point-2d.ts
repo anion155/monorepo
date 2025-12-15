@@ -35,5 +35,34 @@ export class Point2D
   get y() {
     return this[1];
   }
+
+  /** Vector's length from [0, 0] */
+  @cached
+  get magnitude() {
+    return Math.sqrt(this.x * this.x + this.y * this.y);
+  }
+
+  /** Distance between {@link this} vector and {@link other} */
+  distance(other: NumberVectorParams<2, Point2DValue>) {
+    return this.sub(other).magnitude;
+  }
+
+  /** Normalize vector */
+  @cached
+  normalize() {
+    return this.div(this.magnitude);
+  }
+
+  /** Scalar multiplication of {@link this} and {@link other} */
+  dot(other: NumberVectorParams<2, Point2DValue>) {
+    const { x, y } = this.mul(other);
+    return x + y;
+  }
+
+  /** Angle between two vectors {@link this} and {@link other} in radians */
+  andgle(other: NumberVectorParams<2, Point2DValue>) {
+    const _other = Point2D.parseValue(other);
+    return Math.acos(this.dot(_other) / this.magnitude / _other.magnitude);
+  }
 }
 export type Point2DParams = ConstructorParameters<typeof Point2D>;
