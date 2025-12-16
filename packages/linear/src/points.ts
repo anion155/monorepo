@@ -1,12 +1,13 @@
 import { cached } from "@anion155/shared/decorators";
 import { hasTypedField } from "@anion155/shared/is";
 
+import type { PointParams } from "./point";
 import { createPoint } from "./point";
-import type { NumberVectorParams, NumberVectorScalars } from "./vector";
+import type { NumberVectorScalars } from "./vector";
 import { VectorIteratingInvalid } from "./vector";
 
 export type Point2DObject = { readonly x: number; readonly y: number };
-export type Point2DValue = NumberVectorParams<2, Point2DObject>;
+export type Point2DValue = PointParams<2, Point2DObject>;
 export interface Point2D extends NumberVectorScalars<2> {}
 /** Point in 2 dimensions class. */
 export class Point2D
@@ -37,7 +38,7 @@ export class Point2D
 export type Point2DParams = ConstructorParameters<typeof Point2D>;
 
 export type Point3DObject = Point2DObject & { readonly z: number };
-export type Point3DValue = NumberVectorParams<3, Point3DObject>;
+export type Point3DValue = PointParams<3, Point3DObject>;
 export interface Point3D extends NumberVectorScalars<3> {}
 /** Point in 3 dimensions class. */
 export class Point3D
