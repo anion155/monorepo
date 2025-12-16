@@ -113,3 +113,37 @@ type ExclusiveUnionCases = [
   Expect<Equal<ExclusiveUnion<{ a: number }, { b: string }>, { a: number; b?: undefined } | { a?: undefined; b: string }>>,
   Expect<Equal<ExclusiveUnion<{ a: number }, { a: string }>, { a: number } | { a: string }>>,
 ];
+
+type IfNegativeNumberCases = [
+  // should return if number negative
+  Expect<Equal<IfNegativeNumber<10>, false>>,
+  Expect<Equal<IfNegativeNumber<-10>, true>>,
+];
+
+type IfIntegerNumberCases = [
+  // should return if number integer
+  Expect<Equal<IfIntegerNumber<10>, true>>,
+  Expect<Equal<IfIntegerNumber<10.0>, true>>,
+  Expect<Equal<IfIntegerNumber<10.1>, false>>,
+  Expect<Equal<IfIntegerNumber<10e1>, true>>,
+  Expect<Equal<IfIntegerNumber<10e-1>, true>>,
+  Expect<Equal<IfIntegerNumber<10e-2>, false>>,
+];
+
+type AbsNumberCases = [
+  // should return abs of number
+  Expect<Equal<AbsNumber<10>, 10>>,
+  Expect<Equal<AbsNumber<-10>, 10>>,
+];
+
+type TupleCases = [
+  // should create tuple
+  Expect<Equal<Tuple<2, string>, readonly [string, string]>>,
+  Expect<Equal<Tuple<0, 0>, readonly []>>,
+];
+
+type RangeTupleCases = [
+  // should create range of numbers in tuple
+  Expect<Equal<RangeTuple<2, 5>, [2, 3, 4]>>,
+  Expect<Equal<RangeTuple<2, 5>[number], 2 | 3 | 4>>,
+];

@@ -65,6 +65,33 @@ declare global {
       ? Omit<T & { [K in Exclude<keyof U, keyof T>]?: never }, never> | Omit<U & { [K in Exclude<keyof T, keyof U>]?: never }, never>
       : never
     : never;
+
+  /** Type that detects negative numbers. */
+  type IfNegativeNumber<T extends number, A = true, B = false> = `${T}` extends `-${number}` ? A : B;
+  /** Type that detects integer numbers. */
+  type IfIntegerNumber<T extends number, A = true, B = false> = `${T}` extends `${number}.${number}` | `${number}e-${number}` ? B : A;
+  /** A type that calculates the absolute value of a numeric literal type T. */
+  type AbsNumber<T extends number> = `${T}` extends `-${infer N extends number}` ? N : T;
+
+  /** Readonly tuple */
+  type Tuple<N extends number, T, R extends readonly T[] = readonly []> = number extends N
+    ? readonly T[]
+    : N extends R["length"]
+      ? R extends readonly unknown[]
+        ? R
+        : never
+      : Tuple<N, T, readonly [...R, T]>;
+
+  /** Readonly tuple of numbers */
+  type RangeTuple<From extends number, To extends number, FromC extends 0[] = [], ToC extends number[] = []> = number extends From
+    ? number[]
+    : number extends To
+      ? number[]
+      : From extends FromC["length"]
+        ? To extends [...FromC, ...ToC]["length"]
+          ? ToC
+          : RangeTuple<From, To, FromC, [...ToC, [...FromC, ...ToC]["length"]]>
+        : RangeTuple<From, To, [...FromC, 0], []>;
 }
 
 export {};
