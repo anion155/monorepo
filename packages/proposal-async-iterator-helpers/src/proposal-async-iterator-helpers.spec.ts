@@ -2,6 +2,8 @@ import "./global";
 
 import { describe, expect, it, jest } from "@jest/globals";
 
+import { AsyncIteratorPrototype } from "./async-iterator-prototype";
+
 describe("AsyncIterator helpers proposal", () => {
   async function* inc(max: number = Number.MAX_SAFE_INTEGER) {
     let i = 0;
@@ -140,6 +142,20 @@ describe("AsyncIterator helpers proposal", () => {
     await expect(inc(1).take(2).toArray()).resolves.toStrictEqual([0]);
   });
 
+  it("take should return even if iterator does not support return", async () => {
+    const it = AsyncIterator.from(
+      Object.create(AsyncIteratorPrototype, {
+        next: {
+          // eslint-disable-next-line @typescript-eslint/require-await
+          value: async function next() {
+            return { value: 1, done: false };
+          },
+        },
+      }) as AsyncIterator<number, undefined>,
+    );
+    await expect(it.take(2).toArray()).resolves.toStrictEqual([1, 1]);
+  });
+
   it("drop should drop first values", async () => {
     await expect(inc().drop(2).next()).resolves.toStrictEqual({ value: 2, done: false });
     await expect(inc().take(1).drop(2).next()).resolves.toStrictEqual({ value: undefined, done: true });
@@ -190,7 +206,7 @@ describe("AsyncIterator helpers proposal", () => {
         .values()
         .toAsync()
         .flatMap((v) => v.split(" "))
-        .toArray()
+        .toArray(),
     ).resolves.toStrictEqual(["Eiusmod", "consectetur", "nisi", "sint", "dolor"]);
   });
 
@@ -199,7 +215,7 @@ describe("AsyncIterator helpers proposal", () => {
       ["Eiusmod", "consectetur", "nisi", "sint", "dolor"]
         .values()
         .toAsync()
-        .reduce((acc, v) => `${acc} ${v}`)
+        .reduce((acc, v) => `${acc} ${v}`),
     ).resolves.toBe("Eiusmod consectetur nisi sint dolor");
   });
 });

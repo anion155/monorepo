@@ -77,5 +77,6 @@ describe("Map emplace extensions", () => {
     await waiter.await();
     expect(ref!.deref()).toBeUndefined();
     expect(ref!.emplace()).toBeInstanceOf(Test);
+    expect(waiter.deref()).toBeUndefined();
   });
 });

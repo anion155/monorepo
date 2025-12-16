@@ -77,7 +77,7 @@ export const withCreateAction =
     const action = maybeAction instanceof Action ? maybeAction : new Action(maybeAction);
     const Wrapped = (props: Omit<ComponentProps<Component>, Prop>) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return <Component {...(props as any)} {...{ [propName]: action }} />;
+      return <Component {...{ ...(props as any), [propName]: action }} />;
     };
     Object.setPrototypeOf(Wrapped, Component);
     const name = `withCreateAction(${Component.displayName ?? Component.name})`;

@@ -16,6 +16,12 @@ describe("glob()", () => {
     expect(values.filter(glob("file*t"))).toStrictEqual(["file.txt", "file1.txt", "file2.txt"]);
   });
 
+  it("should match using wildcard **", () => {
+    const values = ["file.txt", "test/nested.txt", "image.png"];
+    expect(values.filter(glob("*"))).toStrictEqual(["file.txt", "image.png"]);
+    expect(values.filter(glob("**/*.txt"))).toStrictEqual(["file.txt", "test/nested.txt"]);
+  });
+
   it("should match using wildcard ?", () => {
     const values = ["file.txt", "file1.txt", "file2.txt", "file12.txt"];
     expect(values.filter(glob("file?.txt"))).toStrictEqual(["file1.txt", "file2.txt"]);
@@ -26,6 +32,7 @@ describe("glob()", () => {
     expect(values.filter(glob("file[1-2].txt"))).toStrictEqual(["file1.txt", "file2.txt"]);
     expect(values.filter(glob("file[A-B].txt"))).toStrictEqual(["fileA.txt", "fileB.txt"]);
     expect(values.filter(glob("file[\\]].txt"))).toStrictEqual(["file].txt"]);
+    expect(values.filter(glob("file[A-\\B].txt"))).toStrictEqual(["fileA.txt", "fileB.txt"]);
     expect(values.filter(glob("file[][!].txt"))).toStrictEqual(["file].txt", "file[.txt", "file!.txt"]);
     expect(values.filter(glob("file[1-].txt"))).toStrictEqual(["file1.txt", "file-.txt"]);
     expect(values.filter(glob("file[-1].txt"))).toStrictEqual(["file1.txt", "file-.txt"]);

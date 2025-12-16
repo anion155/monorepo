@@ -101,5 +101,18 @@ describe("context utils", () => {
       }
       context.push({ type: "none" });
     });
+
+    it("this.find() should find context in stack", () => {
+      const context = createContextStack({ type: "none" });
+      const first = { type: "store" };
+      context.push(first);
+      const second = { type: "remove" };
+      context.push(second);
+      const last = { type: "store" };
+      context.push(last);
+      expect(context.find((ctx) => ctx.type === "store")).toBe(last);
+      expect(context.find((ctx) => ctx.type === "remove")).toBe(second);
+      expect(context.find((ctx) => ctx.type === "test")).toBeUndefined();
+    });
   });
 });

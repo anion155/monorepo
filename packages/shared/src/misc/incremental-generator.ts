@@ -14,5 +14,5 @@ export function incrementGenerator() {
       });
       return { value: undefined, done: true };
     },
-  } as Iterator<number> & { current: number } as Iterator<number> & { readonly current: number };
+  } as Iterator<number> & { current: number } as RequiredSome<Iterator<number>, "return"> & { readonly current: number };
 }

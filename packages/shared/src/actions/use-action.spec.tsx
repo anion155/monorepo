@@ -4,9 +4,17 @@ import { Suspense } from "react";
 
 import { createErrorClass } from "../errors";
 import { ErrorBoundary } from "../react/error-boundary";
-import { act, render, renderHook } from "../react/test-utils/render";
+import { act, render, renderHook } from "../react/test-utils";
 import { Action, InvalidActionState } from "./action";
-import { useActionAwait, useActionCall, useActionResultState, useActionRunningState, useActionState } from "./use-action";
+import {
+  useActionAwait,
+  useActionCall,
+  useActionResultState,
+  useActionRunningState,
+  useActionState,
+  useCreateAction,
+  withCreateAction,
+} from "./use-action";
 
 describe("Action hooks", () => {
   describe("useActionRunningState()", () => {
@@ -161,6 +169,48 @@ describe("Action hooks", () => {
       deferred.resolve("test");
       await act(() => Promise.resolve());
       expect(hook.result.current).toStrictEqual({ action, status: "resolved", params: [1, 2], value: "test" });
+    });
+  });
+
+  describe("useCreateAction()", () => {
+    it("should create Action instance", () => {
+      const deferred = Promise.withResolvers<string>();
+      const hook = renderHook(useCreateAction<unknown[], string>, () => deferred.promise);
+      expect(hook.result.current).toBeInstanceOf(Action);
+    });
+
+    it("should return passed Action", () => {
+      const action = new Action(() => 5);
+      const hook = renderHook(useCreateAction<[], number>, action);
+      expect(hook.result.current).toBe(action);
+    });
+
+    it("should cache action instance", () => {
+      const hook = renderHook(useCreateAction<[], number>, () => 5, [1]);
+      const first = hook.result.current;
+      hook.rerender(() => 4, [1]);
+      expect(first).toBe(hook.result.current);
+      hook.rerender(() => 4, [2]);
+      expect(first).not.toBe(hook.result.current);
+    });
+  });
+
+  describe("withCreateAction(Component)", () => {
+    it("should wrap component and add action to props", () => {
+      const spy = jest.fn((_props: { test: Action<[], number> }) => "test");
+      const Wrapped = withCreateAction(() => 5, "test")((props) => spy(props));
+      const component = render(<Wrapped />);
+      expect(component.asFragment()).toHaveTextContent("test");
+      expect(spy).toHaveBeenCalledWith({ test: expect.any(Action) });
+    });
+
+    it("should handle action instance", () => {
+      const spy = jest.fn((_props: { test: Action<[], number> }) => "test");
+      const action = new Action(() => 5);
+      const Wrapped = withCreateAction(action, "test")((props) => spy(props));
+      const component = render(<Wrapped />);
+      expect(component.asFragment()).toHaveTextContent("test");
+      expect(spy).toHaveBeenCalledWith({ test: action });
     });
   });
 });

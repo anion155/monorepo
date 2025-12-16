@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./index.ts",
-    "./jest.config": "./jest.config.js"
+    "./jest.config": "./jest.config.js",
+    "./setup-jest.ts": "./setup-jest.ts"
   },
   "devDependencies": {
     "@anion155/configs": "workspace:*",

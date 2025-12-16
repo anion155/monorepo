@@ -12,11 +12,13 @@ import {
   defineProperties,
   definePropertiesFrom,
   defineProperty,
+  defineToStringTag,
   getOwnProperty,
   getProperty,
   isPrototypeOf,
   modifyMethod,
   modifyProperty,
+  updateProperties,
   updateProperty,
 } from "./object";
 
@@ -48,6 +50,36 @@ describe("object utils", () => {
       expect({ ...obj }).toStrictEqual({ a: 1 });
       obj.a = 2;
       expect(obj.a).toBe(2);
+    });
+
+    it("should define accessor property in object", () => {
+      const obj = {} as { a: number };
+      const set = jest.fn();
+      defineProperty(obj, "a", { get: () => 1, set, enumerable: true });
+      expect(Object.getOwnPropertyDescriptor(obj, "a")).toStrictEqual({
+        get: expect.any(Function),
+        set: expect.any(Function),
+        enumerable: true,
+        configurable: false,
+      });
+      expect(obj.a).toBe(1);
+      expect({ ...obj }).toStrictEqual({ a: 1 });
+      obj.a = 2;
+      expect(set).toHaveBeenCalledWith(2);
+    });
+  });
+
+  describe("defineToStringTag()", () => {
+    it("should Symbol.toStringTag property on prototype", () => {
+      function Test() {}
+      expect(Object.getOwnPropertyDescriptor(Test.prototype, Symbol.toStringTag)).toBeUndefined();
+      defineToStringTag(Test);
+      expect(Object.getOwnPropertyDescriptor(Test.prototype, Symbol.toStringTag)).toStrictEqual({
+        value: "Test",
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      });
     });
 
     it("should define accessor property in object", () => {
@@ -198,6 +230,15 @@ describe("object utils", () => {
       const obj = { a: 1 };
       updateProperty(obj, "a", { enumerable: false });
       expect({ ...obj }).toStrictEqual({});
+    });
+  });
+
+  describe("updateProperties()", () => {
+    it("should update properties", () => {
+      const obj = { a: 1, b: 2 };
+      updateProperties(obj, { a: { enumerable: false }, b: { configurable: false } });
+      expect({ ...obj }).toStrictEqual({ b: 2 });
+      expect(() => Object.defineProperty(obj, "b", { configurable: true })).toStrictThrow(new TypeError("Cannot redefine property: b"));
     });
   });
 

@@ -6,6 +6,7 @@ import { useInputState } from "./use-input-state";
 describe("useInputState()", () => {
   const value1 = Symbol("test-value-1");
   const value2 = Symbol("test-value-2");
+  const modifier = jest.fn((_param: unknown) => value2);
   const onChange = jest.fn();
 
   describe("with value", () => {
@@ -27,6 +28,14 @@ describe("useInputState()", () => {
       const hook = renderHook(useInputState<symbol>, { value: value1, onChange });
       act(() => hook.result.current[1](value2));
 
+      expect(onChange).toHaveBeenCalledWith(value2);
+      expect(hook.result.current[0]).toStrictEqual(value1);
+    });
+
+    it("call setter with modifier", () => {
+      const hook = renderHook(useInputState<symbol>, { value: value1, onChange });
+      act(() => hook.result.current[1]((current) => modifier(current)));
+      expect(modifier).toHaveBeenCalledWith(value1);
       expect(onChange).toHaveBeenCalledWith(value2);
       expect(hook.result.current[0]).toStrictEqual(value1);
     });

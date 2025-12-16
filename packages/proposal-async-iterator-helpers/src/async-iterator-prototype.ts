@@ -9,8 +9,3 @@ polyfillProperty(AsyncIteratorPrototype, Symbol.toStringTag, {
   writable: false,
   enumerable: false,
 });
-polyfillProperty(AsyncIteratorPrototype, Symbol.iterator, {
-  value: function iterator() {
-    return this;
-  },
-});

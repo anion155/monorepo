@@ -14,4 +14,10 @@ describe("incrementalGenerator()", () => {
     generator.next();
     expect(generator.current).toBe(0);
   });
+
+  it("this.return() should stop iteration", () => {
+    const generator = incrementGenerator();
+    expect(generator.return()).toStrictEqual({ value: undefined, done: true });
+    expect(generator.next()).toStrictEqual({ done: true });
+  });
 });

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { useState } from "react";
 
 import { act, renderHook } from "../test-utils";
@@ -19,5 +19,10 @@ describe("useLensedState()", () => {
 
     act(() => hook.result.current.state[1](10));
     expect(hook.result.current.lensed[0]).toBe("10");
+
+    const modifier = jest.fn((_param: unknown) => "1");
+    act(() => hook.result.current.lensed[1]((current) => modifier(current)));
+    expect(hook.result.current.lensed[0]).toBe("1");
+    expect(hook.result.current.state[0]).toBe(1);
   });
 });
