@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { Point2D } from "./point-2d";
+import { Point2D } from "./points";
 import { Rect, RectParams } from "./rect";
 import { Size } from "./size";
 import { VectorIteratingInvalid } from "./vector";
@@ -98,22 +98,28 @@ describe("Rect", () => {
     expect(new Rect(5, 5, 10, 10).offset([5, -5]).toJSON()).toStrictEqual(new Rect(10, 0, 10, 10).toJSON());
   });
 
-  it(".collide() should expand rect by other rect", () => {
+  it("Rect.collide() should return collision Rect", () => {
     const rect1 = new Rect(0, 0, 10, 10);
     const rect2 = new Rect(5, 5, 10, 10);
     const rect3 = new Rect(10, 0, 10, 10);
-    expect(rect1.collide(rect1)!.toJSON()).toStrictEqual(rect1.toJSON());
-    expect(rect1.collide(rect2)!.toJSON()).toStrictEqual(new Rect(5, 5, 5, 5).toJSON());
-    expect(rect2.collide(rect3)!.toJSON()).toStrictEqual(new Rect(10, 5, 5, 5).toJSON());
-    expect(rect1.collide(rect3)).toStrictEqual(null);
+    expect(Rect.collide(rect1, rect1)!.toJSON()).toStrictEqual(rect1.toJSON());
+    expect(Rect.collide(rect1, rect2)!.toJSON()).toStrictEqual(new Rect(5, 5, 5, 5).toJSON());
+    expect(Rect.collide(rect2, rect3)!.toJSON()).toStrictEqual(new Rect(10, 5, 5, 5).toJSON());
+    expect(Rect.collide(rect1, rect3)).toBeNull();
   });
 
-  it(".collide() should not be dependable on order", () => {
+  it("Rect.collide() should not be dependable on order", () => {
     const rect1 = new Rect(0, 0, 10, 10);
     const rect2 = new Rect(5, 5, 10, 10);
     const rect3 = new Rect(10, 0, 10, 10);
-    expect(rect2.collide(rect1)!.toJSON()).toStrictEqual(new Rect(5, 5, 5, 5).toJSON());
-    expect(rect3.collide(rect2)!.toJSON()).toStrictEqual(new Rect(10, 5, 5, 5).toJSON());
-    expect(rect3.collide(rect1)).toStrictEqual(null);
+    expect(Rect.collide(rect2, rect1)!.toJSON()).toStrictEqual(new Rect(5, 5, 5, 5).toJSON());
+    expect(Rect.collide(rect3, rect2)!.toJSON()).toStrictEqual(new Rect(10, 5, 5, 5).toJSON());
+    expect(Rect.collide(rect3, rect1)).toBeNull();
+  });
+
+  it("this.collide(other) should return collision Rect", () => {
+    const rect1 = new Rect(0, 0, 10, 10);
+    const rect2 = new Rect(5, 5, 10, 10);
+    expect(rect1.collide(rect2)!.toJSON()).toStrictEqual(new Rect(5, 5, 5, 5).toJSON());
   });
 });

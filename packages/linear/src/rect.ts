@@ -2,18 +2,18 @@ import { cached } from "@anion155/shared/decorators";
 import { is } from "@anion155/shared/is";
 import { updateProperties } from "@anion155/shared/object";
 
-import type { Point2DObject, Point2DValue } from "./point-2d";
-import { Point2D } from "./point-2d";
+import type { Point2DObject, Point2DValue } from "./points";
+import { Point2D } from "./points";
 import type { SizeObject, SizeShortObject, SizeValue } from "./size";
 import { Size } from "./size";
-import type { NumberVector, NumberVectorParams } from "./vector";
+import type { NumberVectorParams, NumberVectorScalars } from "./vector";
 import { createNumberVector, VectorIteratingInvalid } from "./vector";
 
 export type RectObject = Point2DObject & SizeObject;
 type _RectValue = RectObject | (Point2DObject & SizeShortObject) | [point: Point2DValue, size: SizeValue];
 export type RectValue = NumberVectorParams<4, _RectValue>;
 
-export interface Rect extends NumberVector<4> {}
+export interface Rect extends NumberVectorScalars<4> {}
 /** Rect class. */
 export class Rect
   extends createNumberVector(4, {
@@ -114,15 +114,20 @@ export class Rect
     return new Rect(this.x + x, this.y + y, this.w, this.h);
   }
 
-  /** Expands this rect with {@link other} rect. */
-  collide(other: NumberVectorParams<4, RectValue>) {
-    const _other = Rect.parseValue(other);
-    const x = Math.max(this.x, _other.x);
-    const y = Math.max(this.y, _other.y);
-    const w = Math.min(this.x2, _other.x2) - x;
-    const h = Math.min(this.y2, _other.y2) - y;
+  /** Return collision between {@link valueA} rect with {@link valueB} rect, if none return `null`. */
+  static collide(valueA: RectValue, valueB: RectValue) {
+    const vectorA = Rect.parseValue(valueA);
+    const vectorB = Rect.parseValue(valueB);
+    const x = Math.max(vectorA.x, vectorB.x);
+    const y = Math.max(vectorA.y, vectorB.y);
+    const w = Math.min(vectorA.x2, vectorB.x2) - x;
+    const h = Math.min(vectorA.y2, vectorB.y2) - y;
     if (w <= 0 || h <= 0) return null;
     return new Rect(x, y, w, h);
+  }
+  /** Return collision between {@link this} rect with {@link other} rect, if none return `null`. */
+  collide(other: NumberVectorParams<4, RectValue>) {
+    return Rect.collide(this, other);
   }
 }
 updateProperties(Rect.prototype, { position: { enumerable: false }, size: { enumerable: false } });

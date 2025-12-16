@@ -1,20 +1,11 @@
 import "@anion155/shared/global";
 
-import { doRun } from "@anion155/shared/do";
+import { doRun, doThrow } from "@anion155/shared/do";
 import { createErrorClass } from "@anion155/shared/errors";
 import type { Curried } from "@anion155/shared/functional";
-import { curryHelper, identity } from "@anion155/shared/functional";
+import { curryHelper } from "@anion155/shared/functional";
 import { hasTypedField, is } from "@anion155/shared/is";
 import { appendProperty, defineProperty } from "@anion155/shared/object";
-
-/** Readonly tuple */
-export type Tuple<N extends number, T, R extends readonly T[] = readonly []> = number extends N
-  ? readonly T[]
-  : N extends R["length"]
-    ? R extends readonly unknown[]
-      ? R
-      : never
-    : Tuple<N, T, readonly [...R, T]>;
 
 /** Readonly tuple of numbers */
 export type NumberTuple<N extends number> = Tuple<N, number>;
@@ -25,24 +16,24 @@ type _NumberVectorComponents<N extends number, C extends readonly 0[] = readonly
   : N extends C["length"]
     ? R
     : _NumberVectorComponents<N, readonly [...C, 0], R & { readonly [Index in C["length"]]: number }>;
-export type NumberVector<N extends number> = Omit<_NumberVectorComponents<N>, never>;
+/** Defines indexed number fields from [0, N). */
+export type NumberVectorScalars<N extends number> = Omit<_NumberVectorComponents<N>, never>;
 
-type RangeTuple<From extends number, To extends number, FromC extends 0[] = [], ToC extends number[] = []> = number extends From
-  ? number[]
-  : number extends To
-    ? number[]
-    : From extends FromC["length"]
-      ? To extends [...FromC, ...ToC]["length"]
-        ? ToC
-        : RangeTuple<From, To, FromC, [...ToC, [...FromC, ...ToC]["length"]]>
-      : RangeTuple<From, To, [...FromC, 0], []>;
-
-export type NumberVectorParams<N extends number, Value = never> = NumberVector<N> | NumberTuple<N> | Value;
-
-/** Readonly tuple of numbers, can be used as base for types like Point. */
+/**
+ * Readonly tuple of numbers, can be used as base for types like Point.
+ * Should be used together with declaring NumberVector<N> type.
+ *
+ * @example
+ * interface TestPoint extends NumberVectorScalars<2> {}
+ * class TestPoint extends createNumberVector(2) {}
+ * const point = new TestPoint(1, 2);
+ */
 export const createNumberVector = <N extends number, Value = never>(
   length: N,
-  { name = `NumberVector(${length})`, parseTuple = identity as never }: { name?: string; parseTuple?: (value: Value) => NumberTuple<N> } = {},
+  {
+    name = `NumberVector(${length})`,
+    parseTuple = () => doThrow(new VectorValueInvalid("Unsupported value")),
+  }: { name?: string; parseTuple?: (value: Value) => NumberTuple<N> } = {},
 ) => {
   if (length < 2) throw new VectorInvalid("Invalid number vector length, must be more then 1");
   if (!Number.isInteger(length)) throw new VectorInvalid("Invalid number vector length, must be integer");
@@ -69,10 +60,12 @@ export const createNumberVector = <N extends number, Value = never>(
   );
 
   type BaseVectorParam = SpecificNumberVector | NumberVectorParams<N, Value>;
-  type BaseVectorConstructor = { new (...params: NumberTuple<N>): SpecificNumberVector & NumberVector<N> };
+  type BaseVectorConstructor = Omit<typeof SpecificNumberVector, never> & {
+    new (...params: NumberTuple<N>): SpecificNumberVector & NumberVectorScalars<N>;
+  };
   type VectorParam<VC extends BaseVectorConstructor> = InstanceType<VC> | NumberVectorParams<N, Value>;
 
-  function isNumberVector(vector: unknown): vector is NumberVector<N> | NumberTuple<N> {
+  function isNumberVector(vector: unknown): vector is NumberVectorScalars<N> | NumberTuple<N> {
     if (!is(vector, "object")) return false;
     if (!hasTypedField(vector, "length", "number")) return false;
     if (vector.length !== length) return false;
@@ -99,18 +92,19 @@ export const createNumberVector = <N extends number, Value = never>(
     }
   }
   const project =
-    <Instance extends SpecificNumberVector>(constr: { new (...params: NumberTuple<N>): Instance }) =>
+    <VC extends BaseVectorConstructor>(constr: VC) =>
     <Vectors extends BaseVectorParam[]>(...vectors: Vectors) => {
-      return curryHelper((project: (...params: [...NumberTuple<Vectors["length"]>, index: number]) => number): Instance => {
+      return curryHelper((project: (scalars: NumberTuple<Vectors["length"]>, index: number) => number): InstanceType<VC> => {
         // @ts-expect-error - suppose to have this kind of constructor
-        return new constr(...iterators(...vectors).map((scalars, index) => project(...scalars, index)));
+        return new constr(...iterators(...vectors).map(project));
       });
     };
-  const projectInstance = <Instance extends SpecificNumberVector, Others extends BaseVectorParam[]>(
-    ...vectors: [instance: Instance, ...others: Others]
-  ) => {
-    const constr = vectors[0].constructor as { new (...params: NumberTuple<N>): Instance };
-    return project(constr)(...vectors);
+
+  const addScalars = <Instance extends SpecificNumberVector>(value: Instance) => {
+    return value as never as Instance &
+      NumberVectorScalars<N> & {
+        constructor: Omit<typeof SpecificNumberVector, never> & { new (...params: NumberTuple<N>): Instance & NumberVectorScalars<N> };
+      };
   };
 
   interface SpecificNumberVector {
@@ -127,31 +121,10 @@ export const createNumberVector = <N extends number, Value = never>(
       }
     }
     /** Parses value into vector instance. */
-    static parseValue = Object.assign(
-      function parseValue<VC extends BaseVectorConstructor>(this: VC, value: VectorParam<VC>): InstanceType<VC> {
-        if (value instanceof this) return value as never;
-        if (isNumberVector(value)) return new this(...(iterator(value) as never)) as never;
-        return new this(...parseTuple(value)) as never;
-      },
-      {
-        bound<VC extends BaseVectorConstructor>(constr: VC) {
-          return (value: VectorParam<VC>): InstanceType<VC> => SpecificNumberVector.parseValue.call(constr, value) as never;
-        },
-      },
-    );
-    /** Iterates over passed {@link vectors} scalars. */
-    static iterators<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(
-      this: VC,
-      ...vectors: Vectors
-    ): Generator<NumberTuple<Vectors["length"]>, void, unknown> {
-      return iterators(...vectors);
-    }
-    /** Projects passed {@link vectors} to new vector instance with {@link project} function */
-    static project<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(
-      this: VC,
-      ...vectors: Vectors
-    ): Curried<(project: (...params: [...NumberTuple<Vectors["length"]>, index: number]) => number) => InstanceType<VC>> {
-      return project(this)(...vectors) as never;
+    static parseValue<VC extends BaseVectorConstructor>(this: VC, value: VectorParam<VC>): InstanceType<VC> {
+      if (value instanceof this) return value as never;
+      if (isNumberVector(value)) return new this(...(iterator(value) as never)) as never;
+      return new this(...parseTuple(value)) as never;
     }
 
     constructor(...params: [vector: NumberVectorParams<N, Value>] | NumberTuple<N>) {
@@ -186,6 +159,11 @@ export const createNumberVector = <N extends number, Value = never>(
       return Array.from(this as never) as never;
     }
 
+    /** Pretend that this vector has smaller length. */
+    as<M extends RangeTuple<2, N>[number]>(length: M): NumberVector<M> {
+      return Object.create(this, { length: { value: length, writable: false, enumerable: false, configurable: true } }) as never;
+    }
+
     /** Get {@link index} scalars. */
     at(index: RangeTuple<0, N>[number]): number;
     at(index: number): undefined;
@@ -197,41 +175,114 @@ export const createNumberVector = <N extends number, Value = never>(
     [Symbol.iterator]() {
       return iterator(this);
     }
+    /** Iterate over {@link this}'s vector scalars. */
+    iterate() {
+      return iterator(this);
+    }
+    /** Iterate over passed {@link vector} scalars. */
+    static iterate<VC extends BaseVectorConstructor>(this: VC, vector: VectorParam<VC>): Generator<number, void, unknown> {
+      return iterator(vector);
+    }
+    /** Iterates over passed {@link vectors} scalars. */
+    static iterators<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(
+      this: VC,
+      ...vectors: Vectors
+    ): Generator<NumberTuple<Vectors["length"]>, void, unknown> {
+      return iterators(...vectors);
+    }
 
-    /** Creates new Vector by adding {@link other}'s scalars to {@link this}'s scalars. */
-    equals(other: NumberVectorParams<N, Value | this>): boolean {
-      for (const [thisScalar, otherScalar] of iterators(this, other)) {
+    /** Projects passed {@link vectors} to new vector instance with {@link project} function */
+    static project<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(
+      this: VC,
+      ...vectors: Vectors
+    ): Curried<(project: (scalars: NumberTuple<Vectors["length"]>, index: number) => number) => InstanceType<VC>> {
+      return project(this)(...vectors) as never;
+    }
+
+    /** Compares two vectors. */
+    static equals(a: NumberVectorParams<N, Value>, b: NumberVectorParams<N, Value>) {
+      for (const [thisScalar, otherScalar] of iterators(a, b)) {
         if (thisScalar !== otherScalar) return false;
       }
       return true;
     }
-
-    /** Creates new Vector by adding {@link other}'s scalars to {@link this}'s scalars. */
-    add(other: NumberVectorParams<N, Value | this>) {
-      return projectInstance(this, other)((t, o) => t + o);
+    /** Compares {@link this} vector to {@link other}. */
+    equals(other: NumberVectorParams<N, Value>): boolean {
+      return addScalars(this).constructor.equals(addScalars(this), other);
     }
-    /** Creates new Vector by subtracting {@link other}'s scalars from {@link this}'s scalars. */
-    sub(other: NumberVectorParams<N, Value | this>) {
-      return projectInstance(this, other)((t, o) => t - o);
+
+    /** Creates new Vector by reducing operator over all {@link vectos} scalars. */
+    static operate<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(this: VC, ...vectors: Vectors) {
+      return curryHelper((operator: (previous: number, current: number) => number) => {
+        return project(this)(...vectors)((scalars) => scalars.reduce(operator));
+      });
+    }
+
+    /** Creates new Vector by adding scalars of passed {@link vectors}. */
+    static add<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(this: VC, ...vectors: Vectors) {
+      return this.operate(...vectors)((prev, curr) => prev + curr);
+    }
+    /** Creates new Vector by adding {@link other}'s scalars to {@link this}'s scalars. */
+    add(other: NumberVectorParams<N, Value>) {
+      return addScalars(this).constructor.add(addScalars(this), other);
+    }
+
+    /** Creates new Vector by subtracting scalars of passed {@link vectors}. */
+    static sub<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(this: VC, ...vectors: Vectors) {
+      return this.operate(...vectors)((prev, curr) => prev - curr);
+    }
+    /** Creates new Vector by subtracting {@link other}'s scalars to {@link this}'s scalars. */
+    sub(other: NumberVectorParams<N, Value>) {
+      return addScalars(this).constructor.sub(addScalars(this), other);
+    }
+
+    /** Creates new Vector by multiplying scalars of passed {@link vectors}. */
+    static mul<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(this: VC, ...vectors: Vectors) {
+      return this.operate(...vectors)((prev, curr) => prev * curr);
     }
     /** Creates new Vector by multiplying {@link other}'s scalars to {@link this}'s scalars. */
-    mul(other: NumberVectorParams<N, Value | this>) {
-      return projectInstance(this, other)((t, o) => t * o);
+    mul(other: NumberVectorParams<N, Value>) {
+      return addScalars(this).constructor.mul(addScalars(this), other);
+    }
+
+    /** Creates new Vector by dividing scalars of passed {@link vectors}. */
+    static div<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(this: VC, ...vectors: Vectors) {
+      return this.operate(...vectors)((prev, curr) => prev / curr);
     }
     /** Creates new Vector by dividing {@link this}'s scalars by {@link other}'s scalars. */
-    div(other: NumberVectorParams<N, Value | this>) {
-      return projectInstance(this, other)((t, o) => t / o);
+    div(other: NumberVectorParams<N, Value>) {
+      return addScalars(this).constructor.div(addScalars(this), other);
+    }
+
+    /** Creates new Vector with remainders of dividing scalars of passed {@link vectors}. */
+    static mod<VC extends BaseVectorConstructor, Vectors extends VectorParam<VC>[]>(this: VC, ...vectors: Vectors) {
+      return this.operate(...vectors)((prev, curr) => prev % curr);
     }
     /** Creates new Vector with remainders of dividing {@link this}'s scalars by {@link other}'s scalars. */
-    mod(other: NumberVectorParams<N, Value | this>) {
-      return projectInstance(this, other)((t, o) => t % o);
+    mod(other: NumberVectorParams<N, Value>) {
+      return addScalars(this).constructor.mod(addScalars(this), other);
     }
   }
   defineProperty(SpecificNumberVector, "name", { value: name, writable: true, enumerable: false, configurable: true });
   defineProperty(SpecificNumberVector.prototype, Symbol.toStringTag, { value: name, writable: false, enumerable: false, configurable: true });
   return SpecificNumberVector;
 };
+export type NumberVector<N extends number, Value = never> = InstanceType<ReturnType<typeof createNumberVector<N, Value>>> & NumberVectorScalars<N>;
 
+/**
+ * Should be used everywhere where passed param will be handled with .parseValue() call.
+ *
+ * @example
+ *  type TestPointValue = { test: number };
+ *  class TestPoint extends createNumberVector(2) {
+ *    method(other: NumberVectorParams<_TestPointValue>) {
+ *      const _other = TestPoint.parseValue(other);
+ *    }
+ *  }
+ */
+export type NumberVectorParams<N extends number, Value = never> = NumberVectorScalars<N> | NumberTuple<N> | Value;
+
+export class VectorValueInvalid extends createErrorClass("VectorValueInvalid") {}
 export class VectorInvalid extends createErrorClass("VectorInvalid") {}
 export class VectorIteratingInvalid extends createErrorClass("VectorIteratingInvalid") {}
 

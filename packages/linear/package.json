@@ -4,7 +4,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./point-2d": "./src/point-2d.ts",
+    "./point": "./src/point.ts",
+    "./points": "./src/points.ts",
     "./rect": "./src/rect.ts",
     "./size": "./src/size.ts",
     "./vector": "./src/vector.ts"

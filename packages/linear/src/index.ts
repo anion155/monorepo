@@ -1,4 +1,4 @@
-export * from "./point-2d";
+export * from "./points";
 export * from "./rect";
 export * from "./size";
 export * from "./vector";
