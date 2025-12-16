@@ -6,5 +6,5 @@
     "composite": true,
     "types": ["node", "jest"]
   },
-  "include": ["../configs/jest.react.ts", "src/**/*.ts", "src/**/*.tsx"]
+  "include": ["../configs/jest.react.ts", "../shared/jest.matchers.ts", "src/**/*.ts", "src/**/*.tsx"]
 }

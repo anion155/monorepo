@@ -38,7 +38,7 @@ export function signalsReactive<Render extends Functor<[props: never], ReactNode
 }
 signalsReactive.getEffect = function getEffect() {
   const signalsContext = context.current();
-  if (signalsContext.type !== "subscription") throw new DeveloperError("getEffect() must be calle");
+  if (signalsContext.type !== "subscription") throw new DeveloperError("getEffect() must be called in subscription context");
   if (!signalsContext.render) return undefined;
   if (!(signalsContext.listener instanceof SignalEffect)) return undefined;
   return signalsContext.listener;

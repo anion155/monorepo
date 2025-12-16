@@ -25,11 +25,21 @@ describe("class Signal", () => {
     expect(depends.rank(signalA, signalB)).toBe(-1);
   });
 
+  it("dependencies should not be disposed on dispose", () => {
+    const signalA = new TestSignal();
+    const signalB = new TestSignal();
+    depends.bind(signalA, signalB);
+    expect([signalA.disposed, signalB.disposed]).toStrictEqual([false, false]);
+    signalA.dispose();
+    expect([signalA.disposed, signalB.disposed]).toStrictEqual([true, false]);
+  });
+
   it("dependents should be disposed on dispose", () => {
     const signalA = new TestSignal();
     const signalB = new TestSignal();
     depends.bind(signalA, signalB);
+    expect([signalA.disposed, signalB.disposed]).toStrictEqual([false, false]);
     signalB.dispose();
-    expect(signalB.disposed).toBe(true);
+    expect([signalA.disposed, signalB.disposed]).toStrictEqual([true, true]);
   });
 });
