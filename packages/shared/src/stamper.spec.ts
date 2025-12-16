@@ -26,21 +26,21 @@ describe("Stamper utils", () => {
     expect(() => stamper.stamp(e_value)).toStrictThrow(new DeveloperError("init isn't declares in this Stamper"));
   });
 
-  it(".stamp() should not change value", () => {
+  it("this.stamp() should not change value", () => {
     const value = Object.freeze({});
     const stamper = new Stamper(() => 0);
     stamper.stamp(value);
     expect(value).toStrictEqual({});
   });
 
-  it(".stamp() should throw TypeError on second stamp", () => {
+  it("this.stamp() should throw TypeError on second stamp", () => {
     const value = Object.freeze({});
     const stamper = new Stamper(() => 0);
     stamper.stamp(value);
     expect(() => stamper.stamp(value)).toThrow(new TypeError("passed object was already stamped before"));
   });
 
-  it(".get(), .set(), .modify() should throw TypeError if called before .stamp()", () => {
+  it("this.get(), .set(), .modify() should throw TypeError if called before .stamp()", () => {
     const value = Object.freeze({});
     const stamper = new Stamper(() => 0);
     expect(() => stamper.get(value)).toThrow(new TypeError("passed object wasn't stamped"));
@@ -48,7 +48,7 @@ describe("Stamper utils", () => {
     expect(() => stamper.modify(value, (v) => v + 1)).toThrow(new TypeError("passed object wasn't stamped"));
   });
 
-  it(".emplace() should stamp object if it wasn't already", () => {
+  it("this.emplace() should stamp object if it wasn't already", () => {
     const stamper = new Stamper(() => 0);
     const s_value = Object.freeze({});
     const e_value = Object.freeze({});
@@ -61,7 +61,7 @@ describe("Stamper utils", () => {
     expect(stamper.emplace(s_value)).toBe(1);
   });
 
-  it(".getSafe(), .setSafe(), .modifySafe() should get value from stamped object and undefined from non stamped", () => {
+  it("this.getSafe(), .setSafe(), .modifySafe() should get value from stamped object and undefined from non stamped", () => {
     const stamper = new Stamper(() => 0);
     const s_value = Object.freeze({});
     const e_value = Object.freeze({});
@@ -85,7 +85,7 @@ describe("Stamper utils", () => {
     expect(modify).not.toHaveBeenCalled();
   });
 
-  it(".remove() should remove stored value", () => {
+  it("this.remove() should remove stored value", () => {
     const stamper = new Stamper(() => 0);
     const s_value = Object.freeze({});
     const e_value = Object.freeze({});

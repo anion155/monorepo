@@ -20,7 +20,7 @@ expect.extend({
   },
 });
 
-describe(".toStringThrow()", () => {
+describe("this.toStringThrow()", () => {
   class AnotherDeveloperError extends createErrorClass("DeveloperError") {}
 
   it("should detect thrown errors with precision", () => {

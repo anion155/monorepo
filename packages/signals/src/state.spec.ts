@@ -25,7 +25,7 @@ describe("class SignalState", () => {
     expect(listener.invalidate).toHaveBeenCalledTimes(1);
   });
 
-  it(".set() should not invalidate dependents if value wasn't changed", () => {
+  it("this.set() should not invalidate dependents if value wasn't changed", () => {
     const listener = new TestSignal();
     depends.dependencies.stamp(listener);
     using _subscription = context.setupSubscriptionContext(listener);

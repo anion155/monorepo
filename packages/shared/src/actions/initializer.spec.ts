@@ -53,28 +53,28 @@ describe("class Initializer", () => {
     expect(() => init.run(2)).toStrictThrow(new InvalidActionState());
   });
 
-  it(".initialized should return initialized state", async () => {
+  it("this.initialized should return initialized state", async () => {
     const init = new Initializer(() => 5);
     expect(init.initialized).toBe(false);
     await init.run();
     expect(init.initialized).toBe(true);
   });
 
-  it(".value should return initialized value", async () => {
+  it("this.value should return initialized value", async () => {
     const init = new Initializer(() => 5);
     expect(() => init.value).toStrictThrow(new NotInitialized("this value is not initialized yet"));
     await init.run();
     expect(init.value).toBe(5);
   });
 
-  it(".deferred should return deferred promise", async () => {
+  it("this.deferred should return deferred promise", async () => {
     const init = new Initializer(() => 5);
     const promise = init.deferred;
     await init.run();
     await expect(promise).resolves.toBe(5);
   });
 
-  it(".dispose() should dispose stack", async () => {
+  it("this.dispose() should dispose stack", async () => {
     const spy = jest.fn();
     const init = new Initializer(liftContext(({ stack }) => stack.append(spy)));
     await init.dispose();

@@ -35,7 +35,7 @@ describe("class EventEmitter", () => {
     expect(listener).toHaveBeenCalledTimes(1);
   });
 
-  it(".on() should return function that offs same listener", () => {
+  it("this.on() should return function that offs same listener", () => {
     const emitter = new EventEmitter(immidiateScheduler);
     const listener = jest.fn();
     emitter.on("test", listener)();
@@ -43,7 +43,7 @@ describe("class EventEmitter", () => {
     expect(listener).toHaveBeenCalledTimes(0);
   });
 
-  it(".emit() should handle no listeners", () => {
+  it("this.emit() should handle no listeners", () => {
     const emitter = new EventEmitter(immidiateScheduler);
     expect(() => emitter.emit("test", 1, 2)).not.toThrow();
   });

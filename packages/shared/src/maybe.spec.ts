@@ -63,7 +63,7 @@ describe("class Maybe", () => {
     await expect(rejected).rejects.toThrow(new Error("test error"));
   });
 
-  it(".then() should project Maybe value", async () => {
+  it("this.then() should project Maybe value", async () => {
     const expectMaybe = (something: unknown) => {
       expect(something).toBeInstanceOf(Maybe);
       return something as Maybe<unknown>;
@@ -104,7 +104,7 @@ describe("class Maybe", () => {
     );
   });
 
-  it(".catch() should project rejected Maybe", () => {
+  it("this.catch() should project rejected Maybe", () => {
     const expectMaybe = (something: unknown) => {
       expect(something).toBeInstanceOf(Maybe);
       return something as Maybe<unknown>;
@@ -113,7 +113,7 @@ describe("class Maybe", () => {
     expect(expectMaybe(Maybe.reject(new Error("test error")).catch(() => 10)).unwrap()).toBe(10);
   });
 
-  it(".finally() should run handler", () => {
+  it("this.finally() should run handler", () => {
     const expectMaybe = (something: unknown) => {
       expect(something).toBeInstanceOf(Maybe);
       return something as Maybe<unknown>;

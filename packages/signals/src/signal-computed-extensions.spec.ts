@@ -26,7 +26,7 @@ describe("SignalReadonly extensions", () => {
     invalidate(): void {}
   }
 
-  it(".map() should create SignalReadonlyComputed using project function", () => {
+  it("this.map() should create SignalReadonlyComputed using project function", () => {
     const source = new TestSignal({ value: 5 });
     const target = source.map(({ value }) => value * 2);
     expect(target).toBeInstanceOf(SignalReadonlyComputed);
@@ -36,7 +36,7 @@ describe("SignalReadonly extensions", () => {
     expect(target.get()).toBe(12);
   });
 
-  it(".view() should create SignalReadonlyComputed of specific field", () => {
+  it("this.view() should create SignalReadonlyComputed of specific field", () => {
     const source = new TestSignal({ value: 5 });
     const target = source.view("value");
     expect(target).toBeInstanceOf(SignalReadonlyComputed);
@@ -48,7 +48,7 @@ describe("SignalReadonly extensions", () => {
     expect(target.get()).toBe(6);
   });
 
-  it(".view() should create nested view", () => {
+  it("this.view() should create nested view", () => {
     const source = new TestSignal({ a: { b: { c: 0 } } });
     const target = source.view("a", "b", "c");
     expect(target).toBeInstanceOf(SignalReadonlyComputed);
@@ -56,7 +56,7 @@ describe("SignalReadonly extensions", () => {
     expect(target.get()).toBe(0);
   });
 
-  it(".view() should create readonly version of signal", () => {
+  it("this.view() should create readonly version of signal", () => {
     const source = new TestSignal("test");
     const target = source.view();
     expect(target).toBeInstanceOf(SignalReadonlyComputed);
@@ -64,7 +64,7 @@ describe("SignalReadonly extensions", () => {
     expect(target.get()).toBe("test");
   });
 
-  it(".field() should create SignalWritableComputed of specific field", () => {
+  it("this.field() should create SignalWritableComputed of specific field", () => {
     const source = new TestSignal({ value: 5 });
     const target = source.field("value");
     expect(target).toBeInstanceOf(SignalWritableComputed);
@@ -78,7 +78,7 @@ describe("SignalReadonly extensions", () => {
     expect(source.get()).toStrictEqual({ value: 7 });
   });
 
-  it(".field() should create nested field", () => {
+  it("this.field() should create nested field", () => {
     const source = new TestSignal({ a: { b: { c: 0 } } });
     const target = source.field("a", "b", "c");
     expect(target).toBeInstanceOf(SignalWritableComputed);
@@ -88,13 +88,13 @@ describe("SignalReadonly extensions", () => {
     expect(source.get()).toStrictEqual({ a: { b: { c: 5 } } });
   });
 
-  it(".field() type should fail readonly field", () => {
+  it("this.field() type should fail readonly field", () => {
     const source = new TestSignal<{ readonly value: number }>({ value: 5 });
     // @ts-expect-error(2345) - should fail on type evaluation
     source.field("value");
   });
 
-  it(".get() should return nested value", () => {
+  it("this.get() should return nested value", () => {
     const signal = new TestSignal({ a: { b: { c: 0 } } });
     expect(signal.get()).toStrictEqual({ a: { b: { c: 0 } } });
     expect(signal.get("a")).toStrictEqual({ b: { c: 0 } });
@@ -102,7 +102,7 @@ describe("SignalReadonly extensions", () => {
     expect(signal.get("a", "b", "c")).toStrictEqual(0);
   });
 
-  it(".set() should set nested value", () => {
+  it("this.set() should set nested value", () => {
     const signal = new TestSignal({ a: { b: { c: 0 } } });
     signal.set({ a: { b: { c: 1 } } });
     expect(signal.get("a", "b", "c")).toBe(1);
@@ -114,7 +114,7 @@ describe("SignalReadonly extensions", () => {
     expect(signal.get("a", "b", "c")).toBe(4);
   });
 
-  it(".set() type should fail on readonly field", () => {
+  it("this.set() type should fail on readonly field", () => {
     const signal = new TestSignal<{ a: { readonly b: { c: number } } }>({ a: { b: { c: 0 } } });
     signal.set({ a: { b: { c: 1 } } });
     signal.set({ b: { c: 2 } }, "a");

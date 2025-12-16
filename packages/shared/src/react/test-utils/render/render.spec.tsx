@@ -172,7 +172,7 @@ describe("render test utils", () => {
       expect(component.asFragment()).toHaveTextContent("resolved");
     });
 
-    it(".acted() should properly render async component", async () => {
+    it("this.acted() should properly render async component", async () => {
       const render = createRender(baseRender, {}, new GlobalWrappers(), undefined);
       const deferred = Promise.withResolvers<string>();
       const AsyncComponent = () => {

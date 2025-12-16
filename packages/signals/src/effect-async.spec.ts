@@ -31,7 +31,7 @@ describe("class SignalEffectAsync", () => {
     expect(cleanupSpy).toHaveBeenCalledTimes(2);
   });
 
-  it(".invalidate(true) should flush bached changes", () => {
+  it("this.invalidate(true) should flush bached changes", () => {
     const stateA = new SignalState(1);
     const stateB = new SignalState(1);
 

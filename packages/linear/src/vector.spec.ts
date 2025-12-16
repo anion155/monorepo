@@ -115,19 +115,19 @@ describe("createNumberVector(length)", () => {
     expect(TestPoint.project(new TestPoint(1, 2), new TestPoint(3, 3))(([a, b], index) => a + b + index)).toStrictEqual(new TestPoint(4, 6));
   });
 
-  it(".toString() should return formated string", () => {
+  it("this.toString() should return formated string", () => {
     const TestPoint = createPoint2DClass();
     const point = new TestPoint(1, 2);
     expect(point.toString()).toBe("TestPoint [1, 2]");
   });
 
-  it(".toJSON() should return tuple", () => {
+  it("this.toJSON() should return tuple", () => {
     const TestPoint = createPoint2DClass();
     const point = new TestPoint(1, 2);
     expect(point.toJSON()).toStrictEqual(["TestPoint", [1, 2]]);
   });
 
-  it(".asTuple() should not change value, only type", () => {
+  it("this.asTuple() should not change value, only type", () => {
     const TestPoint = createPoint2DClass();
     const point = new TestPoint(1, 2);
     expect(point.asTuple()).toBe(point);
@@ -136,7 +136,7 @@ describe("createNumberVector(length)", () => {
     expect(fn(...point.asTuple())).toBe(3);
   });
 
-  it(".as() should return wrapped value", () => {
+  it("this.as() should return wrapped value", () => {
     const TestPoint2 = createPoint2DClass();
     const TestPoint4 = createPoint4DClass();
     const source = new TestPoint4(1, 2, 3, 4);
@@ -150,7 +150,7 @@ describe("createNumberVector(length)", () => {
     expect(TestPoint2.isValue(wrapped)).toBe(true);
   });
 
-  it(".toArray() should create array", () => {
+  it("this.toArray() should create array", () => {
     const TestPoint = createPoint2DClass();
     const point = new TestPoint(1, 2);
     const array = point.toArray();
@@ -177,7 +177,7 @@ describe("createNumberVector(length)", () => {
     expect.assertions(2);
   });
 
-  it(".iterate() should return iterator", () => {
+  it("this.iterate() should return iterator", () => {
     const TestPoint = createPoint2DClass();
     const iterator = new TestPoint(1, 2).iterate();
     expect(iterator.next()).toStrictEqual({ done: false, value: 1 });
@@ -195,7 +195,7 @@ describe("createNumberVector(length)", () => {
     expect(TestPoint2.equals([1, 2], new TestPoint4(1, 2, 3, 4).as(2))).toBe(true);
   });
 
-  it(".equals() should compare this vector to other", () => {
+  it("this.equals() should compare this vector to other", () => {
     const TestPoint2 = createPoint2DClass();
     expect(new TestPoint2(1, 2).equals(new TestPoint2(1, 2))).toBe(true);
     expect(new TestPoint2(1, 2).equals(new TestPoint2(2, 3))).toBe(false);
@@ -208,7 +208,7 @@ describe("createNumberVector(length)", () => {
     );
   });
 
-  it(".add() should add a vector to b", () => {
+  it("this.add() should add a vector to b", () => {
     const TestPoint = createPoint2DClass();
     expect(new TestPoint(1, 2).add(new TestPoint(2, 3))).toStrictEqual(new TestPoint(3, 5));
     expect(new TestPoint(1, 2).add(2)).toStrictEqual(new TestPoint(3, 4));
@@ -219,7 +219,7 @@ describe("createNumberVector(length)", () => {
     expect(TestPoint.add(1, 2, 3)).toStrictEqual(new TestPoint(6, 6));
   });
 
-  it(".sub() should subtract b vector from a", () => {
+  it("this.sub() should subtract b vector from a", () => {
     const TestPoint = createPoint2DClass();
     expect(new TestPoint(1, 2).sub(new TestPoint(2, 3))).toStrictEqual(new TestPoint(-1, -1));
     expect(new TestPoint(1, 2).sub(2)).toStrictEqual(new TestPoint(-1, 0));
@@ -230,7 +230,7 @@ describe("createNumberVector(length)", () => {
     expect(TestPoint.sub(3, 2, 1)).toStrictEqual(new TestPoint(0, 0));
   });
 
-  it(".mul() should multiply a vector to b", () => {
+  it("this.mul() should multiply a vector to b", () => {
     const TestPoint = createPoint2DClass();
     expect(new TestPoint(1, 2).mul(new TestPoint(2, 3))).toStrictEqual(new TestPoint(2, 6));
     expect(new TestPoint(1, 2).mul(2)).toStrictEqual(new TestPoint(2, 4));
@@ -241,7 +241,7 @@ describe("createNumberVector(length)", () => {
     expect(TestPoint.mul(3, 2, -1)).toStrictEqual(new TestPoint(-6, -6));
   });
 
-  it(".div() should divide a vector by b", () => {
+  it("this.div() should divide a vector by b", () => {
     const TestPoint = createPoint2DClass();
     expect(new TestPoint(2, 4).div(new TestPoint(1, 2))).toStrictEqual(new TestPoint(2, 2));
     expect(new TestPoint(1, 2).div(2)).toStrictEqual(new TestPoint(0.5, 1));
@@ -252,7 +252,7 @@ describe("createNumberVector(length)", () => {
     expect(TestPoint.div(3, 2, -1)).toStrictEqual(new TestPoint(-1.5, -1.5));
   });
 
-  it(".mod() should find reminder of divinding a vector by b", () => {
+  it("this.mod() should find reminder of divinding a vector by b", () => {
     const TestPoint = createPoint2DClass();
     expect(new TestPoint(2, 5).mod(new TestPoint(1, 2))).toStrictEqual(new TestPoint(0, 1));
     expect(new TestPoint(5, 4).mod(2)).toStrictEqual(new TestPoint(1, 0));

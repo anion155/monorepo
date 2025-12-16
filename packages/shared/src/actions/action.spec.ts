@@ -166,7 +166,7 @@ describe("actions", () => {
   });
 
   describe("class CachedAction", () => {
-    it(".run() should not run callback twice with same params", async () => {
+    it("this.run() should not run callback twice with same params", async () => {
       const spy = jest.fn((param: number) => Promise.resolve(param));
       const action = new CachedAction(spy);
       await expect(action.run(1)).resolves.toBe(1);
@@ -178,7 +178,7 @@ describe("actions", () => {
       expect(spy).toHaveBeenCalledTimes(2);
     });
 
-    it(".run() in pending state, should return same promise if params not changed", () => {
+    it("this.run() in pending state, should return same promise if params not changed", () => {
       const spy = jest.fn((_param: number) => 4);
       const action = new CachedAction(spy);
       const promise1 = action.run(1);
@@ -186,7 +186,7 @@ describe("actions", () => {
       expect(promise1).toBe(promise2);
     });
 
-    it(".run() should cancel current call if params different", async () => {
+    it("this.run() should cancel current call if params different", async () => {
       let deferred = Promise.withResolvers<string>();
       const action = new CachedAction((_index: number) => deferred.promise);
       void action.run(1);
@@ -197,7 +197,7 @@ describe("actions", () => {
       expect(action.state).toStrictEqual({ status: "resolved", params: [2], value: "test" });
     });
 
-    it(".run() should throw InvalidActionState", () => {
+    it("this.run() should throw InvalidActionState", () => {
       let deferred = Promise.withResolvers<string>();
       const action = new CachedAction((_index: number) => deferred.promise);
       void action.run(1);

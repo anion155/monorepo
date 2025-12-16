@@ -21,7 +21,7 @@ describe("class SignalReadonly", () => {
     invalidate(): void {}
   }
 
-  it(".subscribe() should subscribe listener in context to current signal", () => {
+  it("this.subscribe() should subscribe listener in context to current signal", () => {
     const signalA = new TestSignal(0);
     const signalB = new TestSignal(1);
     const signalC = new TestSignal(2, false);
@@ -34,7 +34,7 @@ describe("class SignalReadonly", () => {
     expect(depends.rank(signalA, signalC)).toBe(-1);
   });
 
-  it(".value should subscribe and return value", () => {
+  it("this.value should subscribe and return value", () => {
     const signalA = new TestSignal(0);
     const signalB = new TestSignal(1);
     using _subscription = context.setupSubscriptionContext(signalA);
@@ -42,17 +42,17 @@ describe("class SignalReadonly", () => {
     expect(depends.rank(signalA, signalB)).toBe(1);
   });
 
-  it(".toJSON() should handle JSON conversion", () => {
+  it("this.toJSON() should handle JSON conversion", () => {
     const signal = new TestSignal({ value: 0 });
     expect(JSON.stringify(signal)).toBe('{"value":0}');
   });
 
-  it(".valueOf() should return stored value", () => {
+  it("this.valueOf() should return stored value", () => {
     const signal = new TestSignal(10);
     expect(0 + (signal as never as number)).toBe(10);
   });
 
-  it(".toString() should create string from stored value", () => {
+  it("this.toString() should create string from stored value", () => {
     const signal = new TestSignal([0, 1, 2]);
     using _subscription = context.setupSubscriptionContext(signal);
     expect(`value: ${signal as never as string}`).toBe(`value: 0,1,2`);

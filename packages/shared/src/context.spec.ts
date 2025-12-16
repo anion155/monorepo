@@ -91,7 +91,7 @@ describe("context utils", () => {
       expect(context.iterator().toArray()).toStrictEqual([{ type: "remove" }, { type: "store" }, { type: "none" }]);
     });
 
-    it(".setup() should push value, return it as resource that pop value on dispose", () => {
+    it("this.setup() should push value, return it as resource that pop value on dispose", () => {
       const context = createContextStack({ type: "none" });
       {
         using store = context.setup({ type: "store" });

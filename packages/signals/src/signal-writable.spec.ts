@@ -22,7 +22,7 @@ describe("class SignalWritable", () => {
     };
   }
 
-  it(".value should wrap .get() and .set() methods", () => {
+  it("this.value should wrap .get() and .set() methods", () => {
     const signalA = new TestSignal(0);
     const signalB = new TestSignal(1);
     const signalC = new TestSignal(2, false);
@@ -40,7 +40,7 @@ describe("class SignalWritable", () => {
     expect(signalA.value).toBe(3);
   });
 
-  it(".update() should call .set() with value modified from current", () => {
+  it("this.update() should call .set() with value modified from current", () => {
     const signalA = new TestSignal(5);
     signalA.update((v) => v * 2);
     expect(signalA.peak()).toBe(10);

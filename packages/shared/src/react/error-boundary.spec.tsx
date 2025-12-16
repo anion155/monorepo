@@ -41,7 +41,7 @@ describe("<ErrorBoundary />", () => {
     expect(component.asFragment()).toHaveTextContent("error");
   });
 
-  it(".reset() should reset error state", () => {
+  it("this.reset() should reset error state", () => {
     using _errorSpy = expectErrorLog();
     let error = true;
     const ErrorComponent = () => (error ? doThrow(new TestError()) : "no-error");
@@ -70,7 +70,7 @@ describe("<ErrorBoundary />", () => {
     expect(boundary.stats).toStrictEqual([new TestError(), new TestError()]);
   });
 
-  it(".clean() should clean stats", () => {
+  it("this.clean() should clean stats", () => {
     using _errorSpy = expectErrorLog({ tries: 3 });
     const ErrorComponent = () => doThrow(new TestError());
     const fallbackSpy = jest.fn((..._params: unknown[]) => "error");

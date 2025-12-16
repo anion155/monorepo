@@ -14,7 +14,7 @@ describe("abort utils", () => {
   });
 
   describe("AbortSignal extensions", () => {
-    describe(".handle()", () => {
+    describe("this.handle()", () => {
       it("should handle aborted signal", () => {
         const stub = jest.fn();
         const controller = new AbortController();
@@ -32,7 +32,7 @@ describe("abort utils", () => {
       });
     });
 
-    describe(".promise()", () => {
+    describe("this.promise()", () => {
       it("should create promise and reject it on abort", async () => {
         const controller = new AbortController();
         const promise = controller.signal.promise();
@@ -44,7 +44,7 @@ describe("abort utils", () => {
   });
 
   describe("AbortController extensions", () => {
-    describe(".bindToSignal()", () => {
+    describe("this.bindToSignal()", () => {
       it("should bind controller to another signal", () => {
         const original = new AbortController();
         const controller = new AbortController();
@@ -55,7 +55,7 @@ describe("abort utils", () => {
       });
     });
 
-    describe(".bindToPromise()", () => {
+    describe("this.bindToPromise()", () => {
       it("should bind controller to another signal", async () => {
         const deferred = Promise.withResolvers();
         const controller = new AbortController();

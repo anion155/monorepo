@@ -40,7 +40,7 @@ describe("disposable extensions", () => {
       return { disposables, dispose, resolve, expectDisposed };
     };
 
-    it(".throwIfDisposed() should throw when disposed. sync", () => {
+    it("this.throwIfDisposed() should throw when disposed. sync", () => {
       const stack = new DisposableStack();
       expect(() => stack.throwIfDisposed()).not.toThrow();
       stack.dispose();
@@ -48,40 +48,40 @@ describe("disposable extensions", () => {
       expect(() => stack.throwIfDisposed()).toThrow(new DeveloperError("trying to use disposed stack"));
     });
 
-    it(".throwIfDisposed() should throw when disposed. async", async () => {
+    it("this.throwIfDisposed() should throw when disposed. async", async () => {
       const stack = new AsyncDisposableStack();
       expect(() => stack.throwIfDisposed()).not.toThrow();
       await stack.disposeAsync();
       expect(() => stack.throwIfDisposed()).toThrow(new DeveloperError("trying to use disposed stack"));
     });
 
-    it(".append() should append disposables. sync", () => {
+    it("this.append() should append disposables. sync", () => {
       const { disposables, dispose } = createDisposables();
       const stack = new DisposableStack();
       stack.append(...disposables);
       expect(dispose(stack)()).toBe(true);
     });
 
-    it(".append() should append disposables. async", async () => {
+    it("this.append() should append disposables. async", async () => {
       const stack = new AsyncDisposableStack();
       const { disposables, dispose } = createAsyncDisposables();
       stack.append(...disposables);
       await expect(dispose(stack)).resolves.toBe(true);
     });
 
-    it(".create() should create stack with disposables. sync", () => {
+    it("this.create() should create stack with disposables. sync", () => {
       const { disposables, dispose } = createDisposables();
       const stack = DisposableStack.create(...disposables);
       expect(dispose(stack)()).toBe(true);
     });
 
-    it(".create() should create stack with disposables. async", async () => {
+    it("this.create() should create stack with disposables. async", async () => {
       const { disposables, dispose } = createAsyncDisposables();
       const stack = AsyncDisposableStack.create(...disposables);
       await expect(dispose(stack)).resolves.toBe(true);
     });
 
-    describe(".transaction()", () => {
+    describe("this.transaction()", () => {
       it("should run transaction. sync", () => {
         const { disposables, dispose } = createDisposables();
         const stack = DisposableStack.transaction((stack) => stack.append(...disposables));
@@ -188,11 +188,11 @@ describe("disposable extensions", () => {
       ),
     );
 
-    it(".original() should return original error", () => {
+    it("this.original() should return original error", () => {
       expect(_.original()).toBe(_.suppressed.suppressed.suppressed);
     });
 
-    it(".flatten() should return array of icons", () => {
+    it("this.flatten() should return array of icons", () => {
       const errors = _.flatten();
       expect(errors.length).toBe(4);
       expect(errors[0]).toBe(_.error);

@@ -85,7 +85,7 @@ describe("Rect", () => {
     expect(rect.size).toBe(first);
   });
 
-  it(".expandBy() should expand rect by other rect", () => {
+  it("this.expandBy() should expand rect by other rect", () => {
     let rect = new Rect(5, 5, 10, 10);
     rect = rect.expandBy([0, 0, 10, 10]);
     // FIXME: toStrictEqual does not work with Rect
@@ -94,7 +94,7 @@ describe("Rect", () => {
     expect(rect.toJSON()).toStrictEqual(new Rect(0, 0, 20, 15).toJSON());
   });
 
-  it(".offset() should move rect", () => {
+  it("this.offset() should move rect", () => {
     expect(new Rect(5, 5, 10, 10).offset([5, -5]).toJSON()).toStrictEqual(new Rect(10, 0, 10, 10).toJSON());
   });
 
