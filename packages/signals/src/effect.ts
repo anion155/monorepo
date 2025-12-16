@@ -12,13 +12,13 @@ export interface SignalEffect extends SignalDependent {}
  * Effect signal, runs effect every time value it's subscribed to is changed.
  *
  * @example
- * const server = new SignalState('https://example-chat/room-2');
- * const effect = new SignalEffect(() => {
- *   const connection = connect(server.value);
- *   return () => {
- *     connection.disconnect();
- *   };
- * });
+ *  const server = new SignalState('https://example-chat/room-2');
+ *  const effect = new SignalEffect(() => {
+ *    const connection = connect(server.value);
+ *    return () => {
+ *      connection.disconnect();
+ *    };
+ *  });
  */
 export class SignalEffect extends Signal implements SignalListener {
   #callback: EffectCallback;

@@ -56,9 +56,9 @@ doApply.async = async function doApplyAsync<Value>(value: Value, fn: (value: Val
  * every {@link Disposable} argument will be disposed after execution
  *
  * @example
- * declare const openDescriptor: (path: string) => Descriptor & Disposable;
- * doWith(openDescriptor(), descriptor => ...);
- * // descriptor is closed
+ *  declare const openDescriptor: (path: string) => Descriptor & Disposable;
+ *  doWith(openDescriptor(), descriptor => ...);
+ *  // descriptor is closed
  */
 export function doWith<Args extends unknown[], Result>(...doArgs: [...args: Args, fn: (...args: Args) => Result]): Result {
   const fn = doArgs.pop() as (...args: Args) => Result;
@@ -79,9 +79,9 @@ export function doWith<Args extends unknown[], Result>(...doArgs: [...args: Args
  * every {@link Disposable} or {@link AsyncDisposable} argument will be disposed after execution
  *
  * @example
- * declare const openDescriptor: (path: string) => Descriptor & Disposable;
- * doWith.async(openDescriptor(), descriptor => ...);
- * // descriptor is closed
+ *  declare const openDescriptor: (path: string) => Descriptor & Disposable;
+ *  doWith.async(openDescriptor(), descriptor => ...);
+ *  // descriptor is closed
  */
 doWith.async = function doWithAsync<Args extends unknown[], Result>(
   ...doArgs: [...args: Args, fn: (...args: Args) => Promise<Result>]

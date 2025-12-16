@@ -8,8 +8,8 @@ import { defineProperty } from "./object";
  * {@link AbortError} and throws it's {@link AbortSignal.reason}.
  *
  * @example
- * declare const signal: AbortSignal;
- * const response = await fetch('http://domain.test', { signal }).catch(handleAbortedFetch(signal));
+ *  declare const signal: AbortSignal;
+ *  const response = await fetch('http://domain.test', { signal }).catch(handleAbortedFetch(signal));
  */
 export const handleAbortedFetch = (signal?: AbortSignal | null) => (error: unknown) => {
   if (!signal) {

@@ -15,9 +15,9 @@ export const globalWrappersPlaceholder = Symbol.for("reactRender#globalWrappers"
  * Global wrappers api. Provides developer way to setup wrappers in context
  *
  * @example
- * const globalWrappers = new GlobalWrappers();
- * globalWrappers.push(<Provider value={{}} />)
- * globalWrappers.combine(); // ({children}) => <Provider value={{}}>{children}</Provider>
+ *  const globalWrappers = new GlobalWrappers();
+ *  globalWrappers.push(<Provider value={{}} />)
+ *  globalWrappers.combine(); // ({children}) => <Provider value={{}}>{children}</Provider>
  */
 export class GlobalWrappers {
   readonly items: WrapperArg[] = [];
@@ -99,20 +99,20 @@ export type WrappedRender<BaseRender extends AnyRender> = WrappedRenderFunction<
    * Adds {@link next} wrappers to current render function.
    *
    * @example
-   * const globalWrappers = new GlobalWrappers()
-   * const render = createRender(domRender, {}, globalWrappers, []);
-   * globalWrappers.push(<ProviderA />)
-   * render.with(<ProviderB />).render(<TestComponent />); // <ProviderA><ProviderB><TestComponent /></ProviderB></ProviderA>
+   *  const globalWrappers = new GlobalWrappers()
+   *  const render = createRender(domRender, {}, globalWrappers, []);
+   *  globalWrappers.push(<ProviderA />)
+   *  render.with(<ProviderB />).render(<TestComponent />); // <ProviderA><ProviderB><TestComponent /></ProviderB></ProviderA>
    */
   with: (...next: WrapperArgP[]) => WrappedRender<BaseRender>;
   /**
    * Creates render function without wrappers.
    *
    * @example
-   * const globalWrappers = new GlobalWrappers()
-   * const render = createRender(domRender, {}, globalWrappers, []);
-   * globalWrappers.push(<ProviderA />)
-   * render.without().render(<TestComponent />); // <TestComponent />
+   *  const globalWrappers = new GlobalWrappers()
+   *  const render = createRender(domRender, {}, globalWrappers, []);
+   *  globalWrappers.push(<ProviderA />)
+   *  render.without().render(<TestComponent />); // <TestComponent />
    */
   without: () => WrappedRender<BaseRender>;
 };
@@ -121,10 +121,10 @@ export type WrappedRender<BaseRender extends AnyRender> = WrappedRenderFunction<
  * Render wrapper that adds support for GlobalWrappers.
  *
  * @example
- * const globalWrappers = new GlobalWrappers();
- * const render = createRender(domRender, {}, globalWrappers, []);
- * globalWrappers.push(<Provider value={{}} />)
- * render(<TestComponent />); // <Provider value={{}}><TestComponent /></Provider>
+ *  const globalWrappers = new GlobalWrappers();
+ *  const render = createRender(domRender, {}, globalWrappers, []);
+ *  globalWrappers.push(<Provider value={{}} />)
+ *  render(<TestComponent />); // <Provider value={{}}><TestComponent /></Provider>
  */
 export function createRender<BaseRender extends AnyRender>(
   baseRender: BaseRender,
@@ -161,20 +161,20 @@ export type WrappedRenderHook<BaseRender extends AnyRender> = RenderHookFunction
    * Adds {@link next} wrappers to current renderHook function.
    *
    * @example
-   * const globalWrappers = new GlobalWrappers()
-   * const renderHook = createRenderHook(domRender, {}, globalWrappers, []);
-   * globalWrappers.push(<ProviderA />)
-   * renderHook.with(<ProviderB />).renderHook(useHook, 1); // <ProviderA><ProviderB>{useHook(1)}</ProviderB></ProviderA>
+   *  const globalWrappers = new GlobalWrappers();
+   *  const renderHook = createRenderHook(domRender, {}, globalWrappers, []);
+   *  globalWrappers.push(<ProviderA />)
+   *  renderHook.with(<ProviderB />).renderHook(useHook, 1); // <ProviderA><ProviderB>{useHook(1)}</ProviderB></ProviderA>
    */
   with: (...next: WrapperArgP[]) => WrappedRenderHook<BaseRender>;
   /**
    * Creates render function without wrappers.
    *
    * @example
-   * const globalWrappers = new GlobalWrappers()
-   * const renderHook = createRenderHook(domRender, {}, globalWrappers, []);
-   * globalWrappers.push(<ProviderA />)
-   * renderHook.without().renderHook(useHook, 1); // useHook(1)
+   *  const globalWrappers = new GlobalWrappers()
+   *  const renderHook = createRenderHook(domRender, {}, globalWrappers, []);
+   *  globalWrappers.push(<ProviderA />)
+   *  renderHook.without().renderHook(useHook, 1); // useHook(1)
    */
   without: () => WrappedRenderHook<BaseRender>;
 };
@@ -183,10 +183,10 @@ export type WrappedRenderHook<BaseRender extends AnyRender> = RenderHookFunction
  * Render hook wrapper that adds support for GlobalWrappers.
  *
  * @example
- * const globalWrappers = ;
- * const render = createRenderHook(domRender, {}, globalWrappers, []);
- * globalWrappers.push(<Provider value={{}} />)
- * render(<TestComponent />); // <Provider value={{}}><TestComponent /></Provider>
+ *  const globalWrappers = new GlobalWrappers();
+ *  const render = createRenderHook(domRender, {}, globalWrappers, []);
+ *  globalWrappers.push(<Provider value={{}} />)
+ *  render(<TestComponent />); // <Provider value={{}}><TestComponent /></Provider>
  */
 export function createRenderHook<BaseRender extends AnyRender>(
   baseRender: BaseRender,

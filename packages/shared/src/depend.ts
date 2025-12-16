@@ -17,16 +17,16 @@ export class CircularDependencyError extends createErrorClass("CircularDependenc
  * Utility to create your own depedability tools
  *
  * @example
- * const depend = createDependTools();
+ *  const depend = createDependTools();
  *
- * interface Module extends DependentDependency {}
- * class Module {
- *   constructor(dependencies: Module[]) {
- *     depend.dependents.stamp(this);
- *     depend.dependencies.stamp(this);
- *     dependencies.forEach(dependency => depend.bind(this, dependency))
- *   }
- * }
+ *  interface Module extends DependentDependency {}
+ *  class Module {
+ *    constructor(dependencies: Module[]) {
+ *      depend.dependents.stamp(this);
+ *      depend.dependencies.stamp(this);
+ *      dependencies.forEach(dependency => depend.bind(this, dependency))
+ *    }
+ *  }
  *
  * const moduleA = new Module([]);
  * const moduleB = new Module([moduleA]);

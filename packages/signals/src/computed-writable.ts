@@ -12,11 +12,11 @@ export interface SignalWritableComputed<Value, SetValueArg = never> extends Sign
  * By-directional computed Signal, that can be used as computed writable state.
  *
  * @example
- * const state = new SignalState(5);
- * const stateSin = new SignalWritableComputed(
- *   () => Math.sin(state.value),
- *   sin => state.set(Math.asin(sin)),
- * );
+ *  const state = new SignalState(5);
+ *  const stateSin = new SignalWritableComputed(
+ *    () => Math.sin(state.value),
+ *    sin => state.set(Math.asin(sin)),
+ *  );
  */
 export class SignalWritableComputed<Value, SetValueArg = never>
   extends SignalWritable<Value, SetValueArg>

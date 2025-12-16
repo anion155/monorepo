@@ -4,26 +4,26 @@ import { createFrom } from "./object";
  * Utility to create context stack
  *
  * @example
- * const store = new Set();
- * const context = createContextStack({ type: 'none' })
- * function handleValue(value) {
- *   switch(context.current().type) {
- *     case 'none': return;
- *     case 'store':
- *       store.add(value);
- *       break;
- *     case 'remove':
- *       store.delete(value);
- *       break;
- *   }
- * }
- * handleValue(5); // store => []
- * context.push({ type: 'store' });
- * handleValue(5); // store => [5]
- * context.pop();
- * handleValue(6); // store => [5]
- * context.push({ type: 'remove' });
- * handleValue(5); // store => []
+ *  const store = new Set();
+ *  const context = createContextStack({ type: 'none' })
+ *  function handleValue(value) {
+ *    switch(context.current().type) {
+ *      case 'none': return;
+ *      case 'store':
+ *        store.add(value);
+ *        break;
+ *      case 'remove':
+ *        store.delete(value);
+ *        break;
+ *    }
+ *  }
+ *  handleValue(5); // store => []
+ *  context.push({ type: 'store' });
+ *  handleValue(5); // store => [5]
+ *  context.pop();
+ *  handleValue(6); // store => [5]
+ *  context.push({ type: 'remove' });
+ *  handleValue(5); // store => []
  */
 export function createContextStack<Context extends object>(initial: Context) {
   type Cleanup = { (): void } | void;

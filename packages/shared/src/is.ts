@@ -61,12 +61,12 @@ export function isTypeOf<Type extends keyof TypeOfMap>(value: unknown, type: Typ
  * Registers custom type of.
  *
  * @example
- * declare module "@anion155/shared" {
- *   interface TypeOfMap {
- *     test: 'test';
- *   }
- * }
- * isTypeOf.register("test", value => value === "test");
+ *  declare module "@anion155/shared" {
+ *    interface TypeOfMap {
+ *      test: 'test';
+ *    }
+ *  }
+ *  isTypeOf.register("test", value => value === "test");
  */
 isTypeOf.register = function registerTypeOf<Type extends keyof TypeOfMap>(type: Type, check: (value: unknown) => boolean) {
   if (type in customTypeOf) throw new DeveloperError("trying to override existing type of");

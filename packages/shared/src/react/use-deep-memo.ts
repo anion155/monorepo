@@ -6,10 +6,10 @@ import { compare } from "../misc";
  * Keep same reference between renders until passed value is different deeply.
  *
  * @example
- * const Component = ({ prop }) => {
- *   const value = useDeepMemo({ prop })
- *   useEffect(() => {}, [value])
- * };
+ *  const Component = ({ prop }) => {
+ *    const value = useDeepMemo({ prop })
+ *    useEffect(() => {}, [value])
+ *  };
  */
 export function useDeepMemo<Value>(value: Value, deep?: number | boolean) {
   const memoized = useRef(value);

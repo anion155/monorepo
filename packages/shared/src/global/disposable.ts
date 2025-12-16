@@ -179,13 +179,13 @@ declare global {
      * wraps both of them into {@link SuppressedError}.
      *
      * @example
-     * const disposables = DisposableStack.transaction(() => ...)
-     * try {
-     *   fn()
-     *   disposables[Symbol.dispose]()
-     * } catch (error) {
-     *   SuppressedError.suppress(error, () => disposables[Symbol.dispose]())
-     * }
+     *  const disposables = DisposableStack.transaction(() => ...)
+     *  try {
+     *    fn()
+     *    disposables[Symbol.dispose]()
+     *  } catch (error) {
+     *    SuppressedError.suppress(error, () => disposables[Symbol.dispose]())
+     *  }
      */
     suppress(error: unknown, fn: () => void): never;
     /**
@@ -193,13 +193,13 @@ declare global {
      * wraps both of them into {@link SuppressedError}.
      *
      * @example
-     * const disposables = AsyncDisposableStack.transaction(() => ...)
-     * try {
-     *   fn()
-     *   disposables[Symbol.asyncDispose]()
-     * } catch (error) {
-     *   SuppressedError.suppressAsync(error, () => disposables[Symbol.asyncDispose]())
-     * }
+     *  const disposables = AsyncDisposableStack.transaction(() => ...)
+     *  try {
+     *    fn()
+     *    disposables[Symbol.asyncDispose]()
+     *  } catch (error) {
+     *    SuppressedError.suppressAsync(error, () => disposables[Symbol.asyncDispose]())
+     *  }
      */
     suppressAsync(error: unknown, fn: () => Promise<void>): Promise<never>;
   }

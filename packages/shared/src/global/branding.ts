@@ -6,7 +6,7 @@ declare global {
    * Creates branded version of Type, allow to store Meta and original type
    *
    * @example
-   * type UserId = Branded<string,
+   *  type UserId = Branded<string,
    */
   type Branded<Type, Name extends PropertyKey, Meta = never> = Type & {
     readonly [original]: Type extends Branded<infer Original, PropertyKey, unknown> ? Original : Type;

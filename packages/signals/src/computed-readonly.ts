@@ -10,8 +10,8 @@ export interface SignalReadonlyComputed<Value> extends SignalDependentDependency
  * Computed Signal, can be used as computed readonly state.
  *
  * @example
- * const state = new SignalState(5);
- * const stateSin = new SignalReadonlyComputed(() => Math.sin(state.value));
+ *  const state = new SignalState(5);
+ *  const stateSin = new SignalReadonlyComputed(() => Math.sin(state.value));
  */
 export class SignalReadonlyComputed<Value> extends SignalReadonly<Value> implements SignalValue<Value>, SignalListener {
   #current!: Value;

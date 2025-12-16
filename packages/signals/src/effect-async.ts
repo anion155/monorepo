@@ -9,13 +9,13 @@ const initialized = new WeakSet<SignalEffectAsync>();
  * Batching changes until promise resolved.
  *
  * @example
- * const server = new SignalState('https://example-chat/room-2');
- * const effect = new SignalEffectAsync(() => {
- *   const connection = connect(server.value);
- *   return () => {
- *     connection.disconnect();
- *   };
- * });
+ *  const server = new SignalState('https://example-chat/room-2');
+ *  const effect = new SignalEffectAsync(() => {
+ *    const connection = connect(server.value);
+ *    return () => {
+ *      connection.disconnect();
+ *    };
+ *  });
  */
 export class SignalEffectAsync extends SignalEffect {
   constructor(cb: EffectCallback) {

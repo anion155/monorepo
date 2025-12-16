@@ -221,20 +221,20 @@ function tokenizeGlob(pattern: string, separator: string): ReadonlyArray<Readonl
  *        the pattern “\\\*\[x]\?” matches the string “\*[x]?”.
  *
  * @example
- * // Match all `.js` files
- * ["index.js", "style.css", "app.ts"].filter(glob("*.js")) // Output: ["index.js"]
- * // Match files with exactly one character before `.txt`
- * ["a.txt", "ab.txt", "c.txt"].filter(glob("?.txt")) // Output: ["a.txt", "c.txt"]
- * // Match files starting with "file" and ending with any extension
- * ["file.txt", "file.js", "test.txt"].filter(glob("file.*")) // Output: ["file.txt", "file.js"]
- * // Match files with numbers in their names
- * ["file1.txt", "fileA.txt", "file2.js"].filter(glob("file[0-9].*")) // Output: ["file1.txt", "file2.js"]
- * // Match files that do NOT have numbers in their names
- * ["file1.txt", "fileA.txt", "fileB.js"].filter(glob("file[!0-9].*")) // Output: ["fileA.txt", "fileB.js"]
- * // Match files with specific character classes
- * ["file1.txt", "fileA.txt", "file2.js"].filter(glob("file[:digit:].*")) // Output: ["file1.txt", "file2.js"]
- * // Match files with escaped special characters
- * ["file?.txt", "fileA.txt"].filter(glob("file\\?.txt")) // Output: ["file?.txt"]
+ *  // Match all `.js` files
+ *  ["index.js", "style.css", "app.ts"].filter(glob("*.js")) // Output: ["index.js"]
+ *  // Match files with exactly one character before `.txt`
+ *  ["a.txt", "ab.txt", "c.txt"].filter(glob("?.txt")) // Output: ["a.txt", "c.txt"]
+ *  // Match files starting with "file" and ending with any extension
+ *  ["file.txt", "file.js", "test.txt"].filter(glob("file.*")) // Output: ["file.txt", "file.js"]
+ *  // Match files with numbers in their names
+ *  ["file1.txt", "fileA.txt", "file2.js"].filter(glob("file[0-9].*")) // Output: ["file1.txt", "file2.js"]
+ *  // Match files that do NOT have numbers in their names
+ *  ["file1.txt", "fileA.txt", "fileB.js"].filter(glob("file[!0-9].*")) // Output: ["fileA.txt", "fileB.js"]
+ *  // Match files with specific character classes
+ *  ["file1.txt", "fileA.txt", "file2.js"].filter(glob("file[:digit:].*")) // Output: ["file1.txt", "file2.js"]
+ *  // Match files with escaped special characters
+ *  ["file?.txt", "fileA.txt"].filter(glob("file\\?.txt")) // Output: ["file?.txt"]
  */
 export function glob(pattern: string, separator: string = "/") {
   const tokens = tokenizeGlob(pattern, separator);

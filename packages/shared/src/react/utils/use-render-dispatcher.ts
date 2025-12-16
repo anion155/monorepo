@@ -7,12 +7,12 @@ import { compare } from "../../misc";
  * Creates dispatcher that calls dispatcher when {@link deps} changes.
  *
  * @example
- * const useRenderEffect = effect => {
- *   const destructor = useRenderDispatcher(deps, (cleanup: ReturnType<EffectCallback>) => {
- *     cleanup?.();
- *     return effect();
- *   });
- * }
+ *  const useRenderEffect = effect => {
+ *    const destructor = useRenderDispatcher(deps, (cleanup: ReturnType<EffectCallback>) => {
+ *      cleanup?.();
+ *      return effect();
+ *    });
+ *  }
  */
 export function useRenderDispatcher<S>(deps: DependencyList, onChange: (state: S | undefined, prevDeps: DependencyList | undefined) => S): S {
   const prevRef = useRef<[S, DependencyList] | undefined>(undefined);

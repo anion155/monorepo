@@ -2,7 +2,7 @@
  * Error class mixin
  *
  * @example
- * export class NotImplementedYet extends createErrorClass("NotImplementedYet", "this functionality isn't implemented yet") {}
+ *  export class NotImplementedYet extends createErrorClass("NotImplementedYet", "this functionality isn't implemented yet") {}
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createErrorClass<Base extends Constructor<any[], Error> = typeof Error>(

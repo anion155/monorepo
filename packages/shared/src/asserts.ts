@@ -32,9 +32,9 @@ export function assertPredicate<Pred extends Predicate<never, never>>(
  * Creates assertion function that uses predicate and asserts if value comply with it
  *
  * @example
- * const assertString: AssertPredicate<typeof isString> = assertPredicate.create(isString, "string assertion failed");
- * assertString(value)
- * value; // string
+ *  const assertString: AssertPredicate<typeof isString> = assertPredicate.create(isString, "string assertion failed");
+ *  assertString(value)
+ *  value; // string
  */
 assertPredicate.create =
   <Pred extends Predicate<never, never>>(predicate: Pred, defaultMessage?: string): AssertPredicate<Pred> =>
@@ -45,9 +45,9 @@ assertPredicate.create =
  * Helper type of assertion function based on predicate function.
  *
  * @example
- * const assertString: AssertPredicate<typeof isString> = assertPredicate.create(isString, "string assertion failed");
- * assertString(value)
- * value; // string
+ *  const assertString: AssertPredicate<typeof isString> = assertPredicate.create(isString, "string assertion failed");
+ *  assertString(value)
+ *  value; // string
  */
 export type AssertPredicate<Pred extends Predicate<never, never>> = {
   (value: InferPredicate<Pred>["Param"], message?: string): asserts value is InferPredicate<Pred>["Result"];

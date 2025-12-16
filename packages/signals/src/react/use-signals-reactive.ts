@@ -8,17 +8,17 @@ import { createSignalsStore } from "./utils";
  * Hook that allows you to subscribe to values that was used during render call.
  *
  * @example
- * const state = signalState(5);
- * const Counter = () => {
- *   using signals = useSignalsReactive(); // sets up signals context, that would be cleaned up on render finish
- *   return (
- *     <div>
- *       <div>{state.get()}</div> // on first render will subscribe to state changes
- *       <button onPress={() => state.set(state.get() - 1)}>-</button>
- *       <button onPress={() => state.set(state.get() + 1)}>+</button>
- *     </div>
- *   );
- * };
+ *  const state = signalState(5);
+ *  const Counter = () => {
+ *    using signals = useSignalsReactive(); // sets up signals context, that would be cleaned up on render finish
+ *    return (
+ *      <div>
+ *        <div>{state.get()}</div> // on first render will subscribe to state changes
+ *        <button onPress={() => state.set(state.get() - 1)}>-</button>
+ *        <button onPress={() => state.set(state.get() + 1)}>+</button>
+ *      </div>
+ *    );
+ *  };
  */
 export function useSignalsReactive(sync?: boolean) {
   const store = useConst(() => createSignalsStore(sync));

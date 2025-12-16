@@ -7,12 +7,12 @@ import { isPromise } from "../promise";
  * Accepts both sync and async functions.
  *
  * @example
- * const main = ignoreError(DeveloperError, -1)((argv) => {
- *   if (Array.isArray(argv)) throw new DeveloperError('only array allowed');
- *   return 0;
- * });
- * main([]); // 0
- * main(5); // -1
+ *  const main = ignoreError(DeveloperError, -1)((argv) => {
+ *    if (Array.isArray(argv)) throw new DeveloperError('only array allowed');
+ *    return 0;
+ *  });
+ *  main([]); // 0
+ *  main(5); // -1
  */
 export function ignoreError<SubError extends Error, Result>(Class: { new (...params: never): SubError }, failsafe: Result) {
   const isIgnoredError = isError.create(Class);

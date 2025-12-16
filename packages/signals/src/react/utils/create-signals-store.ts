@@ -12,8 +12,8 @@ export type SignalsStore = {
  * Creates store compatible with useSyncExternalStore.
  *
  * @example
- * const store = createSignalsStore();
- * internals.bind(store.effect, dependency);
+ *  const store = createSignalsStore();
+ *  internals.bind(store.effect, dependency);
  */
 export function createSignalsStore(sync: boolean = true): SignalsStore {
   let scheduleRender: { (): void } | undefined;

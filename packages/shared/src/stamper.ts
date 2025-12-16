@@ -8,14 +8,14 @@ const emptyInit = () => {
  * Creates Stamper object. Let's you store some value without changing object.
  *
  * @example
- * const stamper = new Stamper((disposable: Disposable): DisposableStack => {
- *   const stack = new DisposableStack();
- *   disposable[Symbol.dispose] = () => stack.dispose();
- *   return stack;
- * });
- * const value = {} as Disposable;
- * stamper.stamp(value);
- * stamper.get(value).append(() => {});
+ *  const stamper = new Stamper((disposable: Disposable): DisposableStack => {
+ *    const stack = new DisposableStack();
+ *    disposable[Symbol.dispose] = () => stack.dispose();
+ *    return stack;
+ *  });
+ *  const value = {} as Disposable;
+ *  stamper.stamp(value);
+ *  stamper.get(value).append(() => {});
  */
 export class Stamper<Object extends object, Value> {
   protected init: (object: Object) => Value;

@@ -125,8 +125,8 @@ export function getProperty<Target extends object, Key extends keyof Target | (s
  * Define property on {@link target}. Target's type should already has appropriate property
  *
  * @example
- * const obj = {} as { value: number };
- * defineProperty(obj, "value", { value: 42 });
+ *  const obj = {} as { value: number };
+ *  defineProperty(obj, "value", { value: 42 });
  */
 export function defineProperty<Target extends object, Key extends keyof Target>(target: Target, key: Key, descriptor: DefineProperty<Target, Key>) {
   Object.defineProperty(target, key, descriptor);
@@ -143,8 +143,8 @@ export function defineToStringTag(Class: { prototype: WithToStringTag; name: str
  * Define method on {@link target}. Target's type should already has appropriate method
  *
  * @example
- * const obj = {} as { test(): number };
- * defineMethod(obj, "test", () => 5);
+ *  const obj = {} as { test(): number };
+ *  defineMethod(obj, "test", () => 5);
  */
 export function defineMethod<Target extends object, Key extends MethodsKeys<Target>>(
   target: Target,
@@ -158,10 +158,10 @@ export function defineMethod<Target extends object, Key extends MethodsKeys<Targ
  * Define {@link properties} on {@link target}. Target's type should already has appropriate properties
  *
  * @example
- * const target = { } as { a: number, b: number };
- * defineProperties(target, { a: { value: 1 }, b: { value: 2 } });
- * Object.getOwnPropertyDescriptor(target, "a"); // { value: 1 }
- * Object.getOwnPropertyDescriptor(target, "b"); // { value: 2 }
+ *  const target = { } as { a: number, b: number };
+ *  defineProperties(target, { a: { value: 1 }, b: { value: 2 } });
+ *  Object.getOwnPropertyDescriptor(target, "a"); // { value: 1 }
+ *  Object.getOwnPropertyDescriptor(target, "b"); // { value: 2 }
  */
 export function defineProperties<Target extends object>(target: Target, properties: { [Key in keyof Target]?: DefineProperty<Target, Key> }) {
   Object.defineProperties(target, properties as never);
@@ -171,10 +171,10 @@ export function defineProperties<Target extends object>(target: Target, properti
  * Define properties of {@link values} on {@link target}. Target's type should already has appropriate properties
  *
  * @example
- * const target = { } as { a: number, b: number };
- * definePropertiesFrom(target, { a: 1, b: 2 });
- * Object.getOwnPropertyDescriptor(target, "a"); // { value: 1 }
- * Object.getOwnPropertyDescriptor(target, "b"); // { value: 2 }
+ *  const target = { } as { a: number, b: number };
+ *  definePropertiesFrom(target, { a: 1, b: 2 });
+ *  Object.getOwnPropertyDescriptor(target, "a"); // { value: 1 }
+ *  Object.getOwnPropertyDescriptor(target, "b"); // { value: 2 }
  */
 export function definePropertiesFrom<Target extends object>(target: Target, values: Partial<Target>) {
   const keys = [...Object.getOwnPropertyNames(values), ...Object.getOwnPropertySymbols(values)] as Array<keyof Target>;
@@ -188,8 +188,8 @@ export function definePropertiesFrom<Target extends object>(target: Target, valu
  * Define property on {@link target} and update it's type by asserting
  *
  * @example
- * const obj = {}
- * appendProperty(obj, "value", { value: 42 });
+ *  const obj = {}
+ *  appendProperty(obj, "value", { value: 42 });
  */
 export function appendProperty<Target extends object, Key extends string | symbol, Descriptor extends StronglyTypedPropertyDescriptor<unknown>>(
   target: Target,
@@ -203,8 +203,8 @@ export function appendProperty<Target extends object, Key extends string | symbo
  * Define method on {@link target} and update it's type by asserting
  *
  * @example
- * const obj = {}
- * appendMethod(obj, "test", () => 5);
+ *  const obj = {}
+ *  appendMethod(obj, "test", () => 5);
  */
 export function appendMethod<Target extends object, Key extends string | symbol, _Method extends Method<Target, never, unknown>>(
   target: Target,
@@ -218,9 +218,9 @@ export function appendMethod<Target extends object, Key extends string | symbol,
  * Define properties on {@link target} and update it's type by asserting
  *
  * @example
- * const target = { };
- * appendProperties(target, { b: { value: 42 } });
- * Object.getOwnPropertyDescriptor(target, "b"); // { value: 42 }
+ *  const target = { };
+ *  appendProperties(target, { b: { value: 42 } });
+ *  Object.getOwnPropertyDescriptor(target, "b"); // { value: 42 }
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function appendProperties<Target extends object, Properties extends { [key: string | symbol]: StronglyTypedPropertyDescriptor<any> }>(
@@ -234,9 +234,9 @@ export function appendProperties<Target extends object, Properties extends { [ke
  * Gets all own properties from {@link values} and defines them in {@link target} and update it's type by asserting.
  *
  * @example
- * const target = { };
- * appendProperties(target, { @accessor b: 42 });
- * Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
+ *  const target = { };
+ *  appendProperties(target, { @accessor b: 42 });
+ *  Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
  */
 export function appendPropertiesFrom<Target extends object, Values extends object>(
   target: Target,
@@ -267,8 +267,8 @@ export function modifyMethod<Target extends object, Key extends MethodsKeys<Targ
  * Utility to update property descriptor
  *
  * @example
- * const obj = { value: 42 };
- * updateProperty(obj, "value", { enumerable: false });
+ *  const obj = { value: 42 };
+ *  updateProperty(obj, "value", { enumerable: false });
  */
 export function updateProperty<Target extends object, Key extends keyof Target>(
   target: Target,
@@ -282,8 +282,8 @@ export function updateProperty<Target extends object, Key extends keyof Target>(
  * Utility to update properties descriptors
  *
  * @example
- * const obj = { value: 42 };
- * updateProperties(obj, "value", { enumerable: false });
+ *  const obj = { value: 42 };
+ *  updateProperties(obj, "value", { enumerable: false });
  */
 export function updateProperties<Target extends object>(
   target: Target,
@@ -297,8 +297,8 @@ export function updateProperties<Target extends object>(
  * Assigns all own properties from {@link values} to {@link target}.
  *
  * @example
- * const target = assignProperties({ }, { @accessor b: 42 });
- * Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
+ *  const target = assignProperties({ }, { @accessor b: 42 });
+ *  Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
  */
 export function assignProperties<Target extends object, Values extends object>(target: Target, values: Values): Extend<Target, Values> {
   definePropertiesFrom(target, values);
@@ -309,9 +309,9 @@ export function assignProperties<Target extends object, Values extends object>(t
  * Create object  all own properties from {@link values} to {@link target}.
  *
  * @example
- * const target = create({ a: 1 }, { @accessor b: 42 });
- * Object.getOwnPropertyDescriptor(target, "1"); // undefined
- * Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
+ *  const target = create({ a: 1 }, { @accessor b: 42 });
+ *  Object.getOwnPropertyDescriptor(target, "1"); // undefined
+ *  Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
  */
 export function create<Proto extends object, Properties extends { [key: string | symbol]: StronglyTypedPropertyDescriptor<unknown> }>(
   proto: Proto,
@@ -326,9 +326,9 @@ export function create<Proto extends object, Properties extends { [key: string |
  * Create object  all own properties from {@link values} to {@link target}.
  *
  * @example
- * const target = create({ a: 1 }, { @accessor b: 42 });
- * Object.getOwnPropertyDescriptor(target, "1"); // undefined
- * Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
+ *  const target = create({ a: 1 }, { @accessor b: 42 });
+ *  Object.getOwnPropertyDescriptor(target, "1"); // undefined
+ *  Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
  */
 export function createFrom<Proto extends object, Values extends object>(proto: Proto, values: Values): Extend<Proto, Values> {
   const target = Object.create(proto) as Extend<Proto, Values>;

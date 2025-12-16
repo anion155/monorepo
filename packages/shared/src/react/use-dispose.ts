@@ -5,10 +5,10 @@ import { useRenderEffect } from "./use-render-effect";
  * Disposes {@link disposable} on value change or unmount.
  *
  * @example
- * const Component = () => {
- *   const [value, setValue] = useState();
- *   useDispose(value);
- * };
+ *  const Component = () => {
+ *    const [value, setValue] = useState();
+ *    useDispose(value);
+ *  };
  */
 export function useDispose(disposable: Disposable | AsyncDisposable): void;
 export function useDispose(value: unknown): void;

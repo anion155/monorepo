@@ -12,8 +12,8 @@ export interface SignalBinding<Value, Argument = never> extends SignalDependentD
  * Binding Signal, can be either value or computed value from other signals.
  *
  * @example
- * const a = new SignalBinding(5);
- * const a = new SignalBinding(() => a.value);
+ *  const a = new SignalBinding(5);
+ *  const a = new SignalBinding(() => a.value);
  */
 export class SignalBinding<Value, Argument = never>
   extends SignalWritable<Value, SignalBindingArgument<Value | Argument>>

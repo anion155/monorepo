@@ -10,10 +10,10 @@ import { DeveloperError } from "../errors";
  *   will be triggered on undefined context value, with {@link optional} will not throw error even without context.
  *
  * @example
- * const SpecificContext = createContext<SpecificValue | undefined>(undefined);
- * const useSpecificContext = createUseContext(SpecificContext, "SpecificContext");
- * ...
- * useSpecificContext(); // => SpecificValue
+ *  const SpecificContext = createContext<SpecificValue | undefined>(undefined);
+ *  const useSpecificContext = createUseContext(SpecificContext, "SpecificContext");
+ *  ...
+ *  useSpecificContext(); // => SpecificValue
  */
 export function createUseContext<T>(context: Context<T>, name: string = context.displayName ?? "") {
   /** Resolves context value for {@link context} */

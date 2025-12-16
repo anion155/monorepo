@@ -24,9 +24,9 @@ export type NumberVectorScalars<N extends number> = Omit<_NumberVectorComponents
  * Should be used together with declaring NumberVector<N> type.
  *
  * @example
- * interface TestPoint extends NumberVectorScalars<2> {}
- * class TestPoint extends createNumberVector(2) {}
- * const point = new TestPoint(1, 2);
+ *  interface TestPoint extends NumberVectorScalars<2> {}
+ *  class TestPoint extends createNumberVector(2) {}
+ *  const point = new TestPoint(1, 2);
  */
 export const createNumberVector = <N extends number, Value = never>(
   length: N,
@@ -145,7 +145,7 @@ export const createNumberVector = <N extends number, Value = never>(
      * Converts type to tuple type but without any methods of array available
      *
      * @example
-     * ctx.draw(...position.asTuple());
+     *  ctx.draw(...position.asTuple());
      */
     asTuple(): NumberTuple<N> {
       return this as never;

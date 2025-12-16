@@ -28,20 +28,20 @@ export type CallableProxyFabric<Fn extends Callable<never, unknown>> = (
  * {@link fabric} accepts {@link call} as it's first argument. Let's you call other functions or construct values.
  *
  * @example
- * const spy = (fn) => proxyCallable(call => function (this, ...params) {
- *   if (!spy.calls) spy.calls = [params]
- *   else spy.calls.push(params)
- *   try {
- *     const result = call(fn, params, this, new.target);
- *     if (!spy.results) spy.results = [{ status: 'returned', result }];
- *     else spy.results.push({ status: 'returned', result });
- *     return result;
- *   } catch (error) {
- *     if (!spy.results) spy.results = [{ status: 'thrown', error }];
- *     else spy.results.push({ status: 'thrown', error });
- *     throw error;
- *   }
- * });
+ *  const spy = (fn) => proxyCallable(call => function (this, ...params) {
+ *    if (!spy.calls) spy.calls = [params]
+ *    else spy.calls.push(params)
+ *    try {
+ *      const result = call(fn, params, this, new.target);
+ *      if (!spy.results) spy.results = [{ status: 'returned', result }];
+ *      else spy.results.push({ status: 'returned', result });
+ *      return result;
+ *    } catch (error) {
+ *      if (!spy.results) spy.results = [{ status: 'thrown', error }];
+ *      else spy.results.push({ status: 'thrown', error });
+ *      throw error;
+ *    }
+ *  });
  */
 export function proxyCallable<Fn extends Callable<never, unknown>>(fabric: CallableProxyFabric<Fn>): Fn {
   // eslint-disable-next-line prefer-const
@@ -61,8 +61,8 @@ export function proxyCallable<Fn extends Callable<never, unknown>>(fabric: Calla
  * Clones any callable passed. Cloned function is anonymous.
  *
  * @example
- * declare fn: (...params: unknown[]) => unknown
- * const cloned = cloneCallable(fn);
+ *  declare fn: (...params: unknown[]) => unknown
+ *  const cloned = cloneCallable(fn);
  */
 export function cloneCallable<Fn extends Callable<never, unknown>>(fn: Fn): InferCallableSign<Fn> {
   return proxyCallable(
@@ -78,16 +78,16 @@ export function cloneCallable<Fn extends Callable<never, unknown>>(fn: Fn): Infe
  * but provides own implementation.
  *
  * @example
- * declare fn: {
- *   (...params: unknown[]): unknown;
- *   blah: 5;
- * };
- * const hoisted = hoistCallable(fn, (...params) => {
- *   log('called with:', ...params);
- *   const result = fn(...params);
- *   log('call result:', result);
- *   return result
- * })
+ *  declare fn: {
+ *    (...params: unknown[]): unknown;
+ *    blah: 5;
+ *  };
+ *  const hoisted = hoistCallable(fn, (...params) => {
+ *    log('called with:', ...params);
+ *    const result = fn(...params);
+ *    log('call result:', result);
+ *    return result
+ *  })
  */
 export function hoistCallable<Source extends Callable<never, unknown>, Hoisted extends Callable<never, unknown>>(
   source: Source,
@@ -116,16 +116,16 @@ export type CallableWrapperFabric<Source extends Callable<never, unknown>, Wrapp
  * Wraps any callable, hoists {@link source} fields.
  *
  * @example
- * const logWrapper = <Fn extends Callable<never, unknown>>(fn: Fn) => wrapCallable(fn, callFn => function (this, ...params) => {
- *   log('called with:', ...params);
- *   const result = callFn();
- *   log('call result:', result);
- *   return result;
- * });
- * const wrapped = logWrapper((a: number, b: string) => `test-${a}-${b}`);
- * wrapped(1, '2');
- * // called with: 1 2
- * // call result: test-1-2
+ *  const logWrapper = <Fn extends Callable<never, unknown>>(fn: Fn) => wrapCallable(fn, callFn => function (this, ...params) => {
+ *    log('called with:', ...params);
+ *    const result = callFn();
+ *    log('call result:', result);
+ *    return result;
+ *  });
+ *  const wrapped = logWrapper((a: number, b: string) => `test-${a}-${b}`);
+ *  wrapped(1, '2');
+ *  // called with: 1 2
+ *  // call result: test-1-2
  */
 export function wrapCallable<Source extends Callable<never, unknown>, Wrapped extends Callable<never, unknown>>(
   source: Source,
@@ -162,10 +162,10 @@ export function wrapCallable<Source extends Callable<never, unknown>, Wrapped ex
  * Passes result function's context as first argument.
  *
  * @example
- * const context = { method: listContext((value) => {
- *   assert(value === context)
- * }) }
- * context.method()
+ *  const context = { method: listContext((value) => {
+ *    assert(value === context)
+ *  }) }
+ *  context.method()
  */
 export function liftContext<Context, Params extends unknown[], Result, Hoisted>(fn: { (context: Context, ...params: Params): Result } & Hoisted) {
   /** FIXME: remade {@link wrapCallable} in same manner */
@@ -183,9 +183,9 @@ export type Curried<C extends Functor<never, unknown>> = C & { curried: C };
  * WARNING: Does not implement fn-currying of the function
  *
  * @example
- * const fn = <ManualType>() => curryHelper(<AutoType>(b: AutoType) => {})
- * fn<number>()('test')
- * fn<number>().curry('test') // you could see inferred types in second layer function
+ *  const fn = <ManualType>() => curryHelper(<AutoType>(b: AutoType) => {})
+ *  fn<number>()('test')
+ *  fn<number>().curry('test') // you could see inferred types in second layer function
  */
 export function curryHelper<Fn extends Functor<never, unknown>>(fn: Fn): Curried<Fn> {
   return Object.assign(hoistCallable(fn, cloneCallable(fn)), { curried: fn }) as never;
@@ -260,11 +260,11 @@ const reducedSymbol = Symbol.for("reduced");
  * Reduce function able to stop execution
  *
  * @example
- * reduce([0,1,2,3,2,4], (arr, value, reduced) => {
- *   if (value > 2) reduced(arr);
- *   arr.push(value);
- *   return arr;
- * }, [] as number[]); // [0,1,2]
+ *  reduce([0,1,2,3,2,4], (arr, value, reduced) => {
+ *    if (value > 2) reduced(arr);
+ *    arr.push(value);
+ *    return arr;
+ *  }, [] as number[]); // [0,1,2]
  */
 export function reduce<Value, Result>(
   values: Iterable<Value>,
