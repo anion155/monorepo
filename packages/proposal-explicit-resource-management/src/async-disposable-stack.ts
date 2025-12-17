@@ -63,7 +63,6 @@ export class AsyncDisposableStack {
       }
     }
     this.#stack = [];
-    // eslint-disable-next-line @typescript-eslint/only-throw-error -- it's an error
     if (error) throw error;
   }
   [Symbol.asyncDispose](): Promise<void> {

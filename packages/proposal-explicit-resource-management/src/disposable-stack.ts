@@ -55,7 +55,6 @@ export class DisposableStack {
       }
     }
     this.#stack = [];
-    // eslint-disable-next-line @typescript-eslint/only-throw-error -- it's an error
     if (error) throw error;
   }
   [Symbol.dispose](): void {

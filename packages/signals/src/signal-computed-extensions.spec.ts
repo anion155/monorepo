@@ -91,7 +91,9 @@ describe("SignalReadonly extensions", () => {
   it("this.field() type should fail readonly field", () => {
     const source = new TestSignal<{ readonly value: number }>({ value: 5 });
     // @ts-expect-error(2345) - should fail on type evaluation
-    source.field("value");
+    const value = source.field("value");
+    value.set(4 as never);
+    expect(source.get()).toStrictEqual({ value: 4 });
   });
 
   it("this.get() should return nested value", () => {
@@ -120,7 +122,9 @@ describe("SignalReadonly extensions", () => {
     signal.set({ b: { c: 2 } }, "a");
     // @ts-expect-error(2345) - should fail on type evaluation
     signal.set({ c: 3 }, "a", "b");
+    expect(signal.get()).toStrictEqual({ a: { b: { c: 3 } } });
     // @ts-expect-error(2345) - should fail on type evaluation
     signal.set(4, "a", "b", "c");
+    expect(signal.get()).toStrictEqual({ a: { b: { c: 4 } } });
   });
 });
