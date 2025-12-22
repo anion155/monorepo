@@ -48,11 +48,14 @@ export const rafScheduler: typeof globalThis extends { requestAnimationFrame: un
     : undefined
 ) as never;
 
-/** Schedule {@link fn} to be run on next macrotask ({@link setTimeout}). */
-export const timeoutScheduler: SchedulerCancelable<ReturnType<typeof setTimeout>> = {
-  schedule: (fn) => setTimeout(fn, 1),
+/** Creates scheduler for specific {@link timeout}. */
+export const createTimeoutScheduler = (timeout: number): SchedulerCancelable<ReturnType<typeof setTimeout>> => ({
+  schedule: (fn) => setTimeout(fn, timeout),
   cancel: clearTimeout,
-};
+});
+
+/** Schedule {@link fn} to be run on next macrotask ({@link setTimeout}). */
+export const timeoutScheduler = createTimeoutScheduler(0);
 
 /** Schedule {@link fn} to be run in the next microtask. */
 export const promiseScheduler = createCancelableScheduler({

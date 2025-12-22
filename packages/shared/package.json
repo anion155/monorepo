@@ -41,6 +41,7 @@
     "./jest/run-isolated": "./src/jest/run-isolated.ts",
     "./jest/to-strict-throw": "./src/jest/to-strict-throw.ts",
     "./jest/waiter": "./src/jest/waiter.ts",
+    "./loop": "./src/loop.ts",
     "./maybe": "./src/maybe.ts",
     "./misc/apply-console-format": "./src/misc/apply-console-format.ts",
     "./misc/compare": "./src/misc/compare.ts",
@@ -92,6 +93,7 @@
   },
   "devDependencies": {
     "@anion155/configs": "workspace:*",
+    "@anion155/utils": "workspace:*",
     "@jest/globals": "^30.0.0",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.0.3",

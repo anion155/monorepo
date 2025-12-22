@@ -3,8 +3,7 @@
 import "@anion155/shared/global/promise";
 
 import { Loop } from "@anion155/shared/loop";
-import { applyConsoleFormat } from "@anion155/shared/misc";
-import { printBuffer } from "@anion155/shared/misc/print";
+import { applyConsoleFormat } from "@anion155/shared/misc/apply-console-format";
 import { readFile, stat, writeFile } from "node:fs/promises";
 import { $, cd } from "zx";
 
@@ -31,7 +30,7 @@ type PackageJson = {
   devDependencies?: Record<string, string>;
 };
 
-async function printProgressBar({
+function printProgressBar({
   progress,
   length,
   head = "[",
@@ -50,16 +49,16 @@ async function printProgressBar({
   const completeBars = "#".repeat(complete);
   const emptyBars = "-".repeat(barsLength - complete);
   const filler = " ".repeat(columns - head.length - barsLength - tail.length);
-  await printBuffer(`${head}${completeBars}${emptyBars}${tail}${filler}\r`);
+  process.stdout.write(`${head}${completeBars}${emptyBars}${tail}${filler}\r`);
 }
 
 const progressBar = () => {
   const loader = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"];
   let step = 0;
   let progress = 0;
-  const loop = new Loop(200, async () => {
+  const loop = new Loop(200, () => {
     const percentage = Math.trunc(progress * 100);
-    await printProgressBar({
+    printProgressBar({
       progress,
       length: process.stdout.columns,
       inclusive: true,
@@ -73,7 +72,7 @@ const progressBar = () => {
     },
     async finish() {
       progress = 1;
-      await loop.start();
+      loop.start();
       console.log("");
       loop.stop();
     },
@@ -81,7 +80,7 @@ const progressBar = () => {
 };
 
 try {
-  await printBuffer(applyConsoleFormat("green", "Building package\r"));
+  console.log(applyConsoleFormat("green", "Building package") + "\r");
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
   while (!(await isRoot())) cd("..");
   const sourcePkg: PackageJson = await readFile("./package.json", "utf-8").then(JSON.parse);

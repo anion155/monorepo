@@ -3,7 +3,7 @@ import "./global/disposable";
 import { describe, expect, it, jest } from "@jest/globals";
 
 import { runIsolated } from "./jest/run-isolated";
-import { immidiateScheduler, promiseScheduler, timeoutScheduler } from "./scheduler";
+import { createTimeoutScheduler, immidiateScheduler, promiseScheduler, timeoutScheduler } from "./scheduler";
 
 describe("schedulers", () => {
   describe("immidiateScheduler", () => {
@@ -191,6 +191,34 @@ describe("schedulers", () => {
     });
   });
 
+  describe("createTimeoutScheduler()", () => {
+    it("should run fn after timeout", async () => {
+      const spy = jest.fn<() => void>();
+      const timeoutScheduler = createTimeoutScheduler(10);
+      timeoutScheduler.schedule(spy);
+      const deferred = Promise.withResolvers<void>();
+      setTimeout(() => {
+        expect(spy).toHaveBeenCalledTimes(1);
+        deferred.resolve();
+      }, 10);
+      await deferred.promise;
+      expect.assertions(1);
+    });
+
+    it("should cancel", async () => {
+      const spy = jest.fn<() => void>();
+      const timeoutScheduler = createTimeoutScheduler(100);
+      timeoutScheduler.cancel(timeoutScheduler.schedule(spy));
+      const deferred = Promise.withResolvers<void>();
+      setTimeout(() => {
+        expect(spy).toHaveBeenCalledTimes(0);
+        deferred.resolve();
+      }, 200);
+      await deferred.promise;
+      expect.assertions(1);
+    });
+  });
+
   describe("timeoutScheduler", () => {
     it("should run fn after 0 timeout", async () => {
       const spy = jest.fn<() => void>();
@@ -199,7 +227,7 @@ describe("schedulers", () => {
       setTimeout(() => {
         expect(spy).toHaveBeenCalledTimes(1);
         deferred.resolve();
-      }, 1);
+      }, 0);
       await deferred.promise;
       expect.assertions(1);
     });
@@ -212,7 +240,7 @@ describe("schedulers", () => {
       setTimeout(() => {
         expect(spy).toHaveBeenCalledTimes(0);
         deferred.resolve();
-      }, 1);
+      }, 200);
       await deferred.promise;
       expect.assertions(1);
     });
