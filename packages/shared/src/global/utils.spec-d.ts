@@ -1,5 +1,19 @@
 import type { Equal, Expect, ExpectNot } from "../type-tests";
 
+type ExtractHelperCases = [
+  // should autosuggest key names
+  Expect<Equal<ExtractHelper<"a" | "b", "a">, "a">>,
+  // @ts-expect-error(2344): should assert unknown variant
+  ExtractHelper<"a" | "b", "c">,
+];
+
+type ExcludeHelperCases = [
+  // should autosuggest key names
+  Expect<Equal<ExcludeHelper<"a" | "b", "a">, "b">>,
+  // @ts-expect-error(2344): should assert unknown variant
+  ExcludeHelper<"a" | "b", "c">,
+];
+
 type PickHelperCases = [
   // should autosuggest key names
   Expect<Equal<PickHelper<{ a: number; b: string }, "a">, { a: number }>>,
@@ -114,6 +128,29 @@ type ExclusiveUnionCases = [
   Expect<Equal<ExclusiveUnion<{ a: number }, { a: string }>, { a: number } | { a: string }>>,
 ];
 
+type TupleCases = [
+  // should create tuple
+  Expect<Equal<Tuple<2, string>, readonly [string, string]>>,
+  Expect<Equal<Tuple<0, 0>, readonly []>>,
+];
+
+type RangeTupleCases = [
+  // should create range of numbers in tuple
+  Expect<Equal<RangeTuple<2, 5>, [2, 3, 4]>>,
+  Expect<Equal<RangeTuple<2, 5>[number], 2 | 3 | 4>>,
+];
+
+type ToNumberCases = [
+  // should return number
+  Expect<Equal<ToNumber<"10">, 10>>,
+  Expect<Equal<ToNumber<"-10">, -10>>,
+  Expect<Equal<ToNumber<"10.5">, 10.5>>,
+  Expect<Equal<ToNumber<10>, never>>,
+  Expect<Equal<ToNumber<"test">, never>>,
+  Expect<Equal<ToNumber<"0xA1">, never>>,
+  Expect<Equal<ToNumber<"1e1">, never>>,
+];
+
 type IfNegativeNumberCases = [
   // should return if number negative
   Expect<Equal<IfNegativeNumber<10>, false>>,
@@ -136,14 +173,9 @@ type AbsNumberCases = [
   Expect<Equal<AbsNumber<-10>, 10>>,
 ];
 
-type TupleCases = [
-  // should create tuple
-  Expect<Equal<Tuple<2, string>, readonly [string, string]>>,
-  Expect<Equal<Tuple<0, 0>, readonly []>>,
-];
-
-type RangeTupleCases = [
-  // should create range of numbers in tuple
-  Expect<Equal<RangeTuple<2, 5>, [2, 3, 4]>>,
-  Expect<Equal<RangeTuple<2, 5>[number], 2 | 3 | 4>>,
+type AddPositiveNumbersCases = [
+  // should return add positive numbers, and never for negative
+  Expect<Equal<AddPositiveNumbers<5, 5>, 10>>,
+  Expect<Equal<AddPositiveNumbers<1, 10>, 11>>,
+  Expect<Equal<AddPositiveNumbers<-1, 5>, never>>,
 ];

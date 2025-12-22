@@ -1,4 +1,8 @@
 declare global {
+  /** Extract from T those types that are assignable to U. */
+  type ExtractHelper<T, U extends T> = Extract<T, U>;
+  /** Exclude from T those types that are assignable to U. */
+  type ExcludeHelper<T, U extends T> = Exclude<T, U>;
   /** From T, pick a set of properties whose keys are in the union K. Same as Pick<T, K> */
   type PickHelper<T, K extends keyof T> = Pick<T, K>;
   /** Construct a type with the properties of T except for those in type K. */
@@ -66,13 +70,6 @@ declare global {
       : never
     : never;
 
-  /** Type that detects negative numbers. */
-  type IfNegativeNumber<T extends number, A = true, B = false> = `${T}` extends `-${number}` ? A : B;
-  /** Type that detects integer numbers. */
-  type IfIntegerNumber<T extends number, A = true, B = false> = `${T}` extends `${number}.${number}` | `${number}e-${number}` ? B : A;
-  /** A type that calculates the absolute value of a numeric literal type T. */
-  type AbsNumber<T extends number> = `${T}` extends `-${infer N extends number}` ? N : T;
-
   /** Readonly tuple */
   type Tuple<N extends number, T, R extends readonly T[] = readonly []> = number extends N
     ? readonly T[]
@@ -92,6 +89,24 @@ declare global {
           ? ToC
           : RangeTuple<From, To, FromC, [...ToC, [...FromC, ...ToC]["length"]]>
         : RangeTuple<From, To, [...FromC, 0], []>;
+
+  type Digit = RangeTuple<0, 10>[number];
+  type Hex = `${Digit}` | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b" | "c" | "d" | "e" | "f";
+  type Byte = RangeTuple<0, 0xff>[number];
+  /** Extracts number literal from string literal. */
+  type ToNumber<T> = T extends `0x${string}` | `${number}e${number}` ? never : T extends `${infer N extends number}` ? N : never;
+  /** Type that detects negative numbers. */
+  type IfNegativeNumber<T extends number, A = true, B = false> = `${T}` extends `-${number}` ? A : B;
+  /** Type that detects integer numbers. */
+  type IfIntegerNumber<T extends number, A = true, B = false> = `${T}` extends `${number}.${number}` | `${number}e-${number}` ? B : A;
+  /** A type that calculates the absolute value of a numeric literal type T. */
+  type AbsNumber<T extends number> = `${T}` extends `-${infer N extends number}` ? N : T;
+  /** Add T and U positibe number literals. */
+  type AddPositiveNumbers<T extends number, U extends number> = `${T}` extends `-${number}`
+    ? never
+    : `${U}` extends `-${number}`
+      ? never
+      : [...RangeTuple<0, T>, ...RangeTuple<0, U>]["length"];
 }
 
 export {};

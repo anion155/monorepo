@@ -1,5 +1,3 @@
-import "../global/disposable";
-
 import { is } from "../is";
 import { createFrom } from "../object";
 import { isDisposable } from "./is-disposable";
