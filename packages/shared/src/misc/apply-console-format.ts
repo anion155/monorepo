@@ -1,56 +1,11 @@
 import type { ConsoleFormat } from "./escapes";
-import {
-  consoleFormat,
-  ConsoleFormat4bBackgroundBrightColors,
-  ConsoleFormat4bBackgroundColors,
-  ConsoleFormat4bForegroundBrightColors,
-  ConsoleFormat4bForegroundColors,
-  ConsoleFormatModes,
-} from "./escapes";
+import { consoleFormat, ConsoleFormat4bColors, ConsoleFormatModes } from "./escapes";
 
-const Formats = {
-  ...ConsoleFormatModes,
-
-  fgBlack: [ConsoleFormat4bForegroundColors.fgBlack, ConsoleFormat4bForegroundColors.fgDefault],
-  fgRed: [ConsoleFormat4bForegroundColors.fgRed, ConsoleFormat4bForegroundColors.fgDefault],
-  fgGreen: [ConsoleFormat4bForegroundColors.fgGreen, ConsoleFormat4bForegroundColors.fgDefault],
-  fgYellow: [ConsoleFormat4bForegroundColors.fgYellow, ConsoleFormat4bForegroundColors.fgDefault],
-  fgBlue: [ConsoleFormat4bForegroundColors.fgBlue, ConsoleFormat4bForegroundColors.fgDefault],
-  fgMagenta: [ConsoleFormat4bForegroundColors.fgMagenta, ConsoleFormat4bForegroundColors.fgDefault],
-  fgCyan: [ConsoleFormat4bForegroundColors.fgCyan, ConsoleFormat4bForegroundColors.fgDefault],
-  fgWhite: [ConsoleFormat4bForegroundColors.fgWhite, ConsoleFormat4bForegroundColors.fgDefault],
-
-  bgBlack: [ConsoleFormat4bBackgroundColors.bgBlack, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgRed: [ConsoleFormat4bBackgroundColors.bgRed, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgGreen: [ConsoleFormat4bBackgroundColors.bgGreen, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgYellow: [ConsoleFormat4bBackgroundColors.bgYellow, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgBlue: [ConsoleFormat4bBackgroundColors.bgBlue, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgMagenta: [ConsoleFormat4bBackgroundColors.bgMagenta, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgCyan: [ConsoleFormat4bBackgroundColors.bgCyan, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgWhite: [ConsoleFormat4bBackgroundColors.bgWhite, ConsoleFormat4bBackgroundColors.bgDefault],
-
-  fgBrBlack: [ConsoleFormat4bForegroundBrightColors.fgBrBlack, ConsoleFormat4bForegroundColors.fgDefault],
-  fgBrRed: [ConsoleFormat4bForegroundBrightColors.fgBrRed, ConsoleFormat4bForegroundColors.fgDefault],
-  fgBrGreen: [ConsoleFormat4bForegroundBrightColors.fgBrGreen, ConsoleFormat4bForegroundColors.fgDefault],
-  fgBrYellow: [ConsoleFormat4bForegroundBrightColors.fgBrYellow, ConsoleFormat4bForegroundColors.fgDefault],
-  fgBrBlue: [ConsoleFormat4bForegroundBrightColors.fgBrBlue, ConsoleFormat4bForegroundColors.fgDefault],
-  fgBrMagenta: [ConsoleFormat4bForegroundBrightColors.fgBrMagenta, ConsoleFormat4bForegroundColors.fgDefault],
-  fgBrCyan: [ConsoleFormat4bForegroundBrightColors.fgBrCyan, ConsoleFormat4bForegroundColors.fgDefault],
-  fgBrWhite: [ConsoleFormat4bForegroundBrightColors.fgBrWhite, ConsoleFormat4bForegroundColors.fgDefault],
-
-  bgBrBlack: [ConsoleFormat4bBackgroundBrightColors.bgBrBlack, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgBrRed: [ConsoleFormat4bBackgroundBrightColors.bgBrRed, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgBrGreen: [ConsoleFormat4bBackgroundBrightColors.bgBrGreen, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgBrYellow: [ConsoleFormat4bBackgroundBrightColors.bgBrYellow, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgBrBlue: [ConsoleFormat4bBackgroundBrightColors.bgBrBlue, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgBrMagenta: [ConsoleFormat4bBackgroundBrightColors.bgBrMagenta, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgBrCyan: [ConsoleFormat4bBackgroundBrightColors.bgBrCyan, ConsoleFormat4bBackgroundColors.bgDefault],
-  bgBrWhite: [ConsoleFormat4bBackgroundBrightColors.bgBrWhite, ConsoleFormat4bBackgroundColors.bgDefault],
-} as const;
-export type FormatNames = keyof typeof Formats;
-
+export type FormatNames = keyof (typeof applyConsoleFormat)["formats"];
 export function applyConsoleFormat(formats: FormatNames | (FormatNames | readonly [number, number])[], text: string) {
-  const _formats = Array.isArray(formats) ? formats.map((format) => (typeof format === "string" ? Formats[format] : format)) : [Formats[formats]];
+  const _formats = Array.isArray(formats)
+    ? formats.map((format) => (typeof format === "string" ? applyConsoleFormat.formats[format] : format))
+    : [applyConsoleFormat.formats[formats]];
   const left = [] as Extract<ConsoleFormat, number>[];
   const right = [] as Extract<ConsoleFormat, number>[];
   for (let index = 0; index < _formats.length; index += 1) {
@@ -60,3 +15,65 @@ export function applyConsoleFormat(formats: FormatNames | (FormatNames | readonl
   }
   return `${consoleFormat(...left)}${text}${consoleFormat(...right)}`;
 }
+applyConsoleFormat.formats = {
+  bold: ConsoleFormatModes.bold,
+  dim: ConsoleFormatModes.dim,
+  italic: ConsoleFormatModes.italic,
+  underline: ConsoleFormatModes.underline,
+  doubleUnderline: ConsoleFormatModes.doubleUnderline,
+  blinking: ConsoleFormatModes.blinking,
+  inverse: ConsoleFormatModes.inverse,
+  invisible: ConsoleFormatModes.invisible,
+  strikethrough: ConsoleFormatModes.strikethrough,
+  framed: ConsoleFormatModes.framed,
+  overline: ConsoleFormatModes.overline,
+
+  fgBlack: [ConsoleFormat4bColors.fgBlack, ConsoleFormat4bColors.fgDefault],
+  fgRed: [ConsoleFormat4bColors.fgRed, ConsoleFormat4bColors.fgDefault],
+  fgGreen: [ConsoleFormat4bColors.fgGreen, ConsoleFormat4bColors.fgDefault],
+  fgYellow: [ConsoleFormat4bColors.fgYellow, ConsoleFormat4bColors.fgDefault],
+  fgBlue: [ConsoleFormat4bColors.fgBlue, ConsoleFormat4bColors.fgDefault],
+  fgMagenta: [ConsoleFormat4bColors.fgMagenta, ConsoleFormat4bColors.fgDefault],
+  fgCyan: [ConsoleFormat4bColors.fgCyan, ConsoleFormat4bColors.fgDefault],
+  fgWhite: [ConsoleFormat4bColors.fgWhite, ConsoleFormat4bColors.fgDefault],
+
+  bgBlack: [ConsoleFormat4bColors.bgBlack, ConsoleFormat4bColors.bgDefault],
+  bgRed: [ConsoleFormat4bColors.bgRed, ConsoleFormat4bColors.bgDefault],
+  bgGreen: [ConsoleFormat4bColors.bgGreen, ConsoleFormat4bColors.bgDefault],
+  bgYellow: [ConsoleFormat4bColors.bgYellow, ConsoleFormat4bColors.bgDefault],
+  bgBlue: [ConsoleFormat4bColors.bgBlue, ConsoleFormat4bColors.bgDefault],
+  bgMagenta: [ConsoleFormat4bColors.bgMagenta, ConsoleFormat4bColors.bgDefault],
+  bgCyan: [ConsoleFormat4bColors.bgCyan, ConsoleFormat4bColors.bgDefault],
+  bgWhite: [ConsoleFormat4bColors.bgWhite, ConsoleFormat4bColors.bgDefault],
+
+  fgBrBlack: [ConsoleFormat4bColors.fgBrBlack, ConsoleFormat4bColors.fgDefault],
+  fgBrRed: [ConsoleFormat4bColors.fgBrRed, ConsoleFormat4bColors.fgDefault],
+  fgBrGreen: [ConsoleFormat4bColors.fgBrGreen, ConsoleFormat4bColors.fgDefault],
+  fgBrYellow: [ConsoleFormat4bColors.fgBrYellow, ConsoleFormat4bColors.fgDefault],
+  fgBrBlue: [ConsoleFormat4bColors.fgBrBlue, ConsoleFormat4bColors.fgDefault],
+  fgBrMagenta: [ConsoleFormat4bColors.fgBrMagenta, ConsoleFormat4bColors.fgDefault],
+  fgBrCyan: [ConsoleFormat4bColors.fgBrCyan, ConsoleFormat4bColors.fgDefault],
+  fgBrWhite: [ConsoleFormat4bColors.fgBrWhite, ConsoleFormat4bColors.fgDefault],
+
+  bgBrBlack: [ConsoleFormat4bColors.bgBrBlack, ConsoleFormat4bColors.bgDefault],
+  bgBrRed: [ConsoleFormat4bColors.bgBrRed, ConsoleFormat4bColors.bgDefault],
+  bgBrGreen: [ConsoleFormat4bColors.bgBrGreen, ConsoleFormat4bColors.bgDefault],
+  bgBrYellow: [ConsoleFormat4bColors.bgBrYellow, ConsoleFormat4bColors.bgDefault],
+  bgBrBlue: [ConsoleFormat4bColors.bgBrBlue, ConsoleFormat4bColors.bgDefault],
+  bgBrMagenta: [ConsoleFormat4bColors.bgBrMagenta, ConsoleFormat4bColors.bgDefault],
+  bgBrCyan: [ConsoleFormat4bColors.bgBrCyan, ConsoleFormat4bColors.bgDefault],
+  bgBrWhite: [ConsoleFormat4bColors.bgBrWhite, ConsoleFormat4bColors.bgDefault],
+
+  black: [ConsoleFormat4bColors.fgBlack, ConsoleFormat4bColors.fgDefault],
+  red: [ConsoleFormat4bColors.fgRed, ConsoleFormat4bColors.fgDefault],
+  green: [ConsoleFormat4bColors.fgGreen, ConsoleFormat4bColors.fgDefault],
+  yellow: [ConsoleFormat4bColors.fgYellow, ConsoleFormat4bColors.fgDefault],
+  blue: [ConsoleFormat4bColors.fgBlue, ConsoleFormat4bColors.fgDefault],
+  magenta: [ConsoleFormat4bColors.fgMagenta, ConsoleFormat4bColors.fgDefault],
+  cyan: [ConsoleFormat4bColors.fgCyan, ConsoleFormat4bColors.fgDefault],
+  white: [ConsoleFormat4bColors.fgWhite, ConsoleFormat4bColors.fgDefault],
+  gray: [ConsoleFormat4bColors.fgBrBlack, ConsoleFormat4bColors.fgDefault],
+  grey: [ConsoleFormat4bColors.fgBrBlack, ConsoleFormat4bColors.fgDefault],
+  bgGray: [ConsoleFormat4bColors.bgBrBlack, ConsoleFormat4bColors.fgDefault],
+  bgGrey: [ConsoleFormat4bColors.bgBrBlack, ConsoleFormat4bColors.fgDefault],
+} as const;

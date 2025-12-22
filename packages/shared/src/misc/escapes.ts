@@ -108,6 +108,7 @@ export const ConsoleFormatModes = {
   invisible: [8, 28],
   strikethrough: [9, 29],
   framed: [51, 54],
+  overline: [53, 55],
 } as const;
 export type ConsoleFormatModes = ConsoleFormatResetModes | (typeof ConsoleFormatModes)[keyof typeof ConsoleFormatModes][0 | 1];
 
