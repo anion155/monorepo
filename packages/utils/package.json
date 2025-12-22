@@ -1,0 +1,19 @@
+{
+  "name": "@anion155/utils",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "typescript.config": "./scripts/typescript.config.ts",
+    "generate.exports": "./scripts/generate.exports.ts",
+    "builder": "./scripts/builder.ts"
+  },
+  "dependencies": {
+    "@types/node": "^24.0.3",
+    "typescript": "^5.9.3",
+    "zx": "^8.5.5"
+  },
+  "devDependencies": {
+    "@anion155/configs": "workspace:*",
+    "@anion155/shared": "workspace:*"
+  }
+}

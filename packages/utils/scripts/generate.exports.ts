@@ -1,4 +1,4 @@
-#!/usr/bin/env jiti
+#!/usr/bin/env node
 import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { styleText } from "node:util";

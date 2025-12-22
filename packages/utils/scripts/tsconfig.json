@@ -1,0 +1,8 @@
+{
+  "extends": "@anion155/configs/tsconfig.base.json",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext"
+  },
+  "include": ["./*.ts"]
+}
