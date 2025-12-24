@@ -1,0 +1,10 @@
+{
+  "name": "@anion155/utils",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "typescript.config": "./typescript.config.js",
+    "generate.exports": "./generate.exports.js",
+    "builder": "./builder.js"
+  }
+}

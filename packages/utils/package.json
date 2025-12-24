@@ -1,11 +1,15 @@
 {
-  "name": "@anion155/utils",
+  "name": "@anion155/utils-sources",
   "private": true,
   "type": "module",
-  "bin": {
-    "typescript.config": "./scripts/typescript.config.ts",
-    "generate.exports": "./scripts/generate.exports.ts",
-    "builder": "./scripts/builder.ts"
+  "scripts": {
+    "build:script": "esbuild --bundle --platform=node --target=node22 --format=esm",
+    "build:builder": "pnpm run build:script src/builder.ts --outfile=dist/builder.js",
+    "build:generate.exports": "pnpm run build:script src/generate.exports.ts --outfile=dist/generate.exports.js",
+    "build:typescript.config": "pnpm run build:script src/typescript.config.ts --outfile=dist/typescript.config.js",
+    "build": "mkdir -p dist && cp package.dist.json dist/package.json && pnpm run build:builder && pnpm run build:generate.exports && pnpm run build:typescript.config",
+    "postinstall": "pnpm run build",
+    "lint": "eslint src && tsc --noEmit"
   },
   "dependencies": {
     "@types/node": "^24.0.3",
@@ -14,6 +18,9 @@
   },
   "devDependencies": {
     "@anion155/configs": "workspace:*",
-    "@anion155/shared": "workspace:*"
+    "@anion155/shared": "workspace:*",
+    "@anion155/proposal-explicit-resource-management": "workspace:*",
+    "esbuild": "^0.27.2",
+    "prettier": "^3.6.2"
   }
 }

@@ -1,16 +1,19 @@
 #!/usr/bin/env jiti
 
+import "@anion155/proposal-explicit-resource-management/global";
 import "@anion155/shared/global/promise";
 
-import { Loop } from "@anion155/shared/loop";
-import { applyConsoleFormat } from "@anion155/shared/misc/apply-console-format";
+import { applyConsoleFormat } from "@anion155/shared/misc";
 import { readFile, stat, writeFile } from "node:fs/promises";
 import { $, cd } from "zx";
+import { directPrint } from "./utils/direct-print";
+import { main } from "./utils/main";
+import { ProgressBar } from "./utils/progress-bar";
 
 function isRoot() {
   return stat("node_modules").then(
     () => true,
-    () => false
+    () => false,
   );
 }
 
@@ -30,76 +33,33 @@ type PackageJson = {
   devDependencies?: Record<string, string>;
 };
 
-function printProgressBar({
-  progress,
-  length,
-  head = "[",
-  tail = "]",
-  inclusive = true,
-}: {
-  progress: number;
-  length: number;
-  head?: string;
-  tail?: string;
-  inclusive?: boolean;
-}) {
-  const columns = process.stdout.columns;
-  const barsLength = inclusive ? length - head.length - tail.length : Math.min(length + head.length + tail.length, columns);
-  const complete = Math.trunc(progress * barsLength);
-  const completeBars = "#".repeat(complete);
-  const emptyBars = "-".repeat(barsLength - complete);
-  const filler = " ".repeat(columns - head.length - barsLength - tail.length);
-  process.stdout.write(`${head}${completeBars}${emptyBars}${tail}${filler}\r`);
-}
-
-const progressBar = () => {
-  const loader = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"];
-  let step = 0;
-  let progress = 0;
-  const loop = new Loop(200, () => {
-    const percentage = Math.trunc(progress * 100);
-    printProgressBar({
-      progress,
-      length: process.stdout.columns,
-      inclusive: true,
-      head: ` ${loader[step++ % loader.length]}[`,
-      tail: `] ${percentage.toString().padStart(3, " ")}%`,
-    });
-  });
-  return {
-    step(next: number) {
-      progress = next;
-    },
-    async finish() {
-      progress = 1;
-      loop.start();
-      console.log("");
-      loop.stop();
-    },
-  };
-};
-
-try {
-  console.log(applyConsoleFormat("green", "Building package") + "\r");
+await main(async (stack) => {
+  directPrint(applyConsoleFormat("fgGreen", "Building package") + "\r");
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
   while (!(await isRoot())) cd("..");
   const sourcePkg: PackageJson = await readFile("./package.json", "utf-8").then(JSON.parse);
   if (sourcePkg.name) console.log(applyConsoleFormat("green", `Building package [${sourcePkg.name}]`));
-  const pb = progressBar();
+  let pb = new ProgressBar();
+  stack.append(pb);
 
   pb.step(1 / 6);
+  console.log("GGHH");
   await Promise.delay(1000);
   await $`rm -rf dist`;
   pb.step(2 / 6);
+  console.log("GG");
   await Promise.delay(1000);
   await $`mkdir -p dist/src/../lib/`;
   pb.step(3 / 6);
+  console.log("GG");
   await Promise.delay(1000);
   await $`cp -r src/ dist/src/`;
   pb.step(4 / 6);
+  console.log("GG");
   await Promise.delay(1000);
   await $`pnpm --package=typescript dlx tsc --project tsconfig.build.json --outDir dist/lib`;
   pb.step(5 / 6);
+  console.log("GG");
   await Promise.delay(1000);
 
   const resultPkg: PackageJson = {
@@ -116,11 +76,6 @@ try {
   };
   delete (resultPkg.dependencies as never)["@anion155/polyfill-base"];
   await writeFile("dist/package.json", JSON.stringify(resultPkg, undefined, 2) + "\n");
-  await pb.finish();
+  pb.dispose();
   console.log(applyConsoleFormat("green", "Ready to publish"));
-} catch (error) {
-  console.error(
-    applyConsoleFormat("red", "Compilation failed:"),
-    typeof error === "object" && error !== null && "message" in error ? applyConsoleFormat("red", error.message as string) : (error as never)
-  );
-}
+});
