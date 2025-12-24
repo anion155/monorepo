@@ -39,28 +39,18 @@ await main(async (stack) => {
   while (!(await isRoot())) cd("..");
   const sourcePkg: PackageJson = await readFile("./package.json", "utf-8").then(JSON.parse);
   if (sourcePkg.name) console.log(applyConsoleFormat("green", `Building package [${sourcePkg.name}]`));
-  let pb = new ProgressBar();
+  const pb = new ProgressBar();
   stack.append(pb);
 
-  pb.step(1 / 6);
-  console.log("GGHH");
-  await Promise.delay(1000);
+  pb.step(1 / 5);
   await $`rm -rf dist`;
-  pb.step(2 / 6);
-  console.log("GG");
-  await Promise.delay(1000);
+  pb.step(2 / 5);
   await $`mkdir -p dist/src/../lib/`;
-  pb.step(3 / 6);
-  console.log("GG");
-  await Promise.delay(1000);
+  pb.step(3 / 5);
   await $`cp -r src/ dist/src/`;
-  pb.step(4 / 6);
-  console.log("GG");
-  await Promise.delay(1000);
+  pb.step(4 / 5);
   await $`pnpm --package=typescript dlx tsc --project tsconfig.build.json --outDir dist/lib`;
-  pb.step(5 / 6);
-  console.log("GG");
-  await Promise.delay(1000);
+  pb.step(5 / 5);
 
   const resultPkg: PackageJson = {
     name: sourcePkg.name,
@@ -76,6 +66,5 @@ await main(async (stack) => {
   };
   delete (resultPkg.dependencies as never)["@anion155/polyfill-base"];
   await writeFile("dist/package.json", JSON.stringify(resultPkg, undefined, 2) + "\n");
-  pb.dispose();
   console.log(applyConsoleFormat("green", "Ready to publish"));
 });

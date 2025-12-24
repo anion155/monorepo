@@ -15,15 +15,20 @@ export type ProgressBarConfig = {
   tail?: string | ProgressBarEdgeRender;
   inclusive?: boolean;
   width?: number | `${number}%`;
+  fps?: number;
+  frameStep?: number;
 };
 
-export class ProgressBar {
+export class ProgressBar<Steps extends number> {
+  #progress: number = 0;
+  #pending: number | undefined;
   #head: ProgressBarEdgeRender;
   #bars: ProgressBarBarsRender;
   #tail: ProgressBarEdgeRender;
   #inclusive: boolean;
   #width: ProgressBarConfig["width"];
-  #progress: number = 0;
+  #fps: number;
+  #frameStep: number;
   #loop: Loop<void>;
   constructor(config?: ProgressBarConfig) {
     if (is(config?.head, "string")) {
@@ -66,7 +71,9 @@ export class ProgressBar {
     this.#width = config?.width;
     process.stdout.on("resize", this.#init);
     this.#init();
-    this.#loop = new Loop(200, this.#print);
+    this.#fps = config?.fps ?? 5;
+    this.#frameStep = config?.frameStep ?? 1 / this.#fps;
+    this.#loop = new Loop(1000 / this.#fps, this.#print);
   }
 
   #init = () => {
@@ -87,8 +94,18 @@ export class ProgressBar {
     buffer += escapes.cursor.scrollUp;
     directPrint(buffer);
   };
+  #animate = () => {
+    if (!this.#pending) return;
+    const diff = this.#pending - this.#progress;
+    this.#progress = Math.min(this.#progress + this.#frameStep * diff, this.#pending);
+    if (this.#progress === this.#pending) {
+      this.#pending = undefined;
+      return;
+    }
+  };
   #print = () => {
     const { rows, columns } = process.stdout;
+    this.#animate();
     const progress = this.#progress;
     const head = this.#head(progress);
     const tail = this.#tail(progress);
@@ -98,7 +115,7 @@ export class ProgressBar {
       return Math.trunc((columns * Math.clamp(0, parseFloat(this.#width), 100)) / 100);
     });
     const barsNumber = this.#inclusive ? width - head.length - tail.length : Math.min(columns, width + head.length + tail.length);
-    const completeBars = Math.trunc(this.#progress * barsNumber);
+    const completeBars = Math.trunc(progress * barsNumber);
     const bars = this.#bars(completeBars, barsNumber - completeBars, barsNumber);
 
     let buffer = "";
@@ -110,13 +127,20 @@ export class ProgressBar {
     directPrint(buffer);
   };
 
-  step(next: number) {
-    this.#progress = next;
+  step(next: number, animate = true) {
+    if (animate && next > this.#progress) {
+      if (this.#pending !== undefined) this.#progress = this.#pending;
+      this.#pending = next;
+    } else this.#progress = next;
     this.#print();
+  }
+  finish() {
+    this.#progress = 1;
+    this.#print();
+    this.dispose();
   }
   dispose() {
     process.stdout.off("resize", this.#init);
-    this.#progress = 1;
     this.#loop.stop();
     this.#deinit();
   }
