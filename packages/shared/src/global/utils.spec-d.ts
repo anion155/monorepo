@@ -140,6 +140,14 @@ type RangeTupleCases = [
   Expect<Equal<RangeTuple<2, 5>[number], 2 | 3 | 4>>,
 ];
 
+type IfNumberCases = [
+  // should return if number
+  Expect<Equal<IfNumber<10>, true>>,
+  Expect<Equal<IfNumber<-10>, true>>,
+  Expect<Equal<IfNumber<"-10">, false>>,
+  Expect<Equal<IfNumber<{ a: 5 }>, false>>,
+];
+
 type ToNumberCases = [
   // should return number
   Expect<Equal<ToNumber<"10">, 10>>,
@@ -171,6 +179,22 @@ type AbsNumberCases = [
   // should return abs of number
   Expect<Equal<AbsNumber<10>, 10>>,
   Expect<Equal<AbsNumber<-10>, 10>>,
+];
+
+type IncrementCases = [
+  // should increment non negative integer number
+  Expect<Equal<Increment<5>, 6>>,
+  Expect<Equal<Increment<0>, 1>>,
+  Expect<Equal<Increment<-1>, never>>,
+  Expect<Equal<Increment<1.5>, never>>,
+];
+
+type DecrementCases = [
+  // should deccrement positive integer number
+  Expect<Equal<Decrement<5>, 4>>,
+  Expect<Equal<Decrement<1>, 0>>,
+  Expect<Equal<Decrement<0>, never>>,
+  Expect<Equal<Decrement<-1>, never>>,
 ];
 
 type AddPositiveNumbersCases = [

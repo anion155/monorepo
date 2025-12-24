@@ -93,6 +93,8 @@ declare global {
   type Digit = RangeTuple<0, 10>[number];
   type Hex = `${Digit}` | "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b" | "c" | "d" | "e" | "f";
   type Byte = RangeTuple<0, 0xff>[number];
+  /** Type that detects numbers. */
+  type IfNumber<T, A = true, B = false> = T extends number ? A : B;
   /** Extracts number literal from string literal. */
   type ToNumber<T> = T extends `0x${string}` | `${number}e${number}` ? never : T extends `${infer N extends number}` ? N : never;
   /** Type that detects negative numbers. */
@@ -101,6 +103,18 @@ declare global {
   type IfIntegerNumber<T extends number, A = true, B = false> = `${T}` extends `${number}.${number}` | `${number}e-${number}` ? B : A;
   /** A type that calculates the absolute value of a numeric literal type T. */
   type AbsNumber<T extends number> = `${T}` extends `-${infer N extends number}` ? N : T;
+  /** Increment T. */
+  type Increment<T extends number> =
+    IfIntegerNumber<T> extends true ? (IfNegativeNumber<T> extends false ? [...RangeTuple<0, T>, 0]["length"] : never) : never;
+  /** Decrement T. */
+  type Decrement<T extends number> =
+    IfIntegerNumber<T> extends true
+      ? IfNegativeNumber<T> extends false
+        ? RangeTuple<0, T> extends [...infer R extends unknown[], unknown]
+          ? R["length"]
+          : never
+        : never
+      : never;
   /** Add T and U positibe number literals. */
   type AddPositiveNumbers<T extends number, U extends number> = `${T}` extends `-${number}`
     ? never
