@@ -24,6 +24,7 @@ describe("this.toStringThrow()", () => {
   class AnotherDeveloperError extends createErrorClass("DeveloperError") {}
 
   it("should detect thrown errors with precision", () => {
+    expect(new DeveloperError("test")).toStrictThrow(new DeveloperError("test"));
     expect(() => doThrow(new DeveloperError("test"))).toStrictThrow(new DeveloperError("test"));
     expect(() => doThrow(new DeveloperError("test"))).not.toStrictThrow(new Error("test"));
   });
@@ -32,9 +33,6 @@ describe("this.toStringThrow()", () => {
     expect(() => {
       expect(() => doThrow(new DeveloperError("test"))).toStrictThrow("test" as never);
     }).toStrictThrow(new TypeError("should be called with Error instance"));
-    expect(() => {
-      expect(new DeveloperError("test")).toStrictThrow(new DeveloperError("test"));
-    }).toStrictThrow(new TypeError("should be called with function"));
     expect(() => {
       expect(() => {}).toStrictThrow(new DeveloperError("test"));
     }).toStrictThrow(new TypeError("function did not throw"));

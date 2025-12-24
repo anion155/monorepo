@@ -23,16 +23,17 @@ expect.extend({
   toStrictThrow(actual: unknown, expected: Error) {
     if (!(expected instanceof Error)) throw new TypeError("should be called with Error instance");
     if (this.promise === "") {
-      if (typeof actual !== "function") throw new TypeError("should be called with function");
-      let didThrow = false;
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        actual();
-      } catch (error) {
-        didThrow = true;
-        actual = error as never;
+      if (typeof actual === "function") {
+        let didThrow = false;
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+          actual();
+        } catch (error) {
+          didThrow = true;
+          actual = error as never;
+        }
+        if (!didThrow) throw new TypeError("function did not throw");
       }
-      if (!didThrow) throw new TypeError("function did not throw");
     }
     if (this.promise === "resolves") throw new TypeError("should be called with rejected promise only");
     if (!(actual instanceof Error)) throw new TypeError("should be called with Error instance");
