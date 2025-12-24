@@ -30,6 +30,7 @@
     "./global/emplace": "./src/global/emplace.ts",
     "./global/functions": "./src/global/functions.ts",
     "./global": "./src/global/index.ts",
+    "./global/math": "./src/global/math.ts",
     "./global/promise": "./src/global/promise.ts",
     "./global/utils": "./src/global/utils.ts",
     ".": "./src/index.ts",

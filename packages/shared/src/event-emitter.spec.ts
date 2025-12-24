@@ -13,16 +13,19 @@ describe("class EventEmitter", () => {
     emitter.on("test", listener2);
     emitter.on("other", listener3);
 
-    emitter.emit("test", 1, 2);
+    expect(emitter.emit("test", 1, 2)).toBe(true);
     expect(listener1).toHaveBeenCalledWith(1, 2);
     expect(listener1).toHaveBeenCalledTimes(1);
     expect(listener2).toHaveBeenCalledWith(1, 2);
     expect(listener2).toHaveBeenCalledTimes(1);
 
     emitter.off("test", listener2);
-    emitter.emit("test");
+    expect(emitter.emit("test")).toBe(true);
     expect(listener1).toHaveBeenCalledTimes(2);
     expect(listener2).toHaveBeenCalledTimes(1);
+
+    emitter.off("test");
+    expect(emitter.emit("test")).toBe(false);
   });
 
   it("should use asyncScheduler as default", async () => {

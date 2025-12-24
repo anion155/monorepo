@@ -31,16 +31,18 @@ export class EventEmitter<Events extends AnyEventsMap<never> = AnyEventsMap> {
   }
 
   /** Unsubscribes {@link lintener} from {@link event}. */
-  off<Event extends keyof Events>(event: Event, listener: (...params: Parameters<Events[Event]>) => void) {
-    this.#listeners.get(event)?.delete(listener);
+  off<Event extends keyof Events>(event: Event, listener?: (...params: Parameters<Events[Event]>) => void) {
+    if (listener) this.#listeners.get(event)?.delete(listener);
+    else this.#listeners.delete(event);
   }
 
   /** Emits {@link event}. Uses {@link scheduler} to schedule listeners. */
   emit<Event extends keyof Events>(event: Event, ...params: Parameters<Events[Event]>) {
     const listenersSet = this.#listeners.get(event);
-    if (!listenersSet?.size) return;
+    if (!listenersSet?.size) return false;
     const listeners = [...listenersSet];
     this.#scheduler.schedule(() => listeners.forEach((listener) => listener(...(params as never))));
+    return true;
   }
 
   /** Object that returns emit function for field name as event. */
