@@ -4,5 +4,6 @@ import "./constants";
 import "./disposable";
 import "./emplace";
 import "./functions";
+import "./math";
 import "./promise";
 import "./utils";
