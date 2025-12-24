@@ -1,32 +1,32 @@
 /** Terminal bell */
-export const BEL = "\u0007" as const;
+const BEL = "\u0007" as const;
 /** Backspace */
-export const BS = "\u0008" as const;
+const BS = "\u0008" as const;
 /** Horizontal TAB */
-export const HT = "\u0009" as const;
+const HT = "\u0009" as const;
 /** Linefeed (newline) */
-export const LF = "\u000a" as const;
+const LF = "\u000a" as const;
 /** Vertical TAB */
-export const VT = "\u000b" as const;
+const VT = "\u000b" as const;
 /** Formfeed (also: New page NP) */
-export const FF = "\u000c" as const;
+const FF = "\u000c" as const;
 /** Carriage return */
-export const CR = "\u000d" as const;
+const CR = "\u000d" as const;
 /** Escape character */
-export const ESC = "\u001b" as const;
+const ESC = "\u001b" as const;
 /** Delete character */
-export const DEL = "\u007f" as const;
+const DEL = "\u007f" as const;
 
 /** Control Sequence Introducer: sequence starting with ESC [ or CSI (\x9B). */
-export const CSI = <Command extends string>(command: Command) => `${ESC}[${command}` as const;
+const CSI = <Command extends string>(command: Command) => `${ESC}[${command}` as const;
 
 /** Device Control String: sequence starting with ESC P or DCS (\x90). */
-export const DCS = <Command extends string>(command: Command) => `${ESC}P${command}` as const;
+const DCS = <Command extends string>(command: Command) => `${ESC}P${command}` as const;
 
 /** Operating System Command: sequence starting with ESC ] or OSC (\x9D). */
-export const OSC = <Command extends string>(command: Command) => `${ESC}]${command}` as const;
+const OSC = <Command extends string>(command: Command) => `${ESC}]${command}` as const;
 
-export const ConsoleCursor = {
+const ConsoleCursor = {
   /** moves cursor to home position ({@link line}, {@link column}) */
   moveTo: (line: number = 0, column: number = 0) => (!line && !column ? CSI("H") : CSI(`${line};${column}H`)),
   /** moves cursor to home position ({@link line}, {@link column}) */
@@ -74,7 +74,7 @@ export const ConsoleCursor = {
   },
 } as const;
 
-export const ConsoleErase = {
+const ConsoleErase = {
   /** erase in display (same as ESC[0J) */
   clearInDisplay: CSI("J"),
   /** erase from cursor until end of screen */
@@ -95,9 +95,9 @@ export const ConsoleErase = {
   clearLine: CSI("2K"),
 } as const;
 
-export const ConsoleFormatResetModes = 0;
+const ConsoleFormatResetModes = 0;
 export type ConsoleFormatResetModes = typeof ConsoleFormatResetModes;
-export const ConsoleFormatModes = {
+const ConsoleFormatModes = {
   bold: [1, 22],
   dim: [2, 22],
   italic: [3, 23],
@@ -112,7 +112,7 @@ export const ConsoleFormatModes = {
 } as const;
 export type ConsoleFormatModes = ConsoleFormatResetModes | (typeof ConsoleFormatModes)[keyof typeof ConsoleFormatModes][0 | 1];
 
-export const ConsoleFormatColorsValues = {
+const ConsoleFormatColorsValues = {
   black: 0,
   red: 1,
   green: 2,
@@ -134,31 +134,31 @@ const mapColorsValues = <Result>(
 };
 export type ConsoleFormatColorsValues = _ConsoleFormatColorsValues[keyof _ConsoleFormatColorsValues];
 
-export const ConsoleFormat4bForegroundColors = mapColorsValues<{
+const ConsoleFormat4bForegroundColors = mapColorsValues<{
   readonly [N in keyof _ConsoleFormatColorsValues as `fg${Capitalize<N>}`]: ToNumber<`3${_ConsoleFormatColorsValues[N]}`>;
 }>(([name, value]) => [`fg${name[0].toUpperCase()}${name.substring(1)}`, 30 + value] as never);
 export type ConsoleFormat4bForegroundColors = (typeof ConsoleFormat4bForegroundColors)[keyof typeof ConsoleFormat4bForegroundColors];
 export type ConsoleFormat4bForegroundBrightColorPairs = `${ConsoleFormat4bForegroundColors};1`;
 
-export const ConsoleFormat4bBackgroundColors = mapColorsValues<{
+const ConsoleFormat4bBackgroundColors = mapColorsValues<{
   readonly [N in keyof _ConsoleFormatColorsValues as `bg${Capitalize<N>}`]: ToNumber<`4${_ConsoleFormatColorsValues[N]}`>;
 }>(([name, value]) => [`bg${name[0].toUpperCase()}${name.substring(1)}`, 40 + value] as never);
 export type ConsoleFormat4bBackgroundColors = (typeof ConsoleFormat4bBackgroundColors)[keyof typeof ConsoleFormat4bBackgroundColors];
 export type ConsoleFormat4bBackgroundBrightColorPairs = `${ConsoleFormat4bBackgroundColors};1`;
 
-export const ConsoleFormat4bForegroundBrightColors = mapColorsValues<{
+const ConsoleFormat4bForegroundBrightColors = mapColorsValues<{
   readonly [N in keyof _ConsoleFormatColorsValues as `fgBr${Capitalize<N>}`]: ToNumber<`9${_ConsoleFormatColorsValues[N]}`>;
 }>(([name, value]) => [`fgBr${name[0].toUpperCase()}${name.substring(1)}`, 90 + value] as never);
 export type ConsoleFormat4bForegroundBrightColors =
   (typeof ConsoleFormat4bForegroundBrightColors)[keyof typeof ConsoleFormat4bForegroundBrightColors];
 
-export const ConsoleFormat4bBackgroundBrightColors = mapColorsValues<{
+const ConsoleFormat4bBackgroundBrightColors = mapColorsValues<{
   readonly [N in keyof _ConsoleFormatColorsValues as `bgBr${Capitalize<N>}`]: ToNumber<`10${_ConsoleFormatColorsValues[N]}`>;
 }>(([name, value]) => [`bgBr${name[0].toUpperCase()}${name.substring(1)}`, 100 + value] as never);
 export type ConsoleFormat4bBackgroundBrightColors =
   (typeof ConsoleFormat4bBackgroundBrightColors)[keyof typeof ConsoleFormat4bBackgroundBrightColors];
 
-export const ConsoleFormat4bColors = {
+const ConsoleFormat4bColors = {
   ...ConsoleFormat4bForegroundColors,
   ...ConsoleFormat4bBackgroundColors,
   ...ConsoleFormat4bForegroundBrightColors,
@@ -169,7 +169,7 @@ export type ConsoleFormat4bColors =
   | ConsoleFormat4bForegroundBrightColorPairs
   | ConsoleFormat4bBackgroundBrightColorPairs;
 
-export const ConsoleFormat8bColors = {
+const ConsoleFormat8bColors = {
   standard: { ...ConsoleFormatColorsValues },
   highIntensity: mapColorsValues<{
     readonly [N in Exclude<keyof _ConsoleFormatColorsValues, "default">]: AddPositiveNumbers<_ConsoleFormatColorsValues[N], 8>;
@@ -181,13 +181,13 @@ export const ConsoleFormat8bColors = {
 } as const;
 export type ConsoleFormat8bColors = `${38 | 48};5;${number}`;
 
-export const ConsoleFormat24bColors = {
+const ConsoleFormat24bColors = {
   foreground: (r: Byte, g: Byte, b: Byte) => `38;2;${r};${g};${b}`,
   background: (r: Byte, g: Byte, b: Byte) => `48;2;${r};${g};${b}`,
 };
 export type ConsoleFormat24bColors = `${38 | 48};2;${number};${number};${number}`;
 
-export const ConsoleFormatColors = {
+const ConsoleFormatColors = {
   "4bit": ConsoleFormat4bColors,
   "8bit": ConsoleFormat8bColors,
   "24bit": ConsoleFormat24bColors,
@@ -196,10 +196,10 @@ export type ConsoleFormatColors = ConsoleFormat4bColors | ConsoleFormat8bColors;
 
 export type ConsoleFormat = ConsoleFormatModes | ConsoleFormatColors;
 
-export const consoleFormat = (...params: ConsoleFormat[]) => CSI(`${params.join(";")}m`);
+const consoleFormat = (...params: ConsoleFormat[]) => CSI(`${params.join(";")}m`);
 
 /** Changes the screen width or type. */
-export const ConsoleScreenModes = {
+const ConsoleScreenModes = {
   /** 40 x 25 monochrome (text) */
   "1b40x25": [CSI("=0h"), CSI("=0l")],
   /** 40 x 25 color (text) */
@@ -231,9 +231,9 @@ export const ConsoleScreenModes = {
 };
 
 /** Enables line wrapping */
-export const ConsoleScreenWrapping = [CSI("=7h"), CSI("=7l")];
+const ConsoleScreenWrapping = [CSI("=7h"), CSI("=7l")];
 
-export const ConsolePrivateScreenModes = {
+const ConsolePrivateScreenModes = {
   /** restore screen */
   restoreScreen: CSI("47l"),
   /** save screen */
@@ -243,7 +243,7 @@ export const ConsolePrivateScreenModes = {
 };
 
 /** keyboard codes: code, SHIFT+code, CTRL+code, ALT+code */
-export const ConsoleKeyboardCodes = {
+const ConsoleKeyboardCodes = {
   F1: ["0;59", "0;84", "0;94", "0;104"],
   F2: ["0;60", "0;85", "0;95", "0;105"],
   F3: ["0;61", "0;86", "0;96", "0;106"],
@@ -337,6 +337,44 @@ export const ConsoleKeyboardCodes = {
   "5_keypad": ["0;76", 53, "0;143", null],
 } as const;
 export type ConsoleKeyboardCodes = Exclude<(typeof ConsoleKeyboardCodes)[keyof typeof ConsoleKeyboardCodes][number], null>;
-export const redefineConsoleKeyboard = (code: ConsoleKeyboardCodes, result: RangeTuple<0, 128>[number] | string) => {
+const redefineConsoleKeyboard = (code: ConsoleKeyboardCodes, result: RangeTuple<0, 128>[number] | string) => {
   return CSI(`${code};${typeof result === "string" ? `"${result}"` : result}p`);
+};
+
+const setScrollRegion = (top: number, bottom: number) => {
+  return CSI(`${top};${bottom}r`);
+};
+
+export const escapes = {
+  BEL,
+  BS,
+  HT,
+  LF,
+  VT,
+  FF,
+  CR,
+  ESC,
+  DEL,
+  CSI,
+  DCS,
+  OSC,
+  cursor: ConsoleCursor,
+  erase: ConsoleErase,
+  format: Object.assign(consoleFormat, {
+    reset: ConsoleFormatResetModes,
+    modes: ConsoleFormatModes,
+    colors: ConsoleFormatColors,
+  }),
+  screen: {
+    modes: ConsoleScreenModes,
+    wrappong: ConsoleScreenWrapping,
+    private: ConsolePrivateScreenModes,
+  },
+  ketboard: {
+    keys: ConsoleKeyboardCodes,
+    redefine: redefineConsoleKeyboard,
+  },
+  regions: {
+    set: setScrollRegion,
+  },
 };

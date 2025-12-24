@@ -136,7 +136,7 @@ export type WithToStringTag = { readonly [Symbol.toStringTag]: string };
 
 /** Define standard to string tag prototype property. */
 export function defineToStringTag(Class: { prototype: WithToStringTag; name: string }) {
-  defineProperty(Class.prototype, Symbol.toStringTag, { value: Class.name, writable: false });
+  defineProperty(Class.prototype, Symbol.toStringTag, { value: Class.name, writable: false, enumerable: false, configurable: true });
 }
 
 /**
@@ -151,7 +151,7 @@ export function defineMethod<Target extends object, Key extends MethodsKeys<Targ
   key: Key,
   method: (this: Target, ...params: InferMethod<Target[Key]>["Params"]) => InferMethod<Target[Key]>["Result"],
 ) {
-  defineProperty(target, key, { value: method, writable: true, enumerable: false, configurable: true } as never);
+  Object.defineProperty(target, key, { value: method, writable: true, enumerable: false, configurable: true });
 }
 
 /**
@@ -196,7 +196,7 @@ export function appendProperty<Target extends object, Key extends string | symbo
   key: Key,
   descriptor: Descriptor,
 ): asserts target is Omit<Target & AppendProperty<Key, Descriptor>, never> {
-  defineProperty(target, key as never, descriptor as never) as never;
+  defineProperty(target, key as never, descriptor as never);
 }
 
 /**
@@ -211,7 +211,7 @@ export function appendMethod<Target extends object, Key extends string | symbol,
   key: Key,
   method: _Method,
 ): asserts target is Omit<Target & { [k in Key]: _Method }, never> {
-  defineProperty(target, key as never, { value: method } as never);
+  Object.defineProperty(target, key as never, { value: method as never, writable: true, enumerable: false, configurable: true });
 }
 
 /**

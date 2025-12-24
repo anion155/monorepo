@@ -1,3 +1,5 @@
+import "../global/functions";
+
 /**
  * Error class mixin
  *

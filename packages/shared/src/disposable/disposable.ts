@@ -1,3 +1,5 @@
+import "../global/disposable";
+
 import { is } from "../is";
 import { createFrom } from "../object";
 import { isDisposable } from "./is-disposable";
@@ -17,8 +19,10 @@ export function disposableFrom(value: AsyncDisposable) {
  *  - else stamps {@link value} with DisposableStack.stamped
  */
 export function appendDispose<Value extends object>(value: Value, ...disposables: Array<DisposableStackArgument>) {
-  if (is(value, DisposableStack) || is(value, AsyncDisposableStack)) {
-    value.append(...disposables);
+  if (is(value, DisposableStack)) {
+    (value as DisposableStack).append(...disposables);
+  } else if (is(value, AsyncDisposableStack)) {
+    (value as AsyncDisposableStack).append(...disposables);
   } else if (DisposableStack.stamper.has(value)) {
     DisposableStack.stamper.get(value).append(...disposables);
   } else if (AsyncDisposableStack.stamper.has(value)) {
@@ -36,7 +40,7 @@ export function appendDispose<Value extends object>(value: Value, ...disposables
  */
 appendDispose.async = function appendDisposeAsync<Value extends object>(value: Value, ...disposables: Array<AsyncDisposableStackArgument>) {
   if (is(value, AsyncDisposableStack)) {
-    value.append(...disposables);
+    (value as AsyncDisposableStack).append(...disposables);
   } else if (AsyncDisposableStack.stamper.has(value)) {
     AsyncDisposableStack.stamper.get(value).append(...disposables);
   } else {

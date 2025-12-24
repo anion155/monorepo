@@ -132,6 +132,7 @@ defineProperty(DisposableStack, "stamper", {
   }),
   writable: false,
   enumerable: false,
+  configurable: true,
 });
 defineProperty(AsyncDisposableStack, "stamper", {
   value: new Stamper<AsyncDisposable, AsyncDisposableStack>((object) => {
@@ -147,6 +148,7 @@ defineProperty(AsyncDisposableStack, "stamper", {
   }),
   writable: false,
   enumerable: false,
+  configurable: true,
 });
 
 declare global {
