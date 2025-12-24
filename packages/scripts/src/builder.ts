@@ -47,7 +47,7 @@ await main(async (stack) => {
   pb.step(2 / 5);
   await $`mkdir -p dist/src/../lib/`;
   pb.step(3 / 5);
-  await $`cp -r src/ dist/src/`;
+  await $`rsync -av --exclude *.spec.* --exclude *.spec-d.* src dist/src/`;
   pb.step(4 / 5);
   await $`pnpm --package=typescript dlx tsc --project tsconfig.build.json --outDir dist/lib`;
   pb.step(5 / 5);
