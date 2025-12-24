@@ -94,7 +94,7 @@
   },
   "devDependencies": {
     "@anion155/configs": "workspace:*",
-    "@anion155/utils": "workspace:*",
+    "@anion155/scripts": "workspace:*",
     "@jest/globals": "^30.0.0",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.0.3",

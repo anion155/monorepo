@@ -8,7 +8,7 @@
     { "path": "packages/proposal-async-iterator-helpers" },
     { "path": "packages/proposal-iterator-helpers" },
     { "path": "packages/polyfill-base" },
-    { "path": "packages/utils" },
+    { "path": "packages/scripts" },
     { "path": "packages/configs" },
     { "path": "." }
   ],

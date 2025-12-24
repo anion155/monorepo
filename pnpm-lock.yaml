@@ -175,9 +175,9 @@ importers:
       '@anion155/configs':
         specifier: workspace:*
         version: link:../configs
-      '@anion155/utils':
+      '@anion155/scripts':
         specifier: workspace:*
-        version: link:../utils/dist
+        version: link:../scripts/dist
       '@jest/globals':
         specifier: ^30.0.0
         version: 30.2.0
@@ -213,14 +213,44 @@ importers:
         specifier: ^3.5.3
         version: 3.6.2
 
+  packages/scripts:
+    dependencies:
+      '@types/node':
+        specifier: ^24.0.3
+        version: 24.7.0
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      zx:
+        specifier: ^8.5.5
+        version: 8.8.4
+    devDependencies:
+      '@anion155/configs':
+        specifier: workspace:*
+        version: link:../configs
+      '@anion155/proposal-explicit-resource-management':
+        specifier: workspace:*
+        version: link:../proposal-explicit-resource-management
+      '@anion155/shared':
+        specifier: workspace:*
+        version: link:../shared
+      esbuild:
+        specifier: ^0.27.2
+        version: 0.27.2
+      prettier:
+        specifier: ^3.6.2
+        version: 3.6.2
+
+  packages/scripts/dist: {}
+
   packages/shared:
     devDependencies:
       '@anion155/configs':
         specifier: workspace:*
         version: link:../configs
-      '@anion155/utils':
+      '@anion155/scripts':
         specifier: workspace:*
-        version: link:../utils/dist
+        version: link:../scripts/dist
       '@jest/globals':
         specifier: ^30.0.0
         version: 30.2.0
@@ -284,36 +314,6 @@ importers:
       react:
         specifier: ^19.1.0
         version: 19.2.0
-
-  packages/utils:
-    dependencies:
-      '@types/node':
-        specifier: ^24.0.3
-        version: 24.7.0
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-      zx:
-        specifier: ^8.5.5
-        version: 8.8.4
-    devDependencies:
-      '@anion155/configs':
-        specifier: workspace:*
-        version: link:../configs
-      '@anion155/proposal-explicit-resource-management':
-        specifier: workspace:*
-        version: link:../proposal-explicit-resource-management
-      '@anion155/shared':
-        specifier: workspace:*
-        version: link:../shared
-      esbuild:
-        specifier: ^0.27.2
-        version: 0.27.2
-      prettier:
-        specifier: ^3.6.2
-        version: 3.6.2
-
-  packages/utils/dist: {}
 
 packages:
 
