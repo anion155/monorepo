@@ -1,6 +1,5 @@
-import { polyfillProperty } from "@anion155/polyfill-base";
-
 import { AsyncIteratorPrototype } from "./async-iterator-prototype";
+import { polyfillProperty } from "./base";
 
 polyfillProperty(AsyncIteratorPrototype, "reduce", {
   value: async function reduce<T, TReturn, TNext, U>(

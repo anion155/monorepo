@@ -1,6 +1,5 @@
-import { polyfillProperty } from "@anion155/polyfill-base";
-
 import { AsyncIteratorPrototype } from "./async-iterator-prototype";
+import { polyfillProperty } from "./base";
 
 polyfillProperty(AsyncIteratorPrototype, "toArray", {
   value: async function toArray<T, TReturn, TNext>(this: AsyncIterator<T, TReturn, TNext>): Promise<T[]> {

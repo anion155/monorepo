@@ -1,9 +1,8 @@
 import "./async-iterator-from";
 
-import { polyfillProperty } from "@anion155/polyfill-base";
-
 import { AsyncIteratorConstructor } from "./async-iterator-constructor";
 import { AsyncIteratorPrototype } from "./async-iterator-prototype";
+import { polyfillProperty } from "./base";
 
 polyfillProperty(AsyncIteratorPrototype, "flatMap", {
   value: async function* flatMap<T, TReturn, TNext, U>(

@@ -1,4 +1,4 @@
-import { polyfillProperty } from "@anion155/polyfill-base";
+import { polyfillProperty } from "./base";
 
 /* istanbul ignore next */
 async function* anonym() {}

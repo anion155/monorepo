@@ -1,9 +1,8 @@
 import "./iterator-prototype-to-async";
 
-import { polyfillProperty } from "@anion155/polyfill-base";
-
 import { AsyncIteratorConstructor } from "./async-iterator-constructor";
 import { AsyncIteratorPrototype } from "./async-iterator-prototype";
+import { polyfillProperty } from "./base";
 import { isAsyncIterable, isAsyncIteratorInstance, isIterable, IteratorConstructor } from "./utils";
 
 const doneKey = Symbol.for("proxy-async-iterator-done");
@@ -16,7 +15,7 @@ type ProxyAsyncIterator<T, TReturn = unknown, TNext = unknown> = Iterator<T, TRe
 
 function ProxyAsyncIterator<T, TReturn = unknown, TNext = unknown>(
   this: ProxyAsyncIterator<T, TReturn, TNext>,
-  target: AsyncIterator<T, TReturn, TNext>
+  target: AsyncIterator<T, TReturn, TNext>,
 ) {
   this[doneKey] = false;
   polyfillProperty(this, targetKey, { value: target, writable: false });
@@ -47,7 +46,7 @@ ProxyAsyncIterator.prototype = Object.create(AsyncIteratorPrototype, {
 
 polyfillProperty(AsyncIteratorConstructor, "from", {
   value: function from<T, TReturn = unknown, TNext = unknown>(
-    it: Iterator<T, TReturn, TNext> | Iterable<T> | AsyncIterator<T, TReturn, TNext> | AsyncIterable<T>
+    it: Iterator<T, TReturn, TNext> | Iterable<T> | AsyncIterator<T, TReturn, TNext> | AsyncIterable<T>,
   ): AsyncIteratorObject<T, TReturn, TNext> {
     if (isAsyncIteratorInstance<T, TReturn, TNext>(it)) return it;
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

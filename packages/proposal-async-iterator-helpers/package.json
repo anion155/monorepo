@@ -3,19 +3,45 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./async-iterator-constructor": "./src/async-iterator-constructor.ts",
+    "./async-iterator-from": "./src/async-iterator-from.ts",
+    "./async-iterator-prototype-drop": "./src/async-iterator-prototype-drop.ts",
+    "./async-iterator-prototype-every": "./src/async-iterator-prototype-every.ts",
+    "./async-iterator-prototype-filter": "./src/async-iterator-prototype-filter.ts",
+    "./async-iterator-prototype-find": "./src/async-iterator-prototype-find.ts",
+    "./async-iterator-prototype-flat-map": "./src/async-iterator-prototype-flat-map.ts",
+    "./async-iterator-prototype-for-each": "./src/async-iterator-prototype-for-each.ts",
+    "./async-iterator-prototype-map": "./src/async-iterator-prototype-map.ts",
+    "./async-iterator-prototype-reduce": "./src/async-iterator-prototype-reduce.ts",
+    "./async-iterator-prototype-some": "./src/async-iterator-prototype-some.ts",
+    "./async-iterator-prototype-take": "./src/async-iterator-prototype-take.ts",
+    "./async-iterator-prototype-to-array": "./src/async-iterator-prototype-to-array.ts",
+    "./async-iterator-prototype": "./src/async-iterator-prototype.ts",
+    "./global-async-iterator": "./src/global-async-iterator.ts",
+    "./global": "./src/global.ts",
+    "./global.types": "./src/global.types.ts",
     ".": "./src/index.ts",
-    "./types": "./src/index.types.ts",
-    "./global": "./src/global.ts"
+    "./index.types": "./src/index.types.ts",
+    "./iterator-prototype-to-async": "./src/iterator-prototype-to-async.ts",
+    "./utils": "./src/utils.ts"
   },
+  "!exports": [
+    "base.ts"
+  ],
   "scripts": {
     "test": "jest src",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "builder:ready": "rm dist/src/base.ts && cp ../polyfill-base/index.ts dist/src/base.ts"
   },
   "dependencies": {
     "@anion155/polyfill-base": "workspace:*"
   },
+  "!dependencies": [
+    "@anion155/polyfill-base"
+  ],
   "devDependencies": {
     "@anion155/configs": "workspace:*",
+    "@anion155/scripts": "workspace:*",
     "@jest/globals": "^30.0.0",
     "eslint": "^9.29.0",
     "jest": "^30.0.2",
