@@ -172,11 +172,11 @@ export function defineProperties<Target extends object>(target: Target, properti
  *
  * @example
  *  const target = { } as { a: number, b: number };
- *  definePropertiesFrom(target, { a: 1, b: 2 });
+ *  defineFields(target, { a: 1, b: 2 });
  *  Object.getOwnPropertyDescriptor(target, "a"); // { value: 1 }
  *  Object.getOwnPropertyDescriptor(target, "b"); // { value: 2 }
  */
-export function definePropertiesFrom<Target extends object>(target: Target, values: Partial<Target>) {
+export function defineFields<Target extends object>(target: Target, values: Partial<Target>) {
   const keys = [...Object.getOwnPropertyNames(values), ...Object.getOwnPropertySymbols(values)] as Array<keyof Target>;
   for (const key of keys) {
     const descriptor = getOwnProperty(values, key)!;
@@ -195,7 +195,7 @@ export function appendProperty<Target extends object, Key extends string | symbo
   target: Target,
   key: Key,
   descriptor: Descriptor,
-): asserts target is Omit<Target & AppendProperty<Key, Descriptor>, never> {
+): asserts target is IntersectHelper<Target, AppendProperty<Key, Descriptor>> {
   defineProperty(target, key as never, descriptor as never);
 }
 
@@ -210,7 +210,7 @@ export function appendMethod<Target extends object, Key extends string | symbol,
   target: Target,
   key: Key,
   method: _Method,
-): asserts target is Omit<Target & { [k in Key]: _Method }, never> {
+): asserts target is IntersectHelper<Target, { [k in Key]: _Method }> {
   Object.defineProperty(target, key as never, { value: method as never, writable: true, enumerable: false, configurable: true });
 }
 
@@ -226,7 +226,7 @@ export function appendMethod<Target extends object, Key extends string | symbol,
 export function appendProperties<Target extends object, Properties extends { [key: string | symbol]: StronglyTypedPropertyDescriptor<any> }>(
   target: Target,
   properties: Properties,
-): asserts target is Omit<Target & AppendProperties<Properties>, never> {
+): asserts target is IntersectHelper<Target, AppendProperties<Properties>> {
   defineProperties(target, properties as never);
 }
 
@@ -235,14 +235,14 @@ export function appendProperties<Target extends object, Properties extends { [ke
  *
  * @example
  *  const target = { };
- *  appendProperties(target, { @accessor b: 42 });
+ *  appendPropertiesFrom(target, { @accessor b: 42 });
  *  Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
  */
-export function appendPropertiesFrom<Target extends object, Values extends object>(
+export function appendValues<Target extends object, Values extends object>(
   target: Target,
   values: Values,
-): asserts target is Omit<Target & Values, never> {
-  definePropertiesFrom(target, values);
+): asserts target is IntersectHelper<Target, Values> {
+  defineFields(target, values);
 }
 
 /** Utility to modify property descriptor */
@@ -294,14 +294,30 @@ export function updateProperties<Target extends object>(
 }
 
 /**
+ * Assigns properties from {@link properties} to {@link target}.
+ *
+ * @example
+ *  const target = properties({ }, { b: { value: 42 } });
+ *  Object.getOwnPropertyDescriptor(target, "b"); // { value: 42 }
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function assignProperties<Target extends object, Properties extends { [key: string | symbol]: StronglyTypedPropertyDescriptor<any> }>(
+  target: Target,
+  properties: Properties,
+): IntersectHelper<Target, AppendProperties<Properties>> {
+  defineProperties(target, properties as never);
+  return target as never;
+}
+
+/**
  * Assigns all own properties from {@link values} to {@link target}.
  *
  * @example
- *  const target = assignProperties({ }, { @accessor b: 42 });
+ *  const target = assignFields({ }, { @accessor b: 42 });
  *  Object.getOwnPropertyDescriptor(target, "b"); // { get, set }
  */
-export function assignProperties<Target extends object, Values extends object>(target: Target, values: Values): Extend<Target, Values> {
-  definePropertiesFrom(target, values);
+export function assignFields<Target extends object, Values extends object>(target: Target, values: Values): Extend<Target, Values> {
+  defineFields(target, values);
   return target as never;
 }
 
@@ -319,7 +335,7 @@ export function create<Proto extends object, Properties extends { [key: string |
 ): Extend<Proto, AppendProperties<Properties>> {
   const target = Object.create(proto) as Proto;
   appendProperties(target, properties);
-  return target;
+  return target as never;
 }
 
 /**
@@ -332,7 +348,7 @@ export function create<Proto extends object, Properties extends { [key: string |
  */
 export function createFrom<Proto extends object, Values extends object>(proto: Proto, values: Values): Extend<Proto, Values> {
   const target = Object.create(proto) as Extend<Proto, Values>;
-  definePropertiesFrom(target, values);
+  defineFields(target, values);
   return target;
 }
 

@@ -3,14 +3,15 @@ import { describe, expect, it, jest } from "@jest/globals";
 import {
   appendMethod,
   appendProperties,
-  appendPropertiesFrom,
   appendProperty,
+  appendValues,
+  assignFields,
   assignProperties,
   create,
   createFrom,
+  defineFields,
   defineMethod,
   defineProperties,
-  definePropertiesFrom,
   defineProperty,
   defineToStringTag,
   getOwnProperty,
@@ -140,11 +141,11 @@ describe("object utils", () => {
     });
   });
 
-  describe("definePropertiesFrom()", () => {
+  describe("defineFields()", () => {
     it("should define properties", () => {
       const obj = {} as { a: number; b: number; test(): number };
       const test = () => 5;
-      definePropertiesFrom(obj, {
+      defineFields(obj, {
         a: 1,
         get b() {
           return 2;
@@ -168,7 +169,7 @@ describe("object utils", () => {
       const proto = { a: 1 };
       const values = Object.create(proto, {}) as object;
       appendProperty(values, "b", { value: 2 });
-      definePropertiesFrom(obj, values);
+      defineFields(obj, values);
       expect(Object.getOwnPropertyDescriptor(obj, "a")).toBeUndefined();
       expect(Object.getOwnPropertyDescriptor(obj, "b")).toStrictEqual({ configurable: false, enumerable: false, value: 2, writable: false });
     });
@@ -199,10 +200,10 @@ describe("object utils", () => {
     });
   });
 
-  describe("appendPropertiesFrom()", () => {
+  describe("appendValues()", () => {
     it("should append properties to the object", () => {
       const obj = {};
-      appendPropertiesFrom(obj, { a: 1, test: () => 2 });
+      appendValues(obj, { a: 1, test: () => 2 });
       expect(obj.a).toBe(1);
       expect(obj.test()).toBe(2);
     });
@@ -243,9 +244,20 @@ describe("object utils", () => {
   });
 
   describe("assignProperties()", () => {
+    it("should assign properties", () => {
+      const source = { a: 0 };
+      const obj = assignProperties(source, { b: { value: 1, enumerable: true }, c: { value: 2, configurable: false } });
+      expect(obj).toBe(source);
+      expect(obj).toStrictEqual({ a: 0, b: 1 });
+      expect(obj.c).toStrictEqual(2);
+      expect(() => Object.defineProperty(obj, "c", { configurable: true })).toStrictThrow(new TypeError("Cannot redefine property: c"));
+    });
+  });
+
+  describe("assignFields()", () => {
     it("should assign properties to object", () => {
       const test = () => 3;
-      const obj = assignProperties({ a: 1 }, { b: 2, test });
+      const obj = assignFields({ a: 1 }, { b: 2, test });
       expect({ ...obj }).toStrictEqual({ a: 1, b: 2, test });
       expect(obj.test()).toBe(3);
     });

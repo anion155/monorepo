@@ -2,8 +2,9 @@ import type { PropertyDescriptorReadonly, PropertyDescriptorWritable } from "./o
 import {
   appendMethod,
   appendProperties,
-  appendPropertiesFrom,
   appendProperty,
+  appendValues,
+  assignFields,
   assignProperties,
   create,
   createFrom,
@@ -90,12 +91,18 @@ const value = new (class {
 
 {
   const value = {};
-  appendPropertiesFrom(value, { a: 1, b: (): number => 2 });
+  appendValues(value, { a: 1, b: (): number => 2 });
   type Case = Expect<Equal<typeof value, { a: number; b: () => number }>>;
 }
 
 {
-  const value = assignProperties({ a: 1 }, { b: (): number => 2 });
+  const source = { a: 1 };
+  const value = assignProperties(source, { b: { value: (): number => 2 } });
+  type Case = Expect<Equal<typeof value, { a: number; b: () => number }>>;
+}
+
+{
+  const value = assignFields({ a: 1 }, { b: (): number => 2 });
   type Case = Expect<Equal<typeof value, { a: number; b: () => number }>>;
 }
 
