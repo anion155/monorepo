@@ -131,7 +131,7 @@ export function wrapCallable<Source extends Callable<never, unknown>, Wrapped ex
   source: Source,
   wrappedFabric: CallableWrapperFabric<Source, Wrapped>,
   name?: string,
-): Extend<Source, Wrapped> & InferCallableSign<Wrapped> {
+): Omit<Extend<Source, Wrapped>, never> & InferCallableSign<Wrapped> {
   return nameCallable(
     name ?? source.name,
     proxyCallable((call, getTarget) => {
@@ -169,7 +169,7 @@ export function wrapCallable<Source extends Callable<never, unknown>, Wrapped ex
  */
 export function liftContext<Context, Params extends unknown[], Result, Hoisted>(fn: { (context: Context, ...params: Params): Result } & Hoisted) {
   /** FIXME: remade {@link wrapCallable} in same manner */
-  return wrapCallable(fn, (callFn, _, getContext) => (...params) => {
+  return wrapCallable(fn, (callFn, _, getContext) => (...params: Params) => {
     return callFn([getContext(), ...params] as never, null);
   }) as Method<Context, Params, Result> & Omit<Hoisted, never>;
 }
