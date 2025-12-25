@@ -2,42 +2,42 @@
 
 import "./utils/polyfils";
 
-import { hasTypedField } from "@anion155/shared/is";
 import { applyConsoleFormat } from "@anion155/shared/misc";
 import { readFile, writeFile } from "node:fs/promises";
 import { $, cd } from "zx";
 import { cdRoot } from "./utils/cd-root";
-import { directPrint } from "./utils/direct-print";
+import { Logger } from "./utils/logger";
 import { main } from "./utils/main";
 import { PackageJson } from "./utils/package.json";
 import { ProgressBar } from "./utils/progress-bar";
+import { scriptRunner } from "./utils/script-runner";
+
+const logger = new Logger("builder");
 
 await main(async (stack) => {
-  directPrint(applyConsoleFormat("fgGreen", "Building package") + "\r");
+  logger.info?.(applyConsoleFormat("fgGreen", "Building package") + "\r");
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
   await cdRoot();
   const sourcePkg: PackageJson = await readFile("./package.json", "utf-8").then(JSON.parse);
   if (sourcePkg.name) console.log(applyConsoleFormat("green", `Building package [${sourcePkg.name}]`));
+
+  const runScript = scriptRunner(sourcePkg, logger);
   const pb = new ProgressBar();
   stack.append(pb);
 
-  if (hasTypedField(sourcePkg.scripts, "builder:pre", "string")) {
-    await $`pnpm run builder:pre`;
-  }
+  await runScript("builder:pre");
+  pb.step(1 / 4);
 
-  pb.step(1 / 5);
+  logger.info?.("preparing dist");
   await $`rm -rf dist`;
-  pb.step(2 / 5);
   await $`mkdir -p dist/src/../lib/`;
-  pb.step(3 / 5);
+  pb.step(2 / 4);
   await $`rsync -av --exclude *.spec.* --exclude *.spec-d.* src/ dist/src/`;
-  pb.step(4 / 5);
-  if (hasTypedField(sourcePkg.scripts, "builder:ready", "string")) {
-    await $`pnpm run builder:ready`;
-  }
-  if (hasTypedField(sourcePkg.scripts, "builder:tsc", "string")) {
-    await $`pnpm run builder:tsc`;
-  } else {
+  pb.step(3 / 4);
+
+  logger.info?.("building");
+  await runScript("builder:ready");
+  if (!(await runScript("builder:tsc"))) {
     cd("dist");
     await writeFile(
       "tsconfig.json",
@@ -47,7 +47,7 @@ await main(async (stack) => {
     await $`rm tsconfig.json`;
     cd("..");
   }
-  pb.step(5 / 5);
+  pb.step(4 / 4);
 
   const resultPkg: PackageJson = {
     name: sourcePkg.name,
@@ -63,9 +63,7 @@ await main(async (stack) => {
   };
   await writeFile("dist/package.json", JSON.stringify(resultPkg, undefined, 2) + "\n");
 
-  if (hasTypedField(sourcePkg.scripts, "builder:post", "string")) {
-    await $`pnpm run builder:post`;
-  }
+  await runScript("builder:post");
 
-  console.log(applyConsoleFormat("green", "Ready to publish"));
+  logger.info?.(applyConsoleFormat("green", "Ready to publish"));
 });

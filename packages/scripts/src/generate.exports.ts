@@ -2,13 +2,16 @@
 
 import "./utils/polyfils";
 
+import { escapes } from "@anion155/shared/misc/escapes";
 import { glob } from "@anion155/shared/misc/glob";
 import { readdir, readFile, stat, writeFile } from "node:fs/promises";
-import path from "node:path";
-import { styleText } from "node:util";
+import path, { normalize } from "node:path";
 import { cdRoot } from "./utils/cd-root";
+import { Logger } from "./utils/logger";
 import { main } from "./utils/main";
 import { PackageJson } from "./utils/package.json";
+
+const logger = new Logger("generate.exports");
 
 const SUPPORTED_EXTENSIONS = [".js", ".jsx", ".ts", ".tsx"];
 const UNSUPPORTED_EXTENSIONS = SUPPORTED_EXTENSIONS.map((ext) => `.spec${ext}`).concat(...SUPPORTED_EXTENSIONS.map((ext) => `.spec-d${ext}`));
@@ -26,9 +29,12 @@ const module = (filepath: string) => {
 };
 
 await main(async () => {
+  logger.info?.("Generating exports...");
   await cdRoot();
-  const exports: Record<string, string> = {};
   const pkg: PackageJson = await readFile("./package.json", "utf-8").then(JSON.parse);
+  logger.info?.(`${escapes.cursor.moveUpAndStart()}Generating exports [${pkg.name}]`);
+
+  const exports: Record<string, string> = {};
   if (pkg["+exports"]) {
     for (const [name, module] of Object.entries(pkg["+exports"])) {
       if (typeof module === "string") {
@@ -39,11 +45,26 @@ await main(async () => {
       }
     }
   }
-  const ignores = pkg["!exports"]?.map((pattern) => ({ glob: glob(pattern), nameonly: pattern.includes("/") })) ?? [];
+  const ignores =
+    pkg["!exports"]?.map((pattern) => {
+      if (pattern.includes("/")) return Object.assign(glob(normalize(pattern)), { nameonly: false });
+      return Object.assign(glob(pattern), { nameonly: true });
+    }) ?? [];
+  logger.info?.(
+    "ignore pattern:",
+    ignores.map((glob) => ({ pattern: glob.pattern, nameonly: glob.nameonly })),
+  );
   const traverseDir = async (dir: string, base: string) => {
     for (const file of await readdir(dir)) {
       const filepath = path.join(dir, file);
-      if (ignores.find((ignore) => ignore.glob(ignore.nameonly ? file : filepath))) continue;
+      {
+        const glob = ignores.find((glob) => glob(glob.nameonly ? file : filepath));
+        if (glob) {
+          logger.warn?.("ignoring:", filepath, ", because of:", glob.pattern);
+          continue;
+        }
+      }
+      logger.log?.("export:", filepath);
       const basepath = path.join(base, file);
       const fileStats = await stat(filepath);
       if (fileStats.isDirectory()) {
@@ -59,5 +80,5 @@ await main(async () => {
   pkg.exports = exports;
   await writeFile("./package.json", JSON.stringify(pkg, undefined, 2) + "\n");
 
-  console.log(styleText("green", "Exports updated"));
+  logger.info?.("Exports updated");
 });
