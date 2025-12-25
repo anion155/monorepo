@@ -1,4 +1,4 @@
-import { polyfillProperty } from "@anion155/polyfill-base";
+import { polyfillProperty } from "./base";
 
 polyfillProperty(Promise, "withResolvers", {
   value: function withResolvers<T>(this: typeof Promise) {

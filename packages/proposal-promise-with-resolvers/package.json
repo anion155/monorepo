@@ -1,20 +1,47 @@
 {
   "name": "@anion155/proposal-promise-with-resolvers",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Polyfills implementing the Promise with resolvers proposal for ECMAScript.",
+  "keywords": [
+    "promise",
+    "deferred",
+    "ecmascript",
+    "proposal",
+    "polyfill"
+  ],
+  "author": {
+    "name": "anion155",
+    "url": "https://github.com/anion155"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anion155/monorepo.git",
+    "directory": "packages/proposal-promise-with-resolvers"
+  },
+  "license": "MIT",
   "type": "module",
   "exports": {
+    "./global": "./src/global.ts",
     ".": "./src/index.ts",
-    "./global": "./src/global.ts"
+    "./promise-with-resolvers": "./src/promise-with-resolvers.ts"
   },
+  "!exports": [
+    "base.ts"
+  ],
   "scripts": {
     "test": "jest src",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "builder:ready": "rm dist/src/base.ts && cp ../polyfill-base/index.ts dist/src/base.ts"
   },
   "dependencies": {
     "@anion155/polyfill-base": "workspace:*"
   },
+  "!dependencies": [
+    "@anion155/polyfill-base"
+  ],
   "devDependencies": {
     "@anion155/configs": "workspace:*",
+    "@anion155/scripts": "workspace:*",
     "@jest/globals": "^30.0.0",
     "eslint": "^9.29.0",
     "jest": "^30.0.2",

@@ -206,6 +206,9 @@ importers:
       '@anion155/configs':
         specifier: workspace:*
         version: link:../configs
+      '@anion155/scripts':
+        specifier: workspace:*
+        version: link:../scripts/dist
       '@jest/globals':
         specifier: ^30.0.0
         version: 30.2.0
