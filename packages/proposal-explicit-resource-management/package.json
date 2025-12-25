@@ -1,6 +1,24 @@
 {
   "name": "@anion155/proposal-explicit-resource-management",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Polyfills implementing the Explicit Resource Management proposal for ECMAScript.",
+  "keywords": [
+    "explicit-resource-management",
+    "disposable",
+    "ecmascript",
+    "proposal",
+    "polyfill"
+  ],
+  "author": {
+    "name": "anion155",
+    "url": "https://github.com/anion155"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anion155/monorepo.git",
+    "directory": "packages/proposal-explicit-resource-management"
+  },
+  "license": "MIT",
   "type": "module",
   "exports": {
     "./async-disposable-stack": "./src/async-disposable-stack.ts",
@@ -21,7 +39,8 @@
   ],
   "scripts": {
     "test": "jest src",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "builder:ready": "rm dist/src/base.ts && cp ../polyfill-base/index.ts dist/src/base.ts"
   },
   "dependencies": {
     "@anion155/polyfill-base": "workspace:*"

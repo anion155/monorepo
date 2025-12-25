@@ -1,6 +1,25 @@
 {
   "name": "@anion155/proposal-async-iterator-helpers",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Polyfills implementing the Async Iterator Helpers proposal for ECMAScript.",
+  "keywords": [
+    "iterator",
+    "iterable",
+    "helpers",
+    "ecmascript",
+    "proposal",
+    "polyfill"
+  ],
+  "author": {
+    "name": "anion155",
+    "url": "https://github.com/anion155"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anion155/monorepo.git",
+    "directory": "packages/proposal-async-iterator-helpers"
+  },
+  "license": "MIT",
   "type": "module",
   "exports": {
     "./async-iterator-constructor": "./src/async-iterator-constructor.ts",
