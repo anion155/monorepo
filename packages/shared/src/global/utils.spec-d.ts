@@ -21,6 +21,15 @@ type PickHelperCases = [
   PickHelper<{ a: number; b: string }, "c">,
 ];
 
+type IntersectHelperCases = [
+  // should intersect types without `&`
+  Expect<Equal<IntersectHelper<{ a: number }, { b: string }>, { a: number; b: string }>>,
+  ExpectNot<Equal<IntersectHelper<{ a: number }, { b: string }>, { a: number } & { b: string }>>,
+  // should not do anything to callable types
+  Expect<Equal<IntersectHelper<{ (a: number): string }, { b: string }>, { (a: number): string } & { b: string }>>,
+  Expect<Equal<IntersectHelper<{ b: string }, { (a: number): string }>, { (a: number): string } & { b: string }>>,
+];
+
 type OmitHelperCases = [
   // should autosuggest key names
   Expect<Equal<OmitHelper<{ a: number; b: string }, "a">, { b: string }>>,
@@ -70,6 +79,8 @@ type DeepMutableCases = [
 type ExtendCases = [
   // should make mutable all props no matter how deep
   Expect<Equal<Extend<{ a: number; b: string }, { b: "test"; c: object }>, { a: number; b: "test"; c: object }>>,
+  Expect<Equal<Extend<{ (a: number, b: string): number }, { b: "test"; c: object }>, ((a: number, b: string) => number) & { b: "test"; c: object }>>,
+  Expect<Equal<Extend<{ b: "test"; c: object }, { (a: number, b: string): number }>, ((a: number, b: string) => number) & { b: "test"; c: object }>>,
 ];
 
 type PartialSomeCases = [

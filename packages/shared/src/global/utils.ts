@@ -7,6 +7,8 @@ declare global {
   type PickHelper<T, K extends keyof T> = Pick<T, K>;
   /** Construct a type with the properties of T except for those in type K. */
   type OmitHelper<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+  /** Create intersected type. */
+  type IntersectHelper<T, U> = T extends Callable<never, unknown> ? T & U : U extends Callable<never, unknown> ? T & U : Omit<T & U, never>;
 
   /** Make all properties in T mutable */
   type Mutable<T> = {
@@ -29,7 +31,7 @@ declare global {
   };
 
   /** Takes U and adds not overlapping fields from T */
-  type Extend<T, U> = Omit<Omit<T, keyof U> & U, never>;
+  type Extend<T, U> = T extends Callable<never, unknown> ? T & U : U extends Callable<never, unknown> ? T & U : Omit<Omit<T, keyof U> & U, never>;
   /** Changes some fields to optional */
   type PartialSome<T, K extends keyof T> = Extend<T, Partial<PickHelper<T, K>>>;
   /** Changes some fields to required */
