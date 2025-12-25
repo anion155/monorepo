@@ -1,7 +1,6 @@
 import "./global-symbols";
 
-import { polyfillProperty } from "@anion155/polyfill-base";
-
+import { polyfillProperty } from "./base";
 import { IteratorPrototype } from "./utils";
 
 polyfillProperty(IteratorPrototype, Symbol.dispose, {

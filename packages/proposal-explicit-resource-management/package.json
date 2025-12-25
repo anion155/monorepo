@@ -3,9 +3,22 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./async-disposable-stack": "./src/async-disposable-stack.ts",
+    "./async-iterator-prototype-dispose": "./src/async-iterator-prototype-dispose.ts",
+    "./disposable-stack": "./src/disposable-stack.ts",
+    "./global-async-disposable-stack": "./src/global-async-disposable-stack.ts",
+    "./global-disposable-stack": "./src/global-disposable-stack.ts",
+    "./global-suppressed-error": "./src/global-suppressed-error.ts",
+    "./global-symbols": "./src/global-symbols.ts",
+    "./global": "./src/global.ts",
     ".": "./src/index.ts",
-    "./global": "./src/global.ts"
+    "./iterator-prototype-dispose": "./src/iterator-prototype-dispose.ts",
+    "./suppressed-error": "./src/suppressed-error.ts",
+    "./utils": "./src/utils.ts"
   },
+  "!exports": [
+    "base.ts"
+  ],
   "scripts": {
     "test": "jest src",
     "lint": "eslint src"
@@ -13,8 +26,12 @@
   "dependencies": {
     "@anion155/polyfill-base": "workspace:*"
   },
+  "!dependencies": [
+    "@anion155/polyfill-base"
+  ],
   "devDependencies": {
     "@anion155/configs": "workspace:*",
+    "@anion155/scripts": "workspace:*",
     "@jest/globals": "^30.0.0",
     "eslint": "^9.29.0",
     "jest": "^30.0.2",
