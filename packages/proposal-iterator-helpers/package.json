@@ -52,6 +52,9 @@
   "dependencies": {
     "@anion155/polyfill-base": "workspace:*"
   },
+  "!dependencies": [
+    "@anion155/polyfill-base"
+  ],
   "devDependencies": {
     "@anion155/configs": "workspace:*",
     "@anion155/scripts": "workspace:*",

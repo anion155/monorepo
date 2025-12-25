@@ -13,5 +13,6 @@ export type PackageJson = {
   "!exports"?: string[];
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
+  "!dependencies"?: string[];
   devDependencies?: Record<string, string>;
 };

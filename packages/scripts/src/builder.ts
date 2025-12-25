@@ -2,7 +2,7 @@
 
 import "./utils/polyfils";
 
-import { applyConsoleFormat } from "@anion155/shared/misc";
+import { applyConsoleFormat, escapes } from "@anion155/shared/misc";
 import { readFile, writeFile } from "node:fs/promises";
 import { $, cd } from "zx";
 import { cdRoot } from "./utils/cd-root";
@@ -19,7 +19,7 @@ await main(async (stack) => {
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
   await cdRoot();
   const sourcePkg: PackageJson = await readFile("./package.json", "utf-8").then(JSON.parse);
-  if (sourcePkg.name) console.log(applyConsoleFormat("green", `Building package [${sourcePkg.name}]`));
+  logger.info?.(`${escapes.cursor.moveUpAndStart()}Building package [${sourcePkg.name}]`);
 
   const runScript = scriptRunner(sourcePkg, logger);
   const pb = new ProgressBar();
@@ -61,6 +61,14 @@ await main(async (stack) => {
     exports: sourcePkg.exports,
     dependencies: sourcePkg.dependencies,
   };
+  if (sourcePkg["!dependencies"]) {
+    logger.log?.("remove dependencies:", sourcePkg["!dependencies"]);
+    const dependencies = { ...resultPkg.dependencies };
+    sourcePkg["!dependencies"].forEach((dep) => {
+      delete dependencies[dep];
+    });
+    resultPkg.dependencies = dependencies;
+  }
   await writeFile("dist/package.json", JSON.stringify(resultPkg, undefined, 2) + "\n");
 
   await runScript("builder:post");
