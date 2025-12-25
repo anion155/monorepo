@@ -138,13 +138,13 @@ const ConsoleFormat4bForegroundColors = mapColorsValues<{
   readonly [N in keyof _ConsoleFormatColorsValues as `fg${Capitalize<N>}`]: ToNumber<`3${_ConsoleFormatColorsValues[N]}`>;
 }>(([name, value]) => [`fg${name[0].toUpperCase()}${name.substring(1)}`, 30 + value] as never);
 export type ConsoleFormat4bForegroundColors = (typeof ConsoleFormat4bForegroundColors)[keyof typeof ConsoleFormat4bForegroundColors];
-export type ConsoleFormat4bForegroundBrightColorPairs = `${ConsoleFormat4bForegroundColors};1`;
+export type ConsoleFormat4bForegroundLegacyBrightColors = `${ConsoleFormat4bForegroundColors};1`;
 
 const ConsoleFormat4bBackgroundColors = mapColorsValues<{
   readonly [N in keyof _ConsoleFormatColorsValues as `bg${Capitalize<N>}`]: ToNumber<`4${_ConsoleFormatColorsValues[N]}`>;
 }>(([name, value]) => [`bg${name[0].toUpperCase()}${name.substring(1)}`, 40 + value] as never);
 export type ConsoleFormat4bBackgroundColors = (typeof ConsoleFormat4bBackgroundColors)[keyof typeof ConsoleFormat4bBackgroundColors];
-export type ConsoleFormat4bBackgroundBrightColorPairs = `${ConsoleFormat4bBackgroundColors};1`;
+export type ConsoleFormat4bBackgroundLegacyBrightColors = `${ConsoleFormat4bBackgroundColors};1`;
 
 const ConsoleFormat4bForegroundBrightColors = mapColorsValues<{
   readonly [N in keyof _ConsoleFormatColorsValues as `fgBr${Capitalize<N>}`]: ToNumber<`9${_ConsoleFormatColorsValues[N]}`>;
@@ -158,18 +158,99 @@ const ConsoleFormat4bBackgroundBrightColors = mapColorsValues<{
 export type ConsoleFormat4bBackgroundBrightColors =
   (typeof ConsoleFormat4bBackgroundBrightColors)[keyof typeof ConsoleFormat4bBackgroundBrightColors];
 
-const ConsoleFormat4bColors = {
-  ...ConsoleFormat4bForegroundColors,
-  ...ConsoleFormat4bBackgroundColors,
-  ...ConsoleFormat4bForegroundBrightColors,
-  ...ConsoleFormat4bBackgroundBrightColors,
+const ConsoleFormat4bForegroundPairs = {
+  fgBlack: [ConsoleFormat4bForegroundColors.fgBlack, ConsoleFormat4bForegroundColors.fgDefault],
+  fgRed: [ConsoleFormat4bForegroundColors.fgRed, ConsoleFormat4bForegroundColors.fgDefault],
+  fgGreen: [ConsoleFormat4bForegroundColors.fgGreen, ConsoleFormat4bForegroundColors.fgDefault],
+  fgYellow: [ConsoleFormat4bForegroundColors.fgYellow, ConsoleFormat4bForegroundColors.fgDefault],
+  fgBlue: [ConsoleFormat4bForegroundColors.fgBlue, ConsoleFormat4bForegroundColors.fgDefault],
+  fgMagenta: [ConsoleFormat4bForegroundColors.fgMagenta, ConsoleFormat4bForegroundColors.fgDefault],
+  fgCyan: [ConsoleFormat4bForegroundColors.fgCyan, ConsoleFormat4bForegroundColors.fgDefault],
+  fgWhite: [ConsoleFormat4bForegroundColors.fgWhite, ConsoleFormat4bForegroundColors.fgDefault],
+
+  fgBrBlack: [ConsoleFormat4bForegroundBrightColors.fgBrBlack, ConsoleFormat4bForegroundColors.fgDefault],
+  fgBrRed: [ConsoleFormat4bForegroundBrightColors.fgBrRed, ConsoleFormat4bForegroundColors.fgDefault],
+  fgBrGreen: [ConsoleFormat4bForegroundBrightColors.fgBrGreen, ConsoleFormat4bForegroundColors.fgDefault],
+  fgBrYellow: [ConsoleFormat4bForegroundBrightColors.fgBrYellow, ConsoleFormat4bForegroundColors.fgDefault],
+  fgBrBlue: [ConsoleFormat4bForegroundBrightColors.fgBrBlue, ConsoleFormat4bForegroundColors.fgDefault],
+  fgBrMagenta: [ConsoleFormat4bForegroundBrightColors.fgBrMagenta, ConsoleFormat4bForegroundColors.fgDefault],
+  fgBrCyan: [ConsoleFormat4bForegroundBrightColors.fgBrCyan, ConsoleFormat4bForegroundColors.fgDefault],
+  fgBrWhite: [ConsoleFormat4bForegroundBrightColors.fgBrWhite, ConsoleFormat4bForegroundColors.fgDefault],
+
+  fgGray: [ConsoleFormat4bForegroundBrightColors.fgBrBlack, ConsoleFormat4bForegroundColors.fgDefault],
+  fgGrey: [ConsoleFormat4bForegroundBrightColors.fgBrBlack, ConsoleFormat4bForegroundColors.fgDefault],
 };
-export type ConsoleFormat4bColors =
-  | (typeof ConsoleFormat4bColors)[keyof typeof ConsoleFormat4bColors]
-  | ConsoleFormat4bForegroundBrightColorPairs
-  | ConsoleFormat4bBackgroundBrightColorPairs;
+export type ConsoleFormat4bForegroundColorNames = keyof typeof ConsoleFormat4bForegroundPairs;
+const ConsoleFormat4bNodeCompatPairs = {
+  black: [ConsoleFormat4bForegroundColors.fgBlack, ConsoleFormat4bForegroundColors.fgDefault],
+  red: [ConsoleFormat4bForegroundColors.fgRed, ConsoleFormat4bForegroundColors.fgDefault],
+  green: [ConsoleFormat4bForegroundColors.fgGreen, ConsoleFormat4bForegroundColors.fgDefault],
+  yellow: [ConsoleFormat4bForegroundColors.fgYellow, ConsoleFormat4bForegroundColors.fgDefault],
+  blue: [ConsoleFormat4bForegroundColors.fgBlue, ConsoleFormat4bForegroundColors.fgDefault],
+  magenta: [ConsoleFormat4bForegroundColors.fgMagenta, ConsoleFormat4bForegroundColors.fgDefault],
+  cyan: [ConsoleFormat4bForegroundColors.fgCyan, ConsoleFormat4bForegroundColors.fgDefault],
+  white: [ConsoleFormat4bForegroundColors.fgWhite, ConsoleFormat4bForegroundColors.fgDefault],
+  gray: [ConsoleFormat4bForegroundBrightColors.fgBrBlack, ConsoleFormat4bForegroundColors.fgDefault],
+  grey: [ConsoleFormat4bForegroundBrightColors.fgBrBlack, ConsoleFormat4bForegroundColors.fgDefault],
+};
+export type ConsoleFormat4bNodeCompatColorNames = keyof typeof ConsoleFormat4bNodeCompatPairs;
+const ConsoleFormat4bBackgroundPairs = {
+  bgBlack: [ConsoleFormat4bBackgroundColors.bgBlack, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgRed: [ConsoleFormat4bBackgroundColors.bgRed, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgGreen: [ConsoleFormat4bBackgroundColors.bgGreen, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgYellow: [ConsoleFormat4bBackgroundColors.bgYellow, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgBlue: [ConsoleFormat4bBackgroundColors.bgBlue, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgMagenta: [ConsoleFormat4bBackgroundColors.bgMagenta, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgCyan: [ConsoleFormat4bBackgroundColors.bgCyan, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgWhite: [ConsoleFormat4bBackgroundColors.bgWhite, ConsoleFormat4bBackgroundColors.bgDefault],
+
+  bgBrBlack: [ConsoleFormat4bBackgroundBrightColors.bgBrBlack, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgBrRed: [ConsoleFormat4bBackgroundBrightColors.bgBrRed, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgBrGreen: [ConsoleFormat4bBackgroundBrightColors.bgBrGreen, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgBrYellow: [ConsoleFormat4bBackgroundBrightColors.bgBrYellow, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgBrBlue: [ConsoleFormat4bBackgroundBrightColors.bgBrBlue, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgBrMagenta: [ConsoleFormat4bBackgroundBrightColors.bgBrMagenta, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgBrCyan: [ConsoleFormat4bBackgroundBrightColors.bgBrCyan, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgBrWhite: [ConsoleFormat4bBackgroundBrightColors.bgBrWhite, ConsoleFormat4bBackgroundColors.bgDefault],
+
+  bgGray: [ConsoleFormat4bBackgroundBrightColors.bgBrBlack, ConsoleFormat4bBackgroundColors.bgDefault],
+  bgGrey: [ConsoleFormat4bBackgroundBrightColors.bgBrBlack, ConsoleFormat4bBackgroundColors.bgDefault],
+};
+export type ConsoleFormat4bBackgroundColorNames = keyof typeof ConsoleFormat4bBackgroundPairs;
+const ConsoleFormat4bPairs = {
+  ...ConsoleFormat4bForegroundPairs,
+  ...ConsoleFormat4bNodeCompatPairs,
+  ...ConsoleFormat4bBackgroundPairs,
+};
+export type ConsoleFormat4bColorNames = keyof typeof ConsoleFormat4bPairs;
+
+const ConsoleFormat4bAllForegroundColors = {
+  ...ConsoleFormat4bForegroundColors,
+  ...ConsoleFormat4bForegroundBrightColors,
+  fgPairs: ConsoleFormat4bForegroundPairs,
+  fgNodePairs: ConsoleFormat4bNodeCompatPairs,
+};
+export type ConsoleFormat4bAllForegroundColors =
+  | (typeof ConsoleFormat4bAllForegroundColors)[Exclude<keyof typeof ConsoleFormat4bAllForegroundColors, "fgPairs" | "fgNodePairs">]
+  | ConsoleFormat4bForegroundLegacyBrightColors;
+const ConsoleFormat4bAllBackgroundColors = {
+  ...ConsoleFormat4bBackgroundColors,
+  ...ConsoleFormat4bBackgroundBrightColors,
+  bgPairs: ConsoleFormat4bBackgroundPairs,
+};
+export type ConsoleFormat4bAllBackgroundColors =
+  | (typeof ConsoleFormat4bAllBackgroundColors)[Exclude<keyof typeof ConsoleFormat4bAllBackgroundColors, "bgPairs">]
+  | ConsoleFormat4bBackgroundLegacyBrightColors;
+const ConsoleFormat4bColors = {
+  ...ConsoleFormat4bAllForegroundColors,
+  ...ConsoleFormat4bAllBackgroundColors,
+  pairs: ConsoleFormat4bPairs,
+};
+export type ConsoleFormat4bColors = ConsoleFormat4bAllForegroundColors | ConsoleFormat4bAllBackgroundColors;
 
 const ConsoleFormat8bColors = {
+  foreground: (color: number) => `38;5;${color}`,
+  background: (color: number) => `48;5;${color}`,
   standard: { ...ConsoleFormatColorsValues },
   highIntensity: mapColorsValues<{
     readonly [N in Exclude<keyof _ConsoleFormatColorsValues, "default">]: AddPositiveNumbers<_ConsoleFormatColorsValues[N], 8>;
@@ -179,20 +260,28 @@ const ConsoleFormat8bColors = {
   },
   grayscale: Array.from({ length: 24 }, (_, i) => 232 + i) as RangeTuple<232, 256>,
 } as const;
-export type ConsoleFormat8bColors = `${38 | 48};5;${number}`;
+export type ConsoleFormat8bForegroundColors = `38;5;${number}`;
+export type ConsoleFormat8bBackgroundColors = `48;5;${number}`;
+export type ConsoleFormat8bColors = ConsoleFormat8bForegroundColors | ConsoleFormat8bBackgroundColors;
 
 const ConsoleFormat24bColors = {
   foreground: (r: Byte, g: Byte, b: Byte) => `38;2;${r};${g};${b}`,
   background: (r: Byte, g: Byte, b: Byte) => `48;2;${r};${g};${b}`,
 };
-export type ConsoleFormat24bColors = `${38 | 48};2;${number};${number};${number}`;
+export type ConsoleFormat24bForegroundColors = `38;2;${number};${number};${number}`;
+export type ConsoleFormat24bBackgroundColors = `48;2;${number};${number};${number}`;
+export type ConsoleFormat24bColors = ConsoleFormat24bForegroundColors | ConsoleFormat24bBackgroundColors;
 
 const ConsoleFormatColors = {
   "4bit": ConsoleFormat4bColors,
+  fg4bit: ConsoleFormat4bAllForegroundColors,
+  bg4bit: ConsoleFormat4bAllBackgroundColors,
   "8bit": ConsoleFormat8bColors,
   "24bit": ConsoleFormat24bColors,
 } as const;
-export type ConsoleFormatColors = ConsoleFormat4bColors | ConsoleFormat8bColors;
+export type ConsoleFormatForegroundColors = ConsoleFormat4bAllForegroundColors | ConsoleFormat8bForegroundColors | ConsoleFormat24bForegroundColors;
+export type ConsoleFormatBackgroundColors = ConsoleFormat4bAllBackgroundColors | ConsoleFormat8bBackgroundColors | ConsoleFormat24bBackgroundColors;
+export type ConsoleFormatColors = ConsoleFormat4bColors | ConsoleFormat8bColors | ConsoleFormat24bColors;
 
 export type ConsoleFormat = ConsoleFormatModes | ConsoleFormatColors;
 
