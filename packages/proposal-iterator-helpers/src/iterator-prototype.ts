@@ -1,4 +1,4 @@
-import { polyfillProperty } from "@anion155/polyfill-base";
+import { polyfillProperty } from "./base";
 
 export const IteratorPrototype = Object.getPrototypeOf(Object.getPrototypeOf([][Symbol.iterator]())) as Iterator<unknown>;
 

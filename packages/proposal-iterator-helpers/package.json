@@ -1,20 +1,60 @@
 {
   "name": "@anion155/proposal-iterator-helpers",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Polyfills implementing the Iterator Helpers proposal for ECMAScript.",
+  "keywords": [
+    "iterator",
+    "iterable",
+    "helpers",
+    "ecmascript",
+    "proposal",
+    "polyfill"
+  ],
+  "author": {
+    "name": "anion155",
+    "url": "https://github.com/anion155"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anion155/monorepo.git",
+    "directory": "packages/proposal-iterator-helpers"
+  },
+  "license": "MIT",
   "type": "module",
   "exports": {
+    "./global-iterator": "./src/global-iterator.ts",
+    "./global": "./src/global.ts",
     ".": "./src/index.ts",
-    "./global": "./src/global.ts"
+    "./iterator-constructor": "./src/iterator-constructor.ts",
+    "./iterator-from": "./src/iterator-from.ts",
+    "./iterator-prototype-drop": "./src/iterator-prototype-drop.ts",
+    "./iterator-prototype-every": "./src/iterator-prototype-every.ts",
+    "./iterator-prototype-filter": "./src/iterator-prototype-filter.ts",
+    "./iterator-prototype-find": "./src/iterator-prototype-find.ts",
+    "./iterator-prototype-flat-map": "./src/iterator-prototype-flat-map.ts",
+    "./iterator-prototype-for-each": "./src/iterator-prototype-for-each.ts",
+    "./iterator-prototype-map": "./src/iterator-prototype-map.ts",
+    "./iterator-prototype-reduce": "./src/iterator-prototype-reduce.ts",
+    "./iterator-prototype-some": "./src/iterator-prototype-some.ts",
+    "./iterator-prototype-take": "./src/iterator-prototype-take.ts",
+    "./iterator-prototype-to-array": "./src/iterator-prototype-to-array.ts",
+    "./iterator-prototype": "./src/iterator-prototype.ts",
+    "./utils": "./src/utils.ts"
   },
+  "!exports": [
+    "./src/base.ts"
+  ],
   "scripts": {
+    "lint": "eslint src && tsc --project ./tsconfig.build.json",
     "test": "jest src",
-    "lint": "eslint src"
+    "builder:ready": "rm dist/src/base.ts && cp ../polyfill-base/index.ts dist/src/base.ts"
   },
   "dependencies": {
     "@anion155/polyfill-base": "workspace:*"
   },
   "devDependencies": {
     "@anion155/configs": "workspace:*",
+    "@anion155/scripts": "workspace:*",
     "@jest/globals": "^30.0.0",
     "eslint": "^9.29.0",
     "jest": "^30.0.2",
