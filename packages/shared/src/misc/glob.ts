@@ -1,4 +1,5 @@
 import { createErrorClass } from "../errors";
+import { assignProperties } from "../object";
 
 export class InvalidGlobPattern extends createErrorClass("InvalidGlobPattern", "invalid glob pattern") {
   constructor(
@@ -285,7 +286,8 @@ export function glob(pattern: string, separator: string = "/") {
   function execGlob(value: string) {
     return execLevels(value.split(separator), tokens);
   }
-  execGlob.tokens = tokens;
-  Object.defineProperty(execGlob, "tokens", { writable: false });
-  return execGlob;
+  return assignProperties(execGlob, {
+    pattern: { value: pattern, writable: false, enumerable: true, configurable: true },
+    tokens: { value: tokens, writable: false, enumerable: true, configurable: true },
+  });
 }
