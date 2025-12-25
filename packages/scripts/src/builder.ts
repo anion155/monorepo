@@ -2,24 +2,19 @@
 
 import "./utils/polyfils";
 
-import { applyConsoleFormat, escapes } from "@anion155/shared/misc";
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { $, cd } from "zx";
-import { cdRoot } from "./utils/cd-root";
-import { Logger } from "./utils/logger";
-import { main } from "./utils/main";
+import { ScriptLogger } from "./utils/logger";
+import { main, scriptHeader } from "./utils/main";
 import { PackageJson } from "./utils/package.json";
 import { ProgressBar } from "./utils/progress-bar";
 import { scriptRunner } from "./utils/script-runner";
 
-const logger = new Logger("builder");
+const logger = new ScriptLogger("builder");
 
 await main(async (stack) => {
-  logger.info?.(applyConsoleFormat("fgGreen", "Building package") + "\r");
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
-  await cdRoot();
-  const sourcePkg: PackageJson = await readFile("./package.json", "utf-8").then(JSON.parse);
-  logger.info?.(`${escapes.cursor.moveUpAndStart()}Building package [${sourcePkg.name}]`);
+  const sourcePkg = await scriptHeader(logger, "Building package");
 
   const runScript = scriptRunner(sourcePkg, logger);
   const pb = new ProgressBar();
@@ -73,5 +68,5 @@ await main(async (stack) => {
 
   await runScript("builder:post");
 
-  logger.info?.(applyConsoleFormat("green", "Ready to publish"));
+  logger.success?.("Ready to publish");
 });

@@ -1,6 +1,11 @@
 import { hasTypedField, is, isObject } from "@anion155/shared/is";
 import { Maybe, MaybePromise } from "@anion155/shared/maybe";
+import { escapes } from "@anion155/shared/misc";
 import { applyConsoleFormat } from "@anion155/shared/misc/apply-console-format";
+import { readFile } from "fs/promises";
+import { cdRoot } from "./cd-root";
+import { ScriptLogger } from "./logger";
+import { PackageJson } from "./package.json";
 
 export function main<Result extends void | Promise<void>>(main: (stack: DisposableStack) => Result): MaybePromise<Result> {
   const stack = new DisposableStack();
@@ -20,4 +25,13 @@ export function main<Result extends void | Promise<void>>(main: (stack: Disposab
       dispose();
     },
   ) as never;
+}
+
+export async function scriptHeader(logger: ScriptLogger, name: string) {
+  logger.header?.(`${name}...`);
+  await cdRoot();
+  const pkg: PackageJson = await readFile("./package.json", "utf-8").then(JSON.parse);
+  if (logger.header) process.stdout.write(escapes.cursor.moveUp(1) + escapes.erase.clearLine);
+  logger.header?.(`${name} ${applyConsoleFormat("white", `[${pkg.name}]`)}`);
+  return pkg;
 }

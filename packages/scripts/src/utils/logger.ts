@@ -11,7 +11,7 @@ export enum LogLevels {
 // type LoggerColor = ConsoleFormatForegroundColors | ConsoleFormat4bForegroundColorNames | ConsoleFormat4bNodeCompatColorNames;
 export type LogLevelNames = keyof Omit<typeof LogLevels, never>;
 export type LoggerSink = { [Level in LogLevelNames]: (message: string, ...rest: unknown[]) => void };
-export type LoggerStyles = { [Level in LogLevelNames]: ConsoleFormats };
+export type LoggerStyles = { [Level in LogLevelNames]?: ConsoleFormats };
 export class Logger {
   #name: string;
   get name() {
@@ -57,21 +57,20 @@ export class Logger {
   }
 
   #styles?: LoggerStyles;
-  getLogLevelStyle(logLevel: LogLevels) {
-    const levelName = LogLevels[logLevel] as LogLevelNames;
-    let style = this.#styles?.[levelName];
+  getLogLevelStyle(level: LogLevelNames) {
+    let style = this.#styles?.[level];
     if (style !== undefined) return style;
     for (const parent of this.parents()) {
-      style = parent.#styles?.[levelName];
+      style = parent.#styles?.[level];
       if (style !== undefined) return style;
     }
-    return Logger.defaultStyles[levelName];
+    return Logger.defaultStyles[level];
   }
   static defaultStyles: Readonly<LoggerStyles> = {
     error: ["bgRed", "white"],
     warn: "fgYellow",
-    info: "green",
-    log: "gray",
+    info: undefined,
+    log: "fgGray",
     debug: "fgGray",
   };
 
@@ -95,22 +94,25 @@ export class Logger {
    * - environment settings
    */
   get(
-    level: LogLevels,
-    { formats = this.getLogLevelStyle(level), header = true }: { formats?: ConsoleFormats; header?: boolean } = {},
+    level: LogLevels | LogLevelNames,
+    { formats, header = true }: { formats?: ConsoleFormats; header?: boolean } = {},
   ): { (message: string, ...rest: unknown[]): void } | undefined {
-    const levelName = LogLevels[level] as LogLevelNames;
+    const levelName = typeof level === "string" ? level : (LogLevels[level] as LogLevelNames);
+    if (typeof level === "string") level = LogLevels[level];
+    if (!formats) formats = this.getLogLevelStyle(levelName);
     const nestedLevel = this.getNestedLevel();
     if (nestedLevel !== undefined && level > nestedLevel) return undefined;
     const sink = this.sink;
     if (!sink) return undefined;
     if (!hasTypedField(sink, levelName, "function")) return undefined;
     return (message, ...rest) => {
+      if (formats !== undefined) message = applyConsoleFormat(formats, message);
       if (header) {
         const names = [this.#name, ...this.parents().map((logger) => logger.#name)];
         names.reverse();
         message = applyConsoleFormat("gray", `[${names.join("][")}]`) + " " + message;
       }
-      if (formats) message = applyConsoleFormat(formats, message);
+      if (formats !== undefined) message = applyConsoleFormat(formats, message);
       sink[levelName](message, ...rest);
     };
   }
@@ -128,5 +130,14 @@ export class Logger {
   }
   get debug() {
     return this.get(LogLevels.debug);
+  }
+}
+
+export class ScriptLogger extends Logger {
+  get header() {
+    return this.get(LogLevels.info, { formats: ["green", "bold"] });
+  }
+  get success() {
+    return this.get(LogLevels.info, { formats: "green" });
   }
 }

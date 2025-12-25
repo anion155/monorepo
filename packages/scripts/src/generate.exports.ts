@@ -2,16 +2,13 @@
 
 import "./utils/polyfils";
 
-import { escapes } from "@anion155/shared/misc/escapes";
 import { glob } from "@anion155/shared/misc/glob";
-import { readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { readdir, stat, writeFile } from "node:fs/promises";
 import path, { normalize } from "node:path";
-import { cdRoot } from "./utils/cd-root";
-import { Logger } from "./utils/logger";
-import { main } from "./utils/main";
-import { PackageJson } from "./utils/package.json";
+import { ScriptLogger } from "./utils/logger";
+import { main, scriptHeader } from "./utils/main";
 
-const logger = new Logger("generate.exports");
+const logger = new ScriptLogger("generate.exports");
 
 const SUPPORTED_EXTENSIONS = [".js", ".jsx", ".ts", ".tsx"];
 const UNSUPPORTED_EXTENSIONS = SUPPORTED_EXTENSIONS.map((ext) => `.spec${ext}`).concat(...SUPPORTED_EXTENSIONS.map((ext) => `.spec-d${ext}`));
@@ -29,10 +26,7 @@ const module = (filepath: string) => {
 };
 
 await main(async () => {
-  logger.info?.("Generating exports...");
-  await cdRoot();
-  const pkg: PackageJson = await readFile("./package.json", "utf-8").then(JSON.parse);
-  logger.info?.(`${escapes.cursor.moveUpAndStart()}Generating exports [${pkg.name}]`);
+  const pkg = await scriptHeader(logger, "Generating exports");
 
   const exports: Record<string, string> = {};
   if (pkg["+exports"]) {
@@ -80,5 +74,5 @@ await main(async () => {
   pkg.exports = exports;
   await writeFile("./package.json", JSON.stringify(pkg, undefined, 2) + "\n");
 
-  logger.info?.("Exports updated");
+  logger.success?.("Exports updated");
 });

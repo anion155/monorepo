@@ -42,7 +42,7 @@
     "./utils": "./src/utils.ts"
   },
   "!exports": [
-    "./src/base.ts"
+    "base.ts"
   ],
   "scripts": {
     "lint": "eslint src && tsc --project ./tsconfig.build.json",

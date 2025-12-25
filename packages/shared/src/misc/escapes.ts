@@ -466,4 +466,10 @@ export const escapes = {
   regions: {
     set: setScrollRegion,
   },
+  unescape: (text: string) => {
+    return text
+      .split("")
+      .map((char) => (char === ESC ? "ESC" : char))
+      .join("");
+  },
 };

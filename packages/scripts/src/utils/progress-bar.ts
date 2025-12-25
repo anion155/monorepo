@@ -91,7 +91,6 @@ export class ProgressBar<Steps extends number> {
     buffer += escapes.cursor.moveTo(process.stdout.rows, 0);
     buffer += escapes.erase.clearFromCursorToLineEnd;
     buffer += escapes.cursor.restore;
-    buffer += escapes.cursor.scrollUp;
     directPrint(buffer);
   };
   #animate = () => {
