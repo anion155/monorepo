@@ -249,8 +249,8 @@ const ConsoleFormat4bColors = {
 export type ConsoleFormat4bColors = ConsoleFormat4bAllForegroundColors | ConsoleFormat4bAllBackgroundColors;
 
 const ConsoleFormat8bColors = {
-  foreground: (color: number) => `38;5;${color}`,
-  background: (color: number) => `48;5;${color}`,
+  foreground: (color: number) => CSI(`38;5;${color}`),
+  background: (color: number) => CSI(`48;5;${color}`),
   standard: { ...ConsoleFormatColorsValues },
   highIntensity: mapColorsValues<{
     readonly [N in Exclude<keyof _ConsoleFormatColorsValues, "default">]: AddPositiveNumbers<_ConsoleFormatColorsValues[N], 8>;
@@ -265,8 +265,8 @@ export type ConsoleFormat8bBackgroundColors = `48;5;${number}`;
 export type ConsoleFormat8bColors = ConsoleFormat8bForegroundColors | ConsoleFormat8bBackgroundColors;
 
 const ConsoleFormat24bColors = {
-  foreground: (r: Byte, g: Byte, b: Byte) => `38;2;${r};${g};${b}`,
-  background: (r: Byte, g: Byte, b: Byte) => `48;2;${r};${g};${b}`,
+  foreground: (r: Byte, g: Byte, b: Byte) => CSI(`38;2;${r as number};${g as number};${b as number}`),
+  background: (r: Byte, g: Byte, b: Byte) => CSI(`48;2;${r as number};${g as number};${b as number}`),
 };
 export type ConsoleFormat24bForegroundColors = `38;2;${number};${number};${number}`;
 export type ConsoleFormat24bBackgroundColors = `48;2;${number};${number};${number}`;
