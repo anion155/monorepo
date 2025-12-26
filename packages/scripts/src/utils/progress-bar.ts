@@ -1,15 +1,17 @@
 import "@anion155/shared/global/math";
 
 import { doRun } from "@anion155/shared/do";
+import { DeveloperError } from "@anion155/shared/errors";
 import { hasField, is } from "@anion155/shared/is";
 import { Loop } from "@anion155/shared/loop";
-import { escapes } from "@anion155/shared/misc";
+import { applyConsoleFormat, escapes } from "@anion155/shared/misc";
 import { anionmationLoader } from "./anionmation-loader";
 import { directPrint } from "./direct-print";
 
 export type ProgressBarEdgeRender = (progress: number) => string | { toString(): string; readonly length: number };
-export type ProgressBarBarsRender = (completeBars: number, emptyBars: number, barsNumber: number) => string;
-export type ProgressBarConfig = {
+export type ProgressBarBarsRender = (completeBars: number, emptyBars: number, actualCompleteBars: number, barsNumber: number) => string;
+export type ProgressBarConfig<Steps> = {
+  steps?: Steps;
   head?: string | ProgressBarEdgeRender;
   bars?: string | { complete: string; empty?: string } | ProgressBarBarsRender;
   tail?: string | ProgressBarEdgeRender;
@@ -19,18 +21,52 @@ export type ProgressBarConfig = {
   frameStep?: number;
 };
 
-export class ProgressBar<Steps extends number> {
+export class ProgressBar<Steps> {
   #progress: number = 0;
   #pending: number | undefined;
+  get progress() {
+    return this.#pending ?? this.#progress;
+  }
+  #steps: number | undefined;
+  get steps() {
+    return this.#steps;
+  }
   #head: ProgressBarEdgeRender;
   #bars: ProgressBarBarsRender;
   #tail: ProgressBarEdgeRender;
   #inclusive: boolean;
-  #width: ProgressBarConfig["width"];
+  get inclusive() {
+    return this.#inclusive;
+  }
+  set inclusive(next) {
+    this.#inclusive = next;
+    this.#print();
+  }
+  #width: ProgressBarConfig<Steps>["width"];
+  get width() {
+    return this.#width;
+  }
+  set width(next) {
+    this.#width = next;
+    this.#print();
+  }
   #fps: number;
+  get fps() {
+    return this.#fps;
+  }
   #frameStep: number;
+  get frameStep() {
+    return this.#frameStep;
+  }
   #loop: Loop<void>;
-  constructor(config?: ProgressBarConfig) {
+
+  constructor(config?: ProgressBarConfig<Steps>) {
+    if (config?.steps !== undefined) {
+      if (typeof config.steps !== "number") throw new DeveloperError("specified invalid amount of steps");
+      this.#steps = config.steps;
+      if (this.#steps <= 0 || !Number.isInteger(this.#steps)) throw new DeveloperError("specified invalid amount of steps");
+    }
+
     if (is(config?.head, "string")) {
       const head = config.head;
       this.#head = () => head;
@@ -50,7 +86,9 @@ export class ProgressBar<Steps extends number> {
     }
     if (hasField(bars, "complete")) {
       const { complete, empty = " " } = bars;
-      this.#bars = (completeBars, emptyBars) => `${complete.repeat(completeBars)}${empty.repeat(emptyBars)}`;
+      this.#bars = (completeBars, emptyBars, actualBars, barsNumber) => {
+        return `${complete.repeat(completeBars)}${applyConsoleFormat("gray", complete.repeat(actualBars - completeBars))}${empty.repeat(barsNumber - actualBars)}`;
+      };
     } else {
       this.#bars = bars;
     }
@@ -74,6 +112,20 @@ export class ProgressBar<Steps extends number> {
     this.#fps = config?.fps ?? 5;
     this.#frameStep = config?.frameStep ?? 1 / this.#fps;
     this.#loop = new Loop(1000 / this.#fps, this.#print);
+  }
+
+  changeSteps<NewSteps extends number>(next: NewSteps): ProgressBar<NewSteps> {
+    if (!this.#steps) throw new DeveloperError("amount of steps is not specified");
+    if (next <= 0 || !Number.isInteger(next)) throw new DeveloperError("specified invalid amount of steps");
+    if (this.#pending !== undefined) this.#pending = (this.#pending * this.#steps) / next;
+    this.#progress = (this.#progress * this.#steps) / next;
+    this.#steps = next;
+    this.#print();
+    return this as never;
+  }
+  incSteps(by = 1) {
+    if (!this.#steps) throw new DeveloperError("amount of steps is not specified");
+    this.changeSteps(this.#steps + by);
   }
 
   #init = () => {
@@ -115,7 +167,8 @@ export class ProgressBar<Steps extends number> {
     });
     const barsNumber = this.#inclusive ? width - head.length - tail.length : Math.min(columns, width + head.length + tail.length);
     const completeBars = Math.trunc(progress * barsNumber);
-    const bars = this.#bars(completeBars, barsNumber - completeBars, barsNumber);
+    const actualBars = Math.trunc(this.progress * barsNumber);
+    const bars = this.#bars(completeBars, barsNumber - completeBars, actualBars, barsNumber);
 
     let buffer = "";
     buffer += escapes.cursor.save;
@@ -126,7 +179,12 @@ export class ProgressBar<Steps extends number> {
     directPrint(buffer);
   };
 
-  step(next: number, animate = true) {
+  step(...[next, animate = true]: unknown extends Steps ? [next: number, animate?: boolean] : [next?: number, animate?: boolean]) {
+    if (next === undefined) {
+      if (!this.#steps) throw new DeveloperError("amount of steps is not specified");
+      next = this.progress + 1 / this.#steps;
+    }
+    next = Math.clamp(0, next, 1);
     if (animate && next > this.#progress) {
       if (this.#pending !== undefined) this.#progress = this.#pending;
       this.#pending = next;
