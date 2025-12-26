@@ -1,7 +1,7 @@
 import { createErrorClass } from "./create-error-class";
 
 export class DeveloperError extends createErrorClass("DeveloperError", "should never happen in runtime") {}
-export function never(message?: string): never {
+export function UNREACHABLE(message?: string): never {
   throw new DeveloperError(message);
 }
 

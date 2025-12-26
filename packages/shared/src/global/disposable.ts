@@ -1,5 +1,5 @@
 import { isDisposable } from "../disposable/is-disposable";
-import { DeveloperError, never } from "../errors";
+import { DeveloperError, UNREACHABLE } from "../errors";
 import { appendMethod, defineMethod, defineProperty } from "../object";
 import { Stamper } from "../stamper";
 
@@ -109,7 +109,7 @@ defineMethod(AsyncDisposableStack, "transaction", async function transaction(fn,
     return stack.move();
   } catch (error) {
     await SuppressedError.suppressAsync(error, () => stack.disposeAsync());
-    never();
+    UNREACHABLE();
   }
 });
 

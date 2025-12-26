@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 
-import { DeveloperError, never, NotImplementedYet, TODO } from "./errors";
+import { DeveloperError, NotImplementedYet, TODO, UNREACHABLE } from "./errors";
 
 describe("errors utils", () => {
   it("should create DeveloperError", () => {
@@ -9,8 +9,8 @@ describe("errors utils", () => {
     expect(String(new DeveloperError())).toBe("DeveloperError: should never happen in runtime");
   });
 
-  it("never() should throw DeveloperError", () => {
-    expect(never).toThrow(new DeveloperError());
+  it("UNREACHABLE() should throw DeveloperError", () => {
+    expect(UNREACHABLE).toThrow(new DeveloperError());
   });
 
   it("should create NotImplementedYet", () => {
