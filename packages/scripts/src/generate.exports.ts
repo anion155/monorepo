@@ -8,6 +8,7 @@ import path, { normalize } from "node:path";
 import { ScriptLogger } from "./utils/logger";
 import { main, scriptHeader } from "./utils/main";
 import { PackageJsonConditionalExport } from "./utils/package.json";
+import { ProgressBar } from "./utils/progress-bar";
 
 const logger = new ScriptLogger("generate.exports");
 
@@ -33,8 +34,11 @@ declare global {
   }
 }
 
-await main(async () => {
+await main(async (stack) => {
   const pkg = await scriptHeader<PackageJsonExt>(logger, "Generating exports");
+
+  const pb = new ProgressBar({ steps: 2 });
+  stack.append(pb);
 
   const exports: Record<string, string> = {};
   if (pkg["+exports"]) {
@@ -42,7 +46,7 @@ await main(async () => {
       if (typeof module === "string") {
         exports[name] = module;
       } else {
-        // TODO: support complecated export
+        // TODO: support complicated export
         // exports[name] = module;
       }
     }
@@ -80,7 +84,10 @@ await main(async () => {
   };
   await traverseDir("src", "");
   pkg.exports = exports;
+  pb.step();
+
   await writeFile("./package.json", JSON.stringify(pkg, undefined, 2) + "\n");
+  pb.step();
 
   logger.success?.("Exports updated");
 });
