@@ -15,6 +15,7 @@
   "settings": {
     "editor.formatOnSave": true,
     "editor.formatOnSaveMode": "file",
+    "search.useIgnoreFiles": true,
     "jest.disabledWorkspaceFolders": ["monorepo", "configs", "polyfill-base"]
   }
 }

@@ -92,7 +92,7 @@ export function cloneCallable<Fn extends Callable<never, unknown>>(fn: Fn): Infe
 export function hoistCallable<Source extends Callable<never, unknown>, Hoisted extends Callable<never, unknown>>(
   source: Source,
   hoisted: Hoisted,
-): Extend<Source, Hoisted> & InferCallableSign<Hoisted> {
+): Extend<Source, Hoisted> & InferCallableSign<NoInfer<Hoisted>> {
   Object.setPrototypeOf(hoisted, source);
   if (Object.getOwnPropertyDescriptor(hoisted, "name")) {
     // @ts-expect-error(2704): there is name in fn
