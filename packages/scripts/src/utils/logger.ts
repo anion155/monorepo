@@ -106,14 +106,15 @@ export class Logger {
     if (!sink) return undefined;
     if (!hasTypedField(sink, levelName, "function")) return undefined;
     return (message, ...rest) => {
-      if (formats !== undefined) message = applyConsoleFormat(formats, message);
+      const [formatsLeft, formatsRight] = formats ? applyConsoleFormat(formats, "DELIMETER").split("DELIMETER") : ["", ""];
+      message = `${formatsLeft}${message}${formatsRight}`;
       if (header) {
         const names = [this.#name, ...this.parents().map((logger) => logger.#name)];
         names.reverse();
-        message = applyConsoleFormat("gray", `[${names.join("][")}]`) + " " + message;
+        message = formatsLeft + applyConsoleFormat("gray", `[${names.join("][")}]`) + " " + formatsRight + message;
       }
-      if (formats !== undefined) message = applyConsoleFormat(formats, message);
-      sink[levelName](message, ...rest);
+      if (formatsRight) rest.push(formatsRight);
+      sink[levelName](message + formatsLeft, ...rest);
     };
   }
   get error() {
