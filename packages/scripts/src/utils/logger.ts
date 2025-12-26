@@ -1,4 +1,4 @@
-import { hasTypedField } from "@anion155/shared/is";
+import { hasField, hasTypedField, isObject } from "@anion155/shared/is";
 import { applyConsoleFormat, ConsoleFormats } from "@anion155/shared/misc";
 
 export enum LogLevels {
@@ -11,7 +11,7 @@ export enum LogLevels {
 // type LoggerColor = ConsoleFormatForegroundColors | ConsoleFormat4bForegroundColorNames | ConsoleFormat4bNodeCompatColorNames;
 export type LogLevelNames = keyof Omit<typeof LogLevels, never>;
 export type LoggerSink = { [Level in LogLevelNames]: (message: string, ...rest: unknown[]) => void };
-export type LoggerStyles = { [Level in LogLevelNames]?: ConsoleFormats };
+export type LoggerStyles = { [Level in LogLevelNames]?: ConsoleFormats | { message: ConsoleFormats; header?: ConsoleFormats } };
 export class Logger {
   #name: string;
   get name() {
@@ -67,7 +67,7 @@ export class Logger {
     return Logger.defaultStyles[level];
   }
   static defaultStyles: Readonly<LoggerStyles> = {
-    error: ["bgRed", "white"],
+    error: ["bgRed", "fgBrWhite"],
     warn: "fgYellow",
     info: undefined,
     log: "fgGray",
@@ -95,7 +95,7 @@ export class Logger {
    */
   get(
     level: LogLevels | LogLevelNames,
-    { formats, header = true }: { formats?: ConsoleFormats; header?: boolean } = {},
+    { formats, header = true }: { formats?: ConsoleFormats | { message: ConsoleFormats; header?: ConsoleFormats }; header?: boolean } = {},
   ): { (message: string, ...rest: unknown[]): void } | undefined {
     const levelName = typeof level === "string" ? level : (LogLevels[level] as LogLevelNames);
     if (typeof level === "string") level = LogLevels[level];
@@ -106,15 +106,20 @@ export class Logger {
     if (!sink) return undefined;
     if (!hasTypedField(sink, levelName, "function")) return undefined;
     return (message, ...rest) => {
-      const [formatsLeft, formatsRight] = formats ? applyConsoleFormat(formats, "DELIMETER").split("DELIMETER") : ["", ""];
-      message = `${formatsLeft}${message}${formatsRight}`;
+      let { message: messageFormats, header: headerFormats } =
+        isObject(formats) && hasField(formats, "message") ? formats : { message: formats, header: formats };
+      // const [formatsLeft, formatsRight] = formats ? applyConsoleFormat(formats., "DELIMETER").split("DELIMETER") : ["", ""];
+      if (messageFormats) message = applyConsoleFormat(messageFormats, message);
       if (header) {
         const names = [this.#name, ...this.parents().map((logger) => logger.#name)];
         names.reverse();
-        message = formatsLeft + applyConsoleFormat("gray", `[${names.join("][")}]`) + " " + formatsRight + message;
+        if (Array.isArray(headerFormats)) headerFormats = ["gray", ...headerFormats];
+        else if (headerFormats !== undefined) headerFormats = ["gray", headerFormats];
+        else headerFormats = "gray";
+        const space = messageFormats !== undefined ? applyConsoleFormat(messageFormats, " ") : " ";
+        message = applyConsoleFormat(headerFormats, `[${names.join("][")}]`) + space + message;
       }
-      if (formatsRight) rest.push(formatsRight);
-      sink[levelName](message + formatsLeft, ...rest);
+      sink[levelName](message, ...rest);
     };
   }
   get error() {
