@@ -1,6 +1,6 @@
 {
   "name": "@anion155/proposal-iterator-helpers",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Polyfills implementing the Iterator Helpers proposal for ECMAScript.",
   "keywords": [
     "iterator",
@@ -22,28 +22,18 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    "./global-iterator": "./src/global-iterator.ts",
-    "./global": "./src/global.ts",
     ".": "./src/index.ts",
-    "./iterator-constructor": "./src/iterator-constructor.ts",
-    "./iterator-from": "./src/iterator-from.ts",
-    "./iterator-prototype-drop": "./src/iterator-prototype-drop.ts",
-    "./iterator-prototype-every": "./src/iterator-prototype-every.ts",
-    "./iterator-prototype-filter": "./src/iterator-prototype-filter.ts",
-    "./iterator-prototype-find": "./src/iterator-prototype-find.ts",
-    "./iterator-prototype-flat-map": "./src/iterator-prototype-flat-map.ts",
-    "./iterator-prototype-for-each": "./src/iterator-prototype-for-each.ts",
-    "./iterator-prototype-map": "./src/iterator-prototype-map.ts",
-    "./iterator-prototype-reduce": "./src/iterator-prototype-reduce.ts",
-    "./iterator-prototype-some": "./src/iterator-prototype-some.ts",
-    "./iterator-prototype-take": "./src/iterator-prototype-take.ts",
-    "./iterator-prototype-to-array": "./src/iterator-prototype-to-array.ts",
-    "./iterator-prototype": "./src/iterator-prototype.ts",
-    "./utils": "./src/utils.ts"
+    "./global": "./src/global.ts",
+    "./types": "./src/types.ts"
   },
   "!exports": [
-    "base.ts"
+    "**/*"
   ],
+  "+exports": {
+    ".": "./src/index.ts",
+    "./global": "./src/global.ts",
+    "./types": "./src/types.ts"
+  },
   "scripts": {
     "lint": "eslint src && tsc --project ./tsconfig.build.json",
     "test": "jest src",
