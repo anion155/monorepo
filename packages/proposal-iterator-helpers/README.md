@@ -14,7 +14,7 @@ npm install @anion155/proposal-iterator-helpers
 ## Usage
 
 ```js
-// To polyfill prototypes and constructors without modifying global scope
+// To polyfill prototypes and constructor without modifying global scope
 import "@anion155/proposal-iterator-helpers";
 // or
 // To also polyfill global scope use this import
@@ -30,11 +30,10 @@ function* naturals() {
     i += 1;
   }
 }
-
 const result = naturals().map((value) => {
   return value * value;
 });
-result.next(); //  {value: 0, done: false};
-result.next(); //  {value: 1, done: false};
-result.next(); //  {value: 4, done: false};
+result.next(); // { value: 0, done: false };
+result.next(); // { value: 1, done: false };
+result.next(); // { value: 4, done: false };
 ```

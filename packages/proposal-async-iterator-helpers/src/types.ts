@@ -1,7 +1,10 @@
+interface AsyncIterator<T, TResult, TNext> extends globalThis.AsyncIteratorObject<T, TResult, TNext> {}
+declare abstract class AsyncIterator<T, TResult = undefined, TNext = unknown> {
+  abstract next(value?: TNext): Promise<IteratorResult<T, TResult>>;
+}
+type AsyncIteratorObjectConstructor = typeof AsyncIterator;
+
 declare global {
-  interface IteratorObject<T, TReturn, TNext> {
-    toAsync(): AsyncIteratorObject<T, TReturn, TNext>;
-  }
   interface AsyncIteratorObject<T, TReturn, TNext> {
     readonly [Symbol.toStringTag]: string;
     drop(limit: number): AsyncGenerator<T, TReturn, TNext>;
@@ -11,19 +14,20 @@ declare global {
     flatMap<U>(project: (value: T, index: number) => AsyncIterator<U> | AsyncIterable<U> | Iterable<U>): AsyncGenerator<U, TReturn, undefined>;
     forEach(callback: (value: T, index: number) => void | Promise<void>): Promise<void>;
     map<U>(project: (value: T, index: number) => U | Promise<U>): AsyncGenerator<U, TReturn, TNext>;
-    reduce(reducer: (aggregation: T, value: T, index: number) => T | Promise<T>): Promise<T>;
-    reduce<U>(reducer: (aggregation: U, value: T, index: number) => U | Promise<U>, initialValue: U): Promise<U>;
+    reduce<U>(reducer: (aggregation: U, value: T, index: number) => U | Promise<U>, ...args: [initialValue: U] | []): Promise<U>;
     some(predicate: (value: T, index: number) => boolean | Promise<boolean>): Promise<boolean>;
-    take(limit: number): AsyncGenerator<T, TReturn, TNext>;
+    take(limit: number): AsyncGenerator<T, T | TReturn | undefined, TNext>;
     toArray(): Promise<T[]>;
   }
-  interface AsyncIteratorConstructor {
-    new <T, TReturn = unknown, TNext = unknown>(): AsyncIterator<T, TReturn, TNext>;
-    (): never;
-    from<T, TReturn = unknown, TNext = unknown>(
-      it: Iterator<T, TReturn, TNext> | Iterable<T> | AsyncIterator<T, TReturn, TNext> | AsyncIterable<T>
+  interface IteratorObject<T, TReturn, TNext> {
+    toAsync(): AsyncGenerator<T, TReturn, TNext>;
+  }
+  interface AsyncIteratorConstructor extends AsyncIteratorObjectConstructor {
+    from<T, TReturn = unknown, TNext = undefined>(
+      it: Iterator<T, TReturn, TNext> | Iterable<T, TReturn, TNext> | AsyncIterator<T, TReturn, TNext> | AsyncIterable<T, TReturn, TNext>,
     ): AsyncIteratorObject<T, TReturn, TNext>;
   }
+  var AsyncIterator: AsyncIteratorConstructor;
 }
 
 export {};

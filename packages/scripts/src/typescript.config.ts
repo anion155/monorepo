@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 import { createObjectMerger, createSchemeMerger, mergeArraysUnique, Scheme } from "@anion155/configs/utils";
 import * as fs from "node:fs";
 import { styleText } from "node:util";

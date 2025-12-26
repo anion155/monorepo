@@ -22,31 +22,18 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    "./async-iterator-constructor": "./src/async-iterator-constructor.ts",
-    "./async-iterator-from": "./src/async-iterator-from.ts",
-    "./async-iterator-prototype-drop": "./src/async-iterator-prototype-drop.ts",
-    "./async-iterator-prototype-every": "./src/async-iterator-prototype-every.ts",
-    "./async-iterator-prototype-filter": "./src/async-iterator-prototype-filter.ts",
-    "./async-iterator-prototype-find": "./src/async-iterator-prototype-find.ts",
-    "./async-iterator-prototype-flat-map": "./src/async-iterator-prototype-flat-map.ts",
-    "./async-iterator-prototype-for-each": "./src/async-iterator-prototype-for-each.ts",
-    "./async-iterator-prototype-map": "./src/async-iterator-prototype-map.ts",
-    "./async-iterator-prototype-reduce": "./src/async-iterator-prototype-reduce.ts",
-    "./async-iterator-prototype-some": "./src/async-iterator-prototype-some.ts",
-    "./async-iterator-prototype-take": "./src/async-iterator-prototype-take.ts",
-    "./async-iterator-prototype-to-array": "./src/async-iterator-prototype-to-array.ts",
-    "./async-iterator-prototype": "./src/async-iterator-prototype.ts",
-    "./global-async-iterator": "./src/global-async-iterator.ts",
-    "./global": "./src/global.ts",
-    "./global.types": "./src/global.types.ts",
     ".": "./src/index.ts",
-    "./index.types": "./src/index.types.ts",
-    "./iterator-prototype-to-async": "./src/iterator-prototype-to-async.ts",
-    "./utils": "./src/utils.ts"
+    "./global": "./src/global.ts",
+    "./types": "./src/types.ts"
   },
   "!exports": [
-    "base.ts"
+    "**/*"
   ],
+  "+exports": {
+    ".": "./src/index.ts",
+    "./global": "./src/global.ts",
+    "./types": "./src/types.ts"
+  },
   "scripts": {
     "test": "jest src",
     "lint": "eslint src",

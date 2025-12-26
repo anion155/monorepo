@@ -10,7 +10,6 @@ import "./async-iterator-prototype-reduce";
 import "./async-iterator-prototype-some";
 import "./async-iterator-prototype-take";
 import "./async-iterator-prototype-to-array";
-import "./index.types";
 import "./iterator-prototype-to-async";
 
 export * from "./async-iterator-constructor";
