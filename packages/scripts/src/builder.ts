@@ -6,15 +6,21 @@ import { writeFile } from "node:fs/promises";
 import { $, cd } from "zx";
 import { ScriptLogger } from "./utils/logger";
 import { main, scriptHeader } from "./utils/main";
-import { PackageJson } from "./utils/package.json";
 import { ProgressBar } from "./utils/progress-bar";
 import { scriptRunner } from "./utils/script-runner";
 
 const logger = new ScriptLogger("builder");
 
+declare global {
+  interface PackageJsonExt {
+    "+scripts"?: string[];
+    "!dependencies"?: string[];
+  }
+}
+
 await main(async (stack) => {
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
-  const sourcePkg = await scriptHeader(logger, "Building package");
+  const sourcePkg = await scriptHeader<PackageJsonExt>(logger, "Building package");
 
   const runScript = scriptRunner(sourcePkg, logger);
   const pb = new ProgressBar();

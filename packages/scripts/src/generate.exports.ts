@@ -7,6 +7,7 @@ import { readdir, stat, writeFile } from "node:fs/promises";
 import path, { normalize } from "node:path";
 import { ScriptLogger } from "./utils/logger";
 import { main, scriptHeader } from "./utils/main";
+import { PackageJsonConditionalExport } from "./utils/package.json";
 
 const logger = new ScriptLogger("generate.exports");
 
@@ -25,8 +26,15 @@ const module = (filepath: string) => {
   return filepath;
 };
 
+declare global {
+  interface PackageJsonExt {
+    "+exports"?: Record<string, string | PackageJsonConditionalExport>;
+    "!exports"?: string[];
+  }
+}
+
 await main(async () => {
-  const pkg = await scriptHeader(logger, "Generating exports");
+  const pkg = await scriptHeader<PackageJsonExt>(logger, "Generating exports");
 
   const exports: Record<string, string> = {};
   if (pkg["+exports"]) {
