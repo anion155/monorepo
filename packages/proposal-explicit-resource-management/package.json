@@ -40,7 +40,9 @@
   "scripts": {
     "test": "jest src",
     "lint": "eslint src",
-    "builder:ready": "rm dist/src/base.ts && cp ../polyfill-base/index.ts dist/src/base.ts"
+    "builder:ready": "rm dist/src/base.ts && cp ../polyfill-base/index.ts dist/src/base.ts",
+    "prepublish": "generate.exports && builder",
+    "publish": "cd dist && pnpm publish --access public"
   },
   "dependencies": {
     "@anion155/polyfill-base": "workspace:*"
