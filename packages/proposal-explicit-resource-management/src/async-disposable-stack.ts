@@ -1,5 +1,7 @@
-import "./global-symbols";
+import "./symbols";
 
+import type { AsyncDisposable } from "./async-disposable";
+import type { Disposable } from "./disposable";
 import { SuppressedError } from "./suppressed-error";
 
 export interface AsyncDisposableStack {
@@ -28,9 +30,8 @@ export class AsyncDisposableStack {
       this.#stack.push(() => Promise.resolve(value[Symbol.dispose]()));
       return value;
     }
-    const dispose = Symbol.asyncDispose in value ? value[Symbol.asyncDispose] : value[Symbol.dispose];
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    throw new TypeError(`${dispose} is not a function`);
+
+    throw new TypeError(`[Symbol.asyncDispose] and [Symbol.dispose] are not a functions`);
   }
   defer(onDisposeAsync: () => void | PromiseLike<void>): void {
     if (this.disposed) throw new ReferenceError("AsyncDisposableStack already disposed");

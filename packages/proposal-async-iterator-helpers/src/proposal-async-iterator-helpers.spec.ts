@@ -1,4 +1,5 @@
 import "./global";
+import "./types";
 
 import { describe, expect, it, jest } from "@jest/globals";
 
@@ -20,7 +21,11 @@ describe("AsyncIterator helpers proposal", () => {
     });
 
     it("should throw error on manual instantiation", () => {
+      // @ts-expect-error(): type not constructible
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       expect(() => new AsyncIterator()).toThrow("Abstract class AsyncIterator not directly constructable");
+      // @ts-expect-error(): type not constructible
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       expect(() => AsyncIterator()).toThrow("Constructor AsyncIterator requires 'new'");
     });
 
@@ -41,9 +46,8 @@ describe("AsyncIterator helpers proposal", () => {
     });
 
     it("async iterator should have Symbol.toStringTag and constructor", () => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(AsyncIterator.prototype[Symbol.toStringTag]).toBe("AsyncIterator");
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
       expect(AsyncIterator.prototype.constructor).toBe(AsyncIterator);
     });
 

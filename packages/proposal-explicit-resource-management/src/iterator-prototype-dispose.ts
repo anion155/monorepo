@@ -1,4 +1,4 @@
-import "./global-symbols";
+import "./symbols";
 
 import { polyfillProperty } from "./base";
 import { IteratorPrototype } from "./utils";

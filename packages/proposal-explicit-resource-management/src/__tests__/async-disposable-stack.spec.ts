@@ -1,7 +1,7 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import "../global";
+import "../types";
 
-import { AsyncDisposableStack } from "../async-disposable-stack";
-import { SuppressedError } from "../suppressed-error";
+import { describe, expect, it, jest } from "@jest/globals";
 
 describe("Explicit resource management proposal", () => {
   describe("AsyncDisposableStack", () => {
@@ -29,8 +29,8 @@ describe("Explicit resource management proposal", () => {
       expect(stack.use(asyncDisposable)).toBe(asyncDisposable);
       expect(stack.use(null)).toBeNull();
       expect(stack.use(undefined)).toBeUndefined();
-      expect(() => stack.use({} as never)).toThrow("undefined is not a function");
-      expect(() => stack.use({ [Symbol.asyncDispose]: undefined as never })).toThrow("undefined is not a function");
+      expect(() => stack.use({} as never)).toThrow("[Symbol.asyncDispose] and [Symbol.dispose] are not a function");
+      expect(() => stack.use({ [Symbol.asyncDispose]: undefined as never })).toThrow("[Symbol.asyncDispose] and [Symbol.dispose] are not a function");
 
       await stack.disposeAsync();
       expect(disposable[Symbol.dispose]).toHaveBeenCalledWith();

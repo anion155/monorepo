@@ -1,4 +1,5 @@
 import "./global";
+import "./types";
 
 import { describe, expect, it, jest } from "@jest/globals";
 

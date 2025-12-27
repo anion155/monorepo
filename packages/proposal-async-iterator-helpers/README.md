@@ -20,7 +20,7 @@ npm install @anion155/proposal-iterator-helpers
 
 ## Usage
 
-```js
+```ts
 // To polyfill prototypes and constructor without modifying global scope
 import "@anion155/proposal-async-iterator-helpers";
 // or
@@ -32,12 +32,12 @@ import "@anion155/proposal-async-iterator-helpers/types";
 
 async function* fetchData() {
   while (true) {
-    const response = await fetch(`https://example.com/example.json?d=${Date.now()}`)
-    const json = await response.json()
-    yield json as { frequently_changed_data: string }
+    const response = await fetch(`https://example.com/example.json?d=${Date.now()}`);
+    const json = await response.json();
+    yield json as { frequently_changed_data: string };
   }
 }
-const result = fetchData().map(({frequently_changed_data}) => {
+const result = fetchData().map(({ frequently_changed_data }) => {
   return Number(frequently_changed_data);
 });
 await result.next(); // { value: 0, done: false };

@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2024",
     "esModuleInterop": true,
     "composite": true,
     "types": ["node", "jest"]

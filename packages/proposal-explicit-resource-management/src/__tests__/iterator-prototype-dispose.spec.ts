@@ -1,4 +1,6 @@
+import "../global";
 import "../iterator-prototype-dispose";
+import "../types";
 
 import { describe, expect, it, jest } from "@jest/globals";
 

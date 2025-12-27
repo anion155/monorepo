@@ -1,6 +1,7 @@
 {
   "extends": "@anion155/configs/tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ESNext", "ESNext.Iterator"]
+    "lib": ["ES2024", "ESNext.Iterator"],
+    "target": "es2024"
   }
 }

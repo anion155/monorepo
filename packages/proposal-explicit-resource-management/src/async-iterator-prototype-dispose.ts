@@ -1,5 +1,3 @@
-import "./global-symbols";
-
 import { polyfillProperty } from "./base";
 import { AsyncIteratorPrototype } from "./utils";
 

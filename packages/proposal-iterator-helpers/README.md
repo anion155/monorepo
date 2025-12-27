@@ -13,7 +13,7 @@ npm install @anion155/proposal-iterator-helpers
 
 ## Usage
 
-```js
+```ts
 // To polyfill prototypes and constructor without modifying global scope
 import "@anion155/proposal-iterator-helpers";
 // or

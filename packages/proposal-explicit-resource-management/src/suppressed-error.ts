@@ -1,3 +1,12 @@
+export interface SuppressedError extends Error {
+  readonly name: string;
+  readonly error: unknown;
+  readonly suppressed: unknown;
+}
+export interface SuppressedErrorConstructor {
+  new (error: unknown, suppressed: unknown, message?: string): SuppressedError;
+}
+
 const SuppressedErrorPolyfill = function SuppressedError(error: unknown, suppressed: unknown, message?: string): SuppressedError {
   const parts = [
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions

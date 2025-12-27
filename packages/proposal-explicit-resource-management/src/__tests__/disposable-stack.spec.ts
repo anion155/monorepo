@@ -1,7 +1,7 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import "../global";
+import "../types";
 
-import { DisposableStack } from "../disposable-stack";
-import { SuppressedError } from "../suppressed-error";
+import { describe, expect, it, jest } from "@jest/globals";
 
 describe("Explicit resource management proposal", () => {
   describe("DisposableStack", () => {
@@ -27,7 +27,7 @@ describe("Explicit resource management proposal", () => {
       expect(stack.use(disposable)).toBe(disposable);
       expect(stack.use(null)).toBeNull();
       expect(stack.use(undefined)).toBeUndefined();
-      expect(() => stack.use({} as never)).toThrow("undefined is not a function");
+      expect(() => stack.use({} as never)).toThrow("[Symbol.dispose] is not a function");
 
       stack.dispose();
       expect(disposable[Symbol.dispose]).toHaveBeenCalledWith();

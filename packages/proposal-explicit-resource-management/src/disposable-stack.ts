@@ -1,5 +1,6 @@
-import "./global-symbols";
+import "./symbols";
 
+import type { Disposable } from "./disposable";
 import { SuppressedError } from "./suppressed-error";
 
 export interface DisposableStack {
@@ -18,11 +19,11 @@ export class DisposableStack {
     if (this.disposed) throw new ReferenceError("DisposableStack already disposed");
     if (value === null || value === undefined) return value;
     if (Symbol.dispose in value && typeof value[Symbol.dispose] === "function") {
-      this.#stack.push(value[Symbol.dispose].bind(value));
+      this.#stack.push(() => value[Symbol.dispose]());
       return value;
     }
-    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    throw new TypeError(`${value[Symbol.dispose]} is not a function`);
+
+    throw new TypeError(`[Symbol.dispose] is not a function`);
   }
   defer(onDispose: () => void): void {
     if (this.disposed) throw new ReferenceError("DisposableStack already disposed");
