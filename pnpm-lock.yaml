@@ -102,6 +102,13 @@ importers:
         version: 3.6.2
 
   packages/polyfill-base:
+    dependencies:
+      '@anion155/scripts-sources':
+        specifier: workspace:*
+        version: link:../scripts
+      zx:
+        specifier: ^8.8.4
+        version: 8.8.4
     devDependencies:
       '@anion155/configs':
         specifier: workspace:*
@@ -237,9 +244,6 @@ importers:
       '@anion155/configs':
         specifier: workspace:*
         version: link:../configs
-      '@anion155/proposal-async-iterator-helpers':
-        specifier: workspace:*
-        version: link:../proposal-async-iterator-helpers
       '@anion155/proposal-explicit-resource-management':
         specifier: workspace:*
         version: link:../proposal-explicit-resource-management

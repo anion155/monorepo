@@ -36,10 +36,7 @@
   },
   "scripts": {
     "lint": "eslint src && tsc --project ./tsconfig.build.json",
-    "test": "jest src",
-    "builder:ready": "rm dist/src/base.ts && cp ../polyfill-base/index.ts dist/src/base.ts",
-    "prepublish": "generate.exports && builder",
-    "publish": "cd dist && pnpm publish --access public"
+    "test": "jest src"
   },
   "dependencies": {
     "@anion155/polyfill-base": "workspace:*"

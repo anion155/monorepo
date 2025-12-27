@@ -2,12 +2,28 @@
   "name": "@anion155/scripts-sources",
   "private": true,
   "type": "module",
+  "exports": {
+    "./utils/anionmation-loader": "./src/utils/anionmation-loader.ts",
+    "./utils/cd-root": "./src/utils/cd-root.ts",
+    "./utils/direct-print": "./src/utils/direct-print.ts",
+    "./utils/logger": "./src/utils/logger.ts",
+    "./utils/main": "./src/utils/main.ts",
+    "./utils/package.json": "./src/utils/package.json.ts",
+    "./utils/polyfils": "./src/utils/polyfils.ts",
+    "./utils/progress-bar": "./src/utils/progress-bar.ts",
+    "./utils/script-runner": "./src/utils/script-runner.ts"
+  },
+  "!exports": [
+    "./src/*.ts"
+  ],
   "scripts": {
     "build:script": "esbuild --bundle --platform=node --target=node22 --format=esm",
     "build:builder": "pnpm run build:script src/builder.ts --outfile=dist/builder.js",
     "build:generate.exports": "pnpm run build:script src/generate.exports.ts --outfile=dist/generate.exports.js",
     "build:typescript.config": "pnpm run build:script src/typescript.config.ts --outfile=dist/typescript.config.js",
-    "build": "mkdir -p dist && cp package.dist.json dist/package.json && pnpm run build:builder && pnpm run build:generate.exports && pnpm run build:typescript.config",
+    "build:publisher": "pnpm run build:script src/publisher.ts --outfile=dist/publisher.js",
+    "build": "mkdir -p dist && cp package.dist.json dist/package.json && pnpm run build:builder && pnpm run build:generate.exports && pnpm run build:typescript.config && pnpm run build:publisher",
+    "generate.exports": "pnpm run build:generate.exports && ./dist/generate.exports.js",
     "postinstall": "pnpm run build",
     "lint": "eslint src && tsc --noEmit"
   },

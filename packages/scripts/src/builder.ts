@@ -14,10 +14,10 @@ import { scriptRunner } from "./utils/script-runner";
 
 const logger = new ScriptLogger("builder");
 const scripts = {
-  pre: "builder:pre",
-  ready: "builder:ready",
-  tsc: "builder:tsc",
-  post: "builder:post",
+  pre: ["builder:pre", "BUILDER_PRE"],
+  ready: ["builder:ready", "BUILDER_READY"],
+  tsc: ["builder:tsc", "BUILDER_TSC"],
+  post: ["builder:post", "BUILDER_POST"],
 } as const;
 
 declare global {
@@ -35,14 +35,14 @@ await main(async (stack) => {
   const pb = new ProgressBar({
     steps:
       4 +
-      (runScript.has(scripts.pre) ? 1 : 0) +
-      (runScript.has(scripts.ready) ? 1 : 0) +
-      (runScript.has(scripts.tsc) ? 1 : 3) +
-      (runScript.has(scripts.post) ? 1 : 0),
+      (runScript.has(...scripts.pre) ? 1 : 0) +
+      (runScript.has(...scripts.ready) ? 1 : 0) +
+      (runScript.has(...scripts.tsc) ? 1 : 3) +
+      (runScript.has(...scripts.post) ? 1 : 0),
   });
   stack.append(pb);
 
-  if (await runScript(scripts.pre)) pb.step();
+  if (await runScript(...scripts.pre)) pb.step();
 
   logger.info?.("preparing dist");
   logger.log?.("removing old dist");
@@ -56,8 +56,8 @@ await main(async (stack) => {
   pb.step();
 
   logger.info?.("building");
-  if (await runScript(scripts.ready)) pb.step();
-  if (await runScript(scripts.tsc)) {
+  if (await runScript(...scripts.ready)) pb.step();
+  if (await runScript(...scripts.tsc)) {
     pb.step();
   } else {
     cd("dist");
@@ -76,7 +76,6 @@ await main(async (stack) => {
   const ignoreFiles: Glob[] = [
     glob(".git"),
     glob(".npmrc"),
-    glob("node_modules"),
     glob("package-lock.json"),
     glob("package.json"),
     glob("pnpm-lock.yaml"),
@@ -107,6 +106,7 @@ await main(async (stack) => {
   }
   const traverseDir = async (dir: string) => {
     for (const file of await readdir(dir)) {
+      if (file === "node_modules") continue;
       const filepath = path.join(dir, file);
       const fileStats = await stat(filepath);
       if (fileStats.isDirectory()) {
@@ -210,7 +210,7 @@ await main(async (stack) => {
   await writeFile("dist/package.json", JSON.stringify(resultPkg, undefined, 2) + "\n");
   pb.step();
 
-  if (await runScript(scripts.post)) pb.step();
+  if (await runScript(...scripts.post)) pb.step();
 
   logger.success?.("Ready to publish");
 });

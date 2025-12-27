@@ -5,7 +5,12 @@ import { Logger, LogLevels } from "./logger";
 
 export const scriptRunner = (pkg: PackageJson, logger?: Logger) => {
   return assignFields(
-    (scriptName: string) => {
+    (scriptName: string, envName?: string) => {
+      if (envName && process.env[envName]) {
+        logger?.log?.(`executing script:`);
+        logger?.get(LogLevels.log, { header: false, formats: "grey" })?.(`> ${process.env[envName]}`);
+        return $`bash -c ${process.env[envName]}`;
+      }
       if (hasTypedField(pkg.scripts, scriptName, "string")) {
         logger?.log?.(`executing '${scriptName}' script:`);
         logger?.get(LogLevels.log, { header: false, formats: "grey" })?.(`> ${pkg.scripts[scriptName]}`);
@@ -14,7 +19,8 @@ export const scriptRunner = (pkg: PackageJson, logger?: Logger) => {
       return false;
     },
     {
-      has(scriptName: string) {
+      has(scriptName: string, envName?: string) {
+        if (envName && process.env[envName]) return true;
         return hasTypedField(pkg.scripts, scriptName, "string");
       },
     },

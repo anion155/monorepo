@@ -1,12 +1,18 @@
 {
   "name": "@anion155/polyfill-base",
   "private": true,
-  "module": "index.ts",
   "type": "module",
   "exports": {
     ".": "./index.ts",
     "./jest.config": "./jest.config.js",
     "./setup-jest.ts": "./setup-jest.ts"
+  },
+  "bin": {
+    "builder.proposal": "./scripts/builder.ts"
+  },
+  "dependencies": {
+    "@anion155/scripts-sources": "workspace:*",
+    "zx": "^8.8.4"
   },
   "devDependencies": {
     "@anion155/configs": "workspace:*",

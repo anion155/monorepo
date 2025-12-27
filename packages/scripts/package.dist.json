@@ -5,6 +5,7 @@
   "bin": {
     "typescript.config": "./typescript.config.js",
     "generate.exports": "./generate.exports.js",
-    "builder": "./builder.js"
+    "builder": "./builder.js",
+    "publisher": "./publisher.js"
   }
 }
