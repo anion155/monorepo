@@ -1,5 +1,5 @@
 import { createErrorClass } from "../errors";
-import { assignProperties } from "../object";
+import { assignFields, assignProperties } from "../object";
 
 export class InvalidGlobPattern extends createErrorClass("InvalidGlobPattern", "invalid glob pattern") {
   constructor(
@@ -195,6 +195,54 @@ function tokenizeGlob(pattern: string, separator: string): ReadonlyArray<Readonl
   return tokens;
 }
 
+type TokensLevel = ReadonlyArray<Readonly<GlobToken>>;
+function execLevel(value: string, tokens: TokensLevel) {
+  let tokenIndex = 0;
+  let valueIndex = 0;
+  while (tokenIndex < tokens.length) {
+    if (value[valueIndex] === undefined) return false;
+    const token = tokens[tokenIndex];
+    if (token.type === "character") {
+      if (value.charCodeAt(valueIndex) !== token.code) return false;
+    } else if (token.type === "include") {
+      if (!token.codes.has(value.charCodeAt(valueIndex))) return false;
+    } else if (token.type === "exclude") {
+      if (token.codes.has(value.charCodeAt(valueIndex))) return false;
+    } else if (token.type === "sequence") {
+      while (valueIndex < value.length) {
+        if (execLevel(value.substring(valueIndex), tokens.slice(tokenIndex + 1))) return true;
+        valueIndex += 1;
+      }
+      return false;
+    } else if (token.type === "deep") {
+      throw new InvalidGlobPattern("deep sequence must be one and only token on level", "", tokenIndex);
+    }
+    tokenIndex += 1;
+    valueIndex += 1;
+  }
+  return true;
+}
+type Tokens = ReadonlyArray<TokensLevel>;
+function execLevels(valueLevels: string[], tokens: Tokens) {
+  let levelIndex = 0;
+  let tokenIndex = 0;
+  while (levelIndex < valueLevels.length) {
+    const tokensLevel = tokens[tokenIndex];
+    if (tokensLevel === undefined) return false;
+    if (tokensLevel.length === 1 && tokensLevel[0].type === "deep") {
+      while (levelIndex < valueLevels.length) {
+        if (execLevels(valueLevels.slice(levelIndex), tokens.slice(tokenIndex + 1))) return true;
+        levelIndex += 1;
+      }
+      return false;
+    }
+    if (!execLevel(valueLevels[levelIndex], tokensLevel)) return false;
+    levelIndex += 1;
+    tokenIndex += 1;
+  }
+  return true;
+}
+
 /**
  * shell-style pattern matching.
  *
@@ -238,56 +286,93 @@ function tokenizeGlob(pattern: string, separator: string): ReadonlyArray<Readonl
  *  ["file?.txt", "fileA.txt"].filter(glob("file\\?.txt")) // Output: ["file?.txt"]
  */
 export function glob(pattern: string, separator: string = "/") {
-  const tokens = tokenizeGlob(pattern, separator);
+  const tokens: Tokens = tokenizeGlob(pattern, separator);
   Object.freeze(tokens);
   Object.preventExtensions(tokens);
-  function execLevel(value: string, tokens: ReadonlyArray<Readonly<Exclude<GlobToken, { type: "deep" }>>>) {
-    let tokenIndex = 0;
-    let valueIndex = 0;
-    while (tokenIndex < tokens.length) {
-      if (value[valueIndex] === undefined) return false;
-      const token = tokens[tokenIndex];
-      if (token.type === "character") {
-        if (value.charCodeAt(valueIndex) !== token.code) return false;
-      } else if (token.type === "include") {
-        if (!token.codes.has(value.charCodeAt(valueIndex))) return false;
-      } else if (token.type === "exclude") {
-        if (token.codes.has(value.charCodeAt(valueIndex))) return false;
-      } else if (token.type === "sequence") {
-        while (valueIndex < value.length) {
-          if (execLevel(value.substring(valueIndex), tokens.slice(tokenIndex + 1))) return true;
-          valueIndex += 1;
-        }
-        return false;
-      }
-      tokenIndex += 1;
-      valueIndex += 1;
-    }
-    return true;
-  }
-  function execLevels(levels: string[], tokens: ReadonlyArray<ReadonlyArray<GlobToken>>) {
-    let levelIndex = 0;
-    let tokenIndex = 0;
-    while (levelIndex < levels.length) {
-      if (tokens[tokenIndex] === undefined) return false;
-      if (tokens[tokenIndex].length === 1 && tokens[tokenIndex][0].type === "deep") {
-        while (levelIndex < levels.length) {
-          if (execLevels(levels.slice(levelIndex), tokens.slice(tokenIndex + 1))) return true;
-          levelIndex += 1;
-        }
-        return false;
-      }
-      if (!execLevel(levels[levelIndex], tokens[tokenIndex] as never)) return false;
-      levelIndex += 1;
-      tokenIndex += 1;
-    }
-    return true;
-  }
   function execGlob(value: string) {
     return execLevels(value.split(separator), tokens);
   }
   return assignProperties(execGlob, {
     pattern: { value: pattern, writable: false, enumerable: true, configurable: true },
     tokens: { value: tokens, writable: false, enumerable: true, configurable: true },
+    separator: { value: separator, writable: false, enumerable: true, configurable: true },
+  });
+}
+export type Glob = ReturnType<typeof glob>;
+
+type TokensWithNegative = Tokens & { readonly negative: boolean };
+function execLevelsParallel(valueLevels: string[], tokenss: ReadonlyArray<TokensWithNegative>) {
+  const patternsIndexes = tokenss.map((_, index) => index);
+  let levelIndex = 0;
+  const tokenIndexes = tokenss.map(() => 0);
+  while (levelIndex < valueLevels.length) {
+    for (let patternIndex = 0; patternIndex < patternsIndexes.length; patternIndex += 1) {
+      const tokenssIndex = patternsIndexes[patternIndex];
+      const tokens = tokenss[tokenssIndex];
+      const tokenIndex = tokenIndexes[tokenssIndex];
+      const tokensLevel = tokens[tokenIndex];
+      let match = true;
+      if (tokensLevel === undefined) {
+        match = false;
+      } else if (tokensLevel.length === 1 && tokensLevel[0].type === "deep") {
+        match = false;
+        for (let deepLevelIndex = levelIndex; !match && deepLevelIndex < valueLevels.length; deepLevelIndex += 1) {
+          if (execLevels(valueLevels.slice(deepLevelIndex), tokens.slice(tokenIndex + 1))) {
+            match = true;
+          }
+        }
+      } else if (!execLevel(valueLevels[levelIndex], tokensLevel)) {
+        match = false;
+      }
+      if (!match) {
+        patternsIndexes.splice(patternIndex, 1);
+        patternIndex -= 1;
+      } else {
+        tokenIndexes[tokenssIndex] += 1;
+      }
+    }
+    levelIndex += 1;
+  }
+  for (let patternIndex = 0; patternIndex < patternsIndexes.length; patternIndex += 1) {
+    const tokenssIndex = patternsIndexes[patternIndex];
+    const tokens = tokenss[tokenssIndex];
+    if (tokens.negative) return false;
+  }
+  if (patternsIndexes.length === 0) return false;
+  return true;
+}
+
+/**
+ * Create a predicate that matches a value against multiple shell-style glob patterns.
+ *
+ * Patterns are shell-style globs (see `{@link glob}()` above), return true if any pattern
+ * matches {@link value}. A pattern prefixed with `!` is treated as a negative pattern —
+ * if any negative pattern matches the tested value, the predicate immediately returns `false`.
+ *
+ * @example
+ * // Match JS files in `src/` but exclude test files
+ * ["src/index.js", "src/index.test.js"].filter(globs(["src/*.js", "!src/*.test.js"])) // Output: ["src/index.js"]
+ */
+export function globs(patterns: string[], separator: string = "/") {
+  const tokenss = patterns.map((pattern) => {
+    let tokens: TokensWithNegative;
+    if (pattern.startsWith("!") && pattern.length > 1) {
+      tokens = assignFields(tokenizeGlob(pattern.substring(1), separator), { negative: true });
+    } else {
+      tokens = assignFields(tokenizeGlob(pattern, separator), { negative: false });
+    }
+    Object.freeze(tokens);
+    Object.preventExtensions(tokens);
+    return tokens;
+  });
+  Object.freeze(tokenss);
+  Object.preventExtensions(tokenss);
+  function execGlobs(value: string) {
+    return execLevelsParallel(value.split(separator), tokenss);
+  }
+  return assignProperties(execGlobs, {
+    patterns: { value: patterns, writable: false, enumerable: true, configurable: true },
+    tokens: { value: tokenss, writable: false, enumerable: true, configurable: true },
+    separator: { value: separator, writable: false, enumerable: true, configurable: true },
   });
 }
