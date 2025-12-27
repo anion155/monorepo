@@ -1,6 +1,6 @@
 {
   "name": "@anion155/proposal-explicit-resource-management",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Polyfills implementing the Explicit Resource Management proposal for ECMAScript.",
   "keywords": [
     "explicit-resource-management",

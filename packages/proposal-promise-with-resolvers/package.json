@@ -1,6 +1,6 @@
 {
   "name": "@anion155/proposal-promise-with-resolvers",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Polyfills implementing the Promise with resolvers proposal for ECMAScript.",
   "keywords": [
     "promise",
