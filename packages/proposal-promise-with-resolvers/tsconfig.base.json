@@ -1,3 +1,7 @@
 {
-  "extends": "@anion155/configs/tsconfig.base.json"
+  "extends": "@anion155/configs/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2024"],
+    "target": "es2024"
+  }
 }

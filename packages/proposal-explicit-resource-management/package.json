@@ -21,22 +21,18 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    "./async-disposable-stack": "./src/async-disposable-stack.ts",
-    "./async-iterator-prototype-dispose": "./src/async-iterator-prototype-dispose.ts",
-    "./disposable-stack": "./src/disposable-stack.ts",
-    "./global-async-disposable-stack": "./src/global-async-disposable-stack.ts",
-    "./global-disposable-stack": "./src/global-disposable-stack.ts",
-    "./global-suppressed-error": "./src/global-suppressed-error.ts",
-    "./global-symbols": "./src/global-symbols.ts",
-    "./global": "./src/global.ts",
     ".": "./src/index.ts",
-    "./iterator-prototype-dispose": "./src/iterator-prototype-dispose.ts",
-    "./suppressed-error": "./src/suppressed-error.ts",
-    "./utils": "./src/utils.ts"
+    "./global": "./src/global.ts",
+    "./types": "./src/types.ts"
   },
   "!exports": [
-    "base.ts"
+    "**/*"
   ],
+  "+exports": {
+    ".": "./src/index.ts",
+    "./global": "./src/global.ts",
+    "./types": "./src/types.ts"
+  },
   "scripts": {
     "test": "jest src",
     "lint": "eslint src",
