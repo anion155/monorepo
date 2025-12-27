@@ -12,7 +12,7 @@ import { ProgressBar } from "./utils/progress-bar";
 
 const logger = new ScriptLogger("generate.exports");
 
-const SUPPORTED_EXTENSIONS = [".js", ".jsx", ".ts", ".tsx"];
+const SUPPORTED_EXTENSIONS = [".js", ".jsx", ".d.ts", ".ts", ".d.tsx", ".tsx"];
 const UNSUPPORTED_EXTENSIONS = SUPPORTED_EXTENSIONS.map((ext) => `.spec${ext}`).concat(...SUPPORTED_EXTENSIONS.map((ext) => `.spec-d${ext}`));
 
 const add_dot = (filepath: string) => {

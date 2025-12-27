@@ -237,6 +237,9 @@ importers:
       '@anion155/configs':
         specifier: workspace:*
         version: link:../configs
+      '@anion155/proposal-async-iterator-helpers':
+        specifier: workspace:*
+        version: link:../proposal-async-iterator-helpers
       '@anion155/proposal-explicit-resource-management':
         specifier: workspace:*
         version: link:../proposal-explicit-resource-management
