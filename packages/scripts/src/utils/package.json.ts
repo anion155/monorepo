@@ -63,7 +63,17 @@ export type PackageJsonConstraints = {
   cpu?: PackageJsonArch[] | `!${PackageJsonArch}`[];
   libc?: string;
 };
-type PackageJsonType = PackageJsonMeta & PackageJsonModule & PackageJsonFiles & PackageJsonConfig & PackageJsonDependencies & PackageJsonConstraints;
+export type PackageJsonPublishConfig = {
+  access?: "public" | "restricted" | null;
+};
+type PackageJsonType = PackageJsonMeta &
+  PackageJsonModule &
+  PackageJsonFiles &
+  PackageJsonConfig &
+  PackageJsonDependencies &
+  PackageJsonConstraints & {
+    publishConfig?: PackageJsonPublishConfig;
+  };
 declare global {
   interface PackageJson extends PackageJsonType {}
   interface PackageJsonExt extends PackageJson {}

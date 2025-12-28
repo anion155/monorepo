@@ -1,3 +1,5 @@
+import "./shell";
+
 import { hasTypedField, is, isObject } from "@anion155/shared/is";
 import { Maybe, MaybePromise } from "@anion155/shared/maybe";
 import { escapes } from "@anion155/shared/misc";

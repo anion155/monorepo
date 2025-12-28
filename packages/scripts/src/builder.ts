@@ -72,7 +72,7 @@ await main(async (stack) => {
   }
 
   logger.info?.("copying files to dist/");
-  const files: Glob[] = [glob("README*"), glob("LICENSE*"), glob("LICENCE*"), glob("LICENCE*")];
+  const files: Glob[] = [glob("README*"), glob("LICENSE*"), glob("LICENCE*"), glob("LICENCE*"), glob("AUTHORS*")];
   const ignoreFiles: Glob[] = [
     glob(".git"),
     glob(".npmrc"),
@@ -162,6 +162,8 @@ await main(async (stack) => {
     os: sourcePkg.os,
     cpu: sourcePkg.cpu,
     libc: sourcePkg.libc,
+
+    publishConfig: sourcePkg.publishConfig,
   };
   if (sourcePkg.scripts) {
     const scripts = sourcePkg["+scripts"]?.map((pattern) => glob(pattern)) ?? [];
