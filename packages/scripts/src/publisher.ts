@@ -10,7 +10,7 @@ await main(async (stack) => {
   await cdRoot();
   if (!process.argv.shift()?.endsWith("publisher.js")) process.argv.shift();
   await $`generate.exports`;
-  await $`BUILDER_READY='rm dist/src/base.ts && cp ../polyfill-base/index.ts dist/src/base.ts' builder`;
+  await $`builder`;
   cd("dist");
   await $`pnpm pack --out package.tgz`;
   await $`pnpm publish package.tgz --dry-run --access public ${process.argv}`;
