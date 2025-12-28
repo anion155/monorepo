@@ -1,6 +1,6 @@
 {
   "name": "@anion155/proposal-async-iterator-helpers",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Polyfills implementing the Async Iterator Helpers proposal for ECMAScript.",
   "keywords": [
     "iterator",
