@@ -1,7 +1,7 @@
 import { polyfillProperty } from "./base";
 
 declare global {
-  interface Symbol {
+  interface SymbolConstructor {
     readonly dispose: unique symbol;
     readonly asyncDispose: unique symbol;
   }
