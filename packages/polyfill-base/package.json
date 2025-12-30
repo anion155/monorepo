@@ -7,12 +7,8 @@
     "./jest.config": "./jest.config.js",
     "./setup-jest.ts": "./setup-jest.ts"
   },
-  "bin": {
-    "builder.proposal": "./scripts/builder.ts"
-  },
   "dependencies": {
-    "@anion155/scripts-sources": "workspace:*",
-    "zx": "^8.8.4"
+    "@anion155/scripts-sources": "workspace:*"
   },
   "devDependencies": {
     "@anion155/configs": "workspace:*",
