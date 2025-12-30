@@ -9,6 +9,8 @@ import { main } from "./utils/main";
 await main(async (stack) => {
   await cdRoot();
   if (!process.argv.shift()?.endsWith("publisher.js")) process.argv.shift();
+  await $`pnpm run lint`;
+  await $`pnpm run test`;
   await $`generate.exports`;
   await $`builder`;
   cd("dist");

@@ -15,13 +15,16 @@ const logger = new ScriptLogger("generate.exports");
 const SUPPORTED_EXTENSIONS = [".js", ".jsx", ".d.ts", ".ts", ".d.tsx", ".tsx"];
 const UNSUPPORTED_EXTENSIONS = SUPPORTED_EXTENSIONS.map((ext) => `.spec${ext}`).concat(...SUPPORTED_EXTENSIONS.map((ext) => `.spec-d${ext}`));
 
-const add_dot = (filepath: string) => {
+const addDot = (filepath: string) => {
   filepath = path.join(".", filepath);
   if (filepath !== ".") filepath = "./" + filepath;
   return filepath;
 };
+const exportModule = (filepath: string): PackageJsonConditionalExport => {
+  return { types: addDot(filepath), import: path.join("lib/esm", filepath), require: path.join("lib/cjs", filepath), default: addDot(filepath) };
+};
 const module = (filepath: string) => {
-  filepath = add_dot(filepath);
+  filepath = addDot(filepath);
   const ext = SUPPORTED_EXTENSIONS.find((ext) => filepath.endsWith(ext));
   if (ext) filepath = filepath.substring(0, filepath.length - ext.length);
   return filepath;
@@ -40,7 +43,7 @@ await main(async (stack) => {
   const pb = new ProgressBar({ steps: 2 });
   stack.append(pb);
 
-  const exports: Record<string, string> = {};
+  const exports: Record<string, string | PackageJsonConditionalExport> = {};
   if (pkg["+exports"]) {
     for (const [name, module] of Object.entries(pkg["+exports"])) {
       if (typeof module === "string") {
@@ -76,9 +79,9 @@ await main(async (stack) => {
       if (fileStats.isDirectory()) {
         await traverseDir(filepath, basepath);
       } else if (SUPPORTED_EXTENSIONS.find((ext) => file === `index${ext}`)) {
-        exports[module(base)] = add_dot(filepath);
+        exports[module(base)] = exportModule(filepath);
       } else if (SUPPORTED_EXTENSIONS.find((ext) => file.endsWith(ext)) && !UNSUPPORTED_EXTENSIONS.find((ext) => file.endsWith(ext))) {
-        exports[module(basepath)] = add_dot(filepath);
+        exports[module(basepath)] = exportModule(filepath);
       }
     }
   };

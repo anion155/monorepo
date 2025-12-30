@@ -65,7 +65,8 @@ await main(async (stack) => {
       "tsconfig.json",
       JSON.stringify({ extends: "../tsconfig.build.json", include: ["src/**/*.ts", "src/**/*.tsx"] }, undefined, 2) + "\n",
     );
-    await $`pnpm --package=typescript dlx tsc --outDir lib`;
+    await $`pnpm --package=typescript dlx tsc --module ESNext --outDir lib/esm`;
+    await $`pnpm --package=typescript dlx tsc --module CommonJS --outDir lib/cjs`;
     await $`rm tsconfig.json`;
     cd("..");
     pb.step();

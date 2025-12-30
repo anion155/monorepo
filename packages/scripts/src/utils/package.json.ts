@@ -21,10 +21,13 @@ export type PackageJsonMeta = {
   bugs?: string | PackageJsonIssues;
   funding?: string | PackageJsonFuncding | Array<string | PackageJsonFuncding>;
 };
-export type PackageJsonConditionalExport = Record<
-  "node-addons" | "node" | "import" | "require" | "module-sync" | "react-native" | "default",
-  string | Record<"types" | "default", string>
->;
+type _PackageJsonConditionalExport<Conditions extends string, Value> = string | ({ [Cond in Conditions]?: Value } & { default: Value });
+export type PackageJsonConditionalExport =
+  | _PackageJsonConditionalExport<
+      "node-addons" | "node" | "import" | "require" | "module-sync" | "react-native",
+      _PackageJsonConditionalExport<"types", string>
+    >
+  | _PackageJsonConditionalExport<"node-addons" | "node" | "import" | "require" | "module-sync" | "react-native" | "types" | "default", string>;
 export type PackageJsonModule = {
   type?: "module" | "commonjs";
   exports?: string | PackageJsonConditionalExport | Record<string, string | PackageJsonConditionalExport>;
