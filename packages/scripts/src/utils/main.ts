@@ -8,6 +8,11 @@ import { readFile } from "fs/promises";
 import { cdRoot } from "./cd-root";
 import { ScriptLogger } from "./logger";
 
+export function fatal(message: string, code = 1): never {
+  console.error(applyConsoleFormat("red", message));
+  process.exit(code);
+}
+
 export function main<Result extends void | Promise<void>>(main: (stack: DisposableStack) => Result): MaybePromise<Result> {
   const stack = new DisposableStack();
   const dispose = () => stack.dispose();

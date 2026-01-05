@@ -21,18 +21,16 @@
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
     "./global": "./src/global.ts",
+    ".": "./src/index.ts",
     "./types": "./src/types.ts"
   },
   "!exports": [
-    "**/*"
+    "**/*",
+    "!src/index.ts",
+    "!src/global.ts",
+    "!src/types.ts"
   ],
-  "+exports": {
-    ".": "./src/index.ts",
-    "./global": "./src/global.ts",
-    "./types": "./src/types.ts"
-  },
   "scripts": {
     "lint": "eslint src && tsc --project ./tsconfig.build.json",
     "test": "jest src",

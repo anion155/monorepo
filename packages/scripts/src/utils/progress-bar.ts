@@ -1,5 +1,3 @@
-import "@anion155/shared/global/math";
-
 import { doRun } from "@anion155/shared/do";
 import { DeveloperError } from "@anion155/shared/errors";
 import { hasField, is } from "@anion155/shared/is";

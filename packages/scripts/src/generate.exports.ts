@@ -2,9 +2,9 @@
 
 import "./utils/polyfils";
 
-import { glob } from "@anion155/shared/misc/glob";
+import { globs } from "@anion155/shared/misc/glob";
 import { readdir, stat, writeFile } from "node:fs/promises";
-import path, { normalize } from "node:path";
+import path from "node:path";
 import { ScriptLogger } from "./utils/logger";
 import { main, scriptHeader } from "./utils/main";
 import { PackageJsonConditionalExport } from "./utils/package.json";
@@ -21,7 +21,7 @@ const addDot = (filepath: string) => {
   return filepath;
 };
 const exportModule = (filepath: string): PackageJsonConditionalExport => {
-  return { types: addDot(filepath), import: path.join("lib/esm", filepath), require: path.join("lib/cjs", filepath), default: addDot(filepath) };
+  return addDot(filepath);
 };
 const module = (filepath: string) => {
   filepath = addDot(filepath);
@@ -54,24 +54,14 @@ await main(async (stack) => {
       }
     }
   }
-  const ignores =
-    pkg["!exports"]?.map((pattern) => {
-      if (pattern.includes("/")) return Object.assign(glob(normalize(pattern)), { nameonly: false });
-      return Object.assign(glob(pattern), { nameonly: true });
-    }) ?? [];
-  logger.info?.(
-    "ignore pattern:",
-    ignores.map((glob) => ({ pattern: glob.pattern, nameonly: glob.nameonly })),
-  );
+  const ignored = pkg["!exports"] ? globs(pkg["!exports"]) : undefined;
+  if (ignored) logger.info?.("exports patterns:", ignored.patterns);
   const traverseDir = async (dir: string, base: string) => {
     for (const file of await readdir(dir)) {
       const filepath = path.join(dir, file);
-      {
-        const glob = ignores.find((glob) => glob(glob.nameonly ? file : filepath));
-        if (glob) {
-          logger.warn?.("ignoring:", filepath, ", because of:", glob.pattern);
-          continue;
-        }
+      if (ignored?.(filepath)) {
+        logger.warn?.("ignoring:", filepath);
+        continue;
       }
       logger.log?.("export:", filepath);
       const basepath = path.join(base, file);

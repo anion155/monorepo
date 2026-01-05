@@ -106,9 +106,6 @@ importers:
       '@anion155/scripts-sources':
         specifier: workspace:*
         version: link:../scripts
-      zx:
-        specifier: ^8.8.4
-        version: 8.8.4
     devDependencies:
       '@anion155/configs':
         specifier: workspace:*

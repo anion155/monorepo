@@ -2,6 +2,7 @@
 
 import "./utils/polyfils";
 
+import { TODO } from "@anion155/shared/errors";
 import { isTruthy } from "@anion155/shared/is";
 import { Glob, glob } from "@anion155/shared/misc";
 import { readdir, stat, writeFile } from "node:fs/promises";
@@ -26,6 +27,10 @@ declare global {
     "!dependencies"?: string[];
   }
 }
+
+const chExt = (filepath: string, ext: `.${string}`) => {
+  return filepath.replace(/\.[\w\d-_]+$/, ext);
+};
 
 await main(async (stack) => {
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
@@ -65,8 +70,8 @@ await main(async (stack) => {
       "tsconfig.json",
       JSON.stringify({ extends: "../tsconfig.build.json", include: ["src/**/*.ts", "src/**/*.tsx"] }, undefined, 2) + "\n",
     );
-    await $`pnpm --package=typescript dlx tsc --module ESNext --outDir lib/esm`;
-    await $`pnpm --package=typescript dlx tsc --module CommonJS --outDir lib/cjs`;
+    await $`pnpm --package=typescript dlx tsc --module ESNext --moduleResolution node --outDir lib/esm`;
+    await $`pnpm --package=typescript dlx tsc --module CommonJS --moduleResolution node --outDir lib/cjs`;
     await $`rm tsconfig.json`;
     cd("..");
     pb.step();
@@ -166,6 +171,22 @@ await main(async (stack) => {
 
     publishConfig: sourcePkg.publishConfig,
   };
+  if (!resultPkg.exports) {
+  } else if (typeof resultPkg.exports === "string") {
+    TODO();
+  } else if ("." in resultPkg.exports) {
+    for (const [submodule, srcPath] of Object.entries(resultPkg.exports)) {
+      if (typeof srcPath !== "string") continue;
+      if (!srcPath.startsWith("./src/")) continue;
+      resultPkg.exports[submodule] = {
+        types: srcPath,
+        import: chExt(srcPath.replace("./src", "./lib/esm"), ".js"),
+        require: chExt(srcPath.replace("./src", "./lib/cjs"), ".js"),
+        typescript: srcPath,
+        default: srcPath,
+      };
+    }
+  }
   if (sourcePkg.scripts) {
     const scripts = sourcePkg["+scripts"]?.map((pattern) => glob(pattern)) ?? [];
     if (!scripts.find((pattern) => pattern("postinstall"))) scripts.push(glob("postinstall"));

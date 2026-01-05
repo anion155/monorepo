@@ -24,7 +24,7 @@ export type PackageJsonMeta = {
 type _PackageJsonConditionalExport<Conditions extends string, Value> = string | ({ [Cond in Conditions]?: Value } & { default: Value });
 export type PackageJsonConditionalExport =
   | _PackageJsonConditionalExport<
-      "node-addons" | "node" | "import" | "require" | "module-sync" | "react-native",
+      "node-addons" | "node" | "import" | "require" | "module-sync" | "react-native" | "typescript",
       _PackageJsonConditionalExport<"types", string>
     >
   | _PackageJsonConditionalExport<"node-addons" | "node" | "import" | "require" | "module-sync" | "react-native" | "types" | "default", string>;
