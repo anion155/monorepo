@@ -3,13 +3,13 @@ import "./shell";
 import { hasTypedField, is, isObject } from "@anion155/shared/is";
 import { Maybe, MaybePromise } from "@anion155/shared/maybe";
 import { escapes } from "@anion155/shared/misc";
-import { applyConsoleFormat } from "@anion155/shared/misc/apply-console-format";
 import { readFile } from "fs/promises";
+import { UsageError } from "./argv";
 import { cdRoot } from "./cd-root";
 import { ScriptLogger } from "./logger";
 
 export function fatal(message: string, code = 1): never {
-  console.error(applyConsoleFormat("red", message));
+  console.error(message.consoleFormat("red"));
   process.exit(code);
 }
 
@@ -25,9 +25,13 @@ export function main<Result extends void | Promise<void>>(main: (stack: Disposab
   return Maybe.try(() => main(stack)).then(
     () => dispose(),
     (error) => {
-      const message =
-        is(error, Error) || (isObject(error) && hasTypedField(error, "message", "string")) ? applyConsoleFormat("red", error.message) : "";
-      console.error(applyConsoleFormat("red", "Failed:"), message, "\n", error);
+      if (error instanceof UsageError) {
+        console.error(error.message.consoleFormat("red"));
+        console.error(error.help({ maxColumns: 120 }));
+      } else {
+        const message = is(error, Error) || (isObject(error) && hasTypedField(error, "message", "string")) ? error.message.consoleFormat("red") : "";
+        console.error("Failed:".consoleFormat("red"), message, "\n", error);
+      }
       dispose();
     },
   ) as never;
@@ -38,6 +42,6 @@ export async function scriptHeader<PKG extends PackageJson>(logger: ScriptLogger
   await cdRoot();
   const pkg: PKG = await readFile("./package.json", "utf-8").then(JSON.parse);
   if (logger.header) process.stdout.write(escapes.cursor.moveUp(1) + escapes.erase.clearLine);
-  logger.header?.(`${name} ${applyConsoleFormat("white", `[${pkg.name}]`)}`);
+  logger.header?.(`${name} ${`[${pkg.name}]`.consoleFormat("white")}`);
   return pkg;
 }
