@@ -33,9 +33,9 @@ declare global {
   /** Takes U and adds not overlapping fields from T */
   type Extend<T, U> = T extends Callable<never, unknown> ? T & U : U extends Callable<never, unknown> ? T & U : Omit<Omit<T, keyof U> & U, never>;
   /** Changes some fields to optional */
-  type PartialSome<T, K extends keyof T> = Extend<T, Partial<PickHelper<T, K>>>;
+  type PartialSome<T, K extends keyof T> = Extend<T, Partial<Pick<T, K>>>;
   /** Changes some fields to required */
-  type RequiredSome<T, K extends keyof T> = Extend<T, Required<PickHelper<T, K>>>;
+  type RequiredSome<T, K extends keyof T> = Extend<T, Required<Pick<T, K>>>;
 
   /** If X equals to Y returns A, otherwise returns B */
   type IfEquals<X, Y, A = X, B = never> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? A : B;

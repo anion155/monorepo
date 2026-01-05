@@ -108,7 +108,6 @@ export class Logger {
     return (message, ...rest) => {
       let { message: messageFormats, header: headerFormats } =
         isObject(formats) && hasField(formats, "message") ? formats : { message: formats, header: formats };
-      // const [formatsLeft, formatsRight] = formats ? applyConsoleFormat(formats., "DELIMETER").split("DELIMETER") : ["", ""];
       if (messageFormats) message = applyConsoleFormat(messageFormats, message);
       if (header) {
         const names = [this.#name, ...this.parents().map((logger) => logger.#name)];

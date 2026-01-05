@@ -8,8 +8,8 @@ export const ConsoleFormats = {
 export type ConsoleFormatNames = keyof typeof ConsoleFormats;
 export type ConsoleFormats = ConsoleFormatNames | (ConsoleFormatNames | readonly [number, number] | readonly [string, string])[];
 
-/** Formats {@link text} using {@link ConsoleFormats}. */
-export function applyConsoleFormat(formats: ConsoleFormats, text: string) {
+/** Formats {@link text} using {@link formats}. */
+export function applyConsoleFormat(formats: ConsoleFormats, text: string, disabled: boolean = !process.stdout.isTTY) {
   // {
   //   if (process.env.FORCE_COLOR !== undefined) {
   //     return lazyInternalTTY().getColorDepth() > 2;
@@ -47,5 +47,6 @@ export function applyConsoleFormat(formats: ConsoleFormats, text: string) {
   }
   const left = lGroups.map((group) => (typeof group === "string" ? group : escapes.format(...group)));
   const right = rGroups.reverse().map((group) => (typeof group === "string" ? group : escapes.format(...group)));
+  if (disabled) return text;
   return `${left.join("")}${text}${right.join("")}`;
 }

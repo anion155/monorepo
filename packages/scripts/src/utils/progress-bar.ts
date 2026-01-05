@@ -2,7 +2,7 @@ import { doRun } from "@anion155/shared/do";
 import { DeveloperError } from "@anion155/shared/errors";
 import { hasField, is } from "@anion155/shared/is";
 import { Loop } from "@anion155/shared/loop";
-import { applyConsoleFormat, escapes } from "@anion155/shared/misc";
+import { escapes } from "@anion155/shared/misc";
 import { anionmationLoader } from "./anionmation-loader";
 import { directPrint } from "./direct-print";
 
@@ -85,7 +85,7 @@ export class ProgressBar<Steps> {
     if (hasField(bars, "complete")) {
       const { complete, empty = " " } = bars;
       this.#bars = (completeBars, emptyBars, actualBars, barsNumber) => {
-        return `${complete.repeat(completeBars)}${applyConsoleFormat("gray", complete.repeat(actualBars - completeBars))}${empty.repeat(barsNumber - actualBars)}`;
+        return `${complete.repeat(completeBars)}${complete.repeat(actualBars - completeBars).consoleFormat("gray")}${empty.repeat(barsNumber - actualBars)}`;
       };
     } else {
       this.#bars = bars;
