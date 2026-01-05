@@ -32,7 +32,7 @@ describe("Promise extensions", () => {
     });
   });
 
-  describe("Promise.signal()", () => {
+  describe("this.signal()", () => {
     it("should create signal that would be aborted on promise rejection", async () => {
       const signal = Promise.timeout(10).signal();
       expect(signal.aborted).toBe(false);

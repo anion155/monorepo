@@ -32,6 +32,7 @@
     "./global": "./src/global/index.ts",
     "./global/math": "./src/global/math.ts",
     "./global/promise": "./src/global/promise.ts",
+    "./global/string": "./src/global/string.ts",
     "./global/utils": "./src/global/utils.ts",
     ".": "./src/index.ts",
     "./is-iterable": "./src/is-iterable.ts",

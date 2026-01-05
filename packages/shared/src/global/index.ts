@@ -6,4 +6,5 @@ import "./emplace";
 import "./functions";
 import "./math";
 import "./promise";
+import "./string";
 import "./utils";
