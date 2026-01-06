@@ -1,9 +1,11 @@
+import { cached } from "@anion155/shared/decorators";
 import { doRun } from "@anion155/shared/do";
 import { createErrorClass } from "@anion155/shared/errors";
 import { Curried, curryHelper } from "@anion155/shared/functional";
 
-export const __interpretator = process.argv.shift();
-export const __scriptName = process.argv.shift();
+export const ARGV = process.argv.slice();
+export const __interpretator = ARGV.shift();
+export const __scriptName = ARGV.shift();
 
 type OptionNames = Array<string | { name: string; short?: boolean }>;
 type BaseOption<Type extends string, T = string> = { type: Type; default?: T; names: OptionNames; description?: string };
@@ -11,9 +13,9 @@ type BaseOption<Type extends string, T = string> = { type: Type; default?: T; na
 type StringOption = BaseOption<"string">;
 type BooleanOption = BaseOption<"boolean", boolean>;
 type EnumOption<Values> = BaseOption<"enum", Values> & { values: Values[] };
-type HelpOption = BaseOption<"help">;
+type HelpOption<Result> = BaseOption<"help"> & { handler: (parser: Pick<OptionsParser<any>, "help">, result: Result) => void };
 
-type Option = StringOption | BooleanOption | EnumOption<unknown> | HelpOption;
+type Option = StringOption | BooleanOption | EnumOption<unknown> | HelpOption<any>;
 type OptionParams<_Option extends Option, _Partial extends keyof _Option = "names"> = Omit<PartialSome<_Option, _Partial>, "type">;
 type OptionParamsDefault<_Option extends Option, _Partial extends keyof _Option = "names"> = Omit<
   PartialSome<_Option, _Partial>,
@@ -26,12 +28,16 @@ type OptionType<_Option extends Option> = _Option extends { type: "boolean" }
     ? Values
     : _Option extends { type: "string" }
       ? string
-      : never;
-type OptionNullable<_Option extends Option> = _Option extends { default: infer Default }
-  ? Default extends undefined
-    ? undefined
-    : never
-  : undefined;
+      : _Option extends { type: "help" }
+        ? boolean
+        : never;
+type OptionNullable<_Option extends Option> = _Option extends { type: "help" }
+  ? never
+  : _Option extends { default: infer Default }
+    ? Default extends undefined
+      ? undefined
+      : never
+    : undefined;
 type OptionsResults<Options extends Option[]> = { [I in keyof Options]: OptionType<Options[I]> | OptionNullable<Options[I]> };
 
 type OptionItem = {
@@ -72,18 +78,11 @@ export type OptionParserUsageStyle = {
  *    .parse();
  */
 export class OptionsParser<Options extends Option[] = []> {
-  #config: Readonly<OptionsParserConfig>;
+  #config: Partial<OptionsParserConfig>;
+  @cached
   get config() {
-    return this.#config;
-  }
-
-  #options: Options;
-  get options() {
-    return this.#options;
-  }
-
-  constructor(config?: Partial<OptionsParserConfig>) {
-    this.#config = Object.freeze<OptionsParserConfig>({
+    const config = this.#config;
+    return Object.freeze({
       short: config?.short ?? true,
       oneArgValue: config?.oneArgValue ?? true,
       booleanValues: config?.booleanValues ?? true,
@@ -92,6 +91,19 @@ export class OptionsParser<Options extends Option[] = []> {
       shortBolleanGroups: config?.shortBolleanGroups ?? true,
       longOneHyphen: config?.longOneHyphen ?? false,
     });
+  }
+  mergeConfig(other: OptionsParser<Option[]>) {
+    cached.reset(this, "config");
+    this.#config = { ...other.#config, ...this.#config };
+  }
+
+  #options: Options;
+  get options() {
+    return this.#options;
+  }
+
+  constructor(config?: Partial<OptionsParserConfig>) {
+    this.#config = config ?? {};
     this.#options = [] as never;
   }
 
@@ -126,8 +138,21 @@ export class OptionsParser<Options extends Option[] = []> {
     });
   }
 
-  addHelp(description?: string): OptionsParser<[...Options, HelpOption]> {
-    return this.#option({ type: "help", names: ["help"], description });
+  addHelp(
+    handler?: HelpOption<OptionsResults<Options>>["handler"] | OptionParserUsageStyle,
+    description?: string,
+  ): OptionsParser<[...Options, HelpOption<OptionsResults<Options>>]> {
+    return this.#option({
+      type: "help",
+      names: ["help"],
+      description: description ?? "Print this options help message",
+      handler: doRun(() => {
+        if (typeof handler === "function") return handler;
+        return (parser) => {
+          console.log(parser.help(handler));
+        };
+      }),
+    });
   }
 
   #optionsMap() {
@@ -141,7 +166,7 @@ export class OptionsParser<Options extends Option[] = []> {
           map.set(name, { index, option, short: true, name });
         } else {
           map.set(name, { index, option, short: false, name });
-          if (this.#config.short) {
+          if (this.config.short) {
             if (!map.has(name[0])) map.set(name[0], { index, option, short: true, name });
           }
         }
@@ -152,7 +177,7 @@ export class OptionsParser<Options extends Option[] = []> {
   static POSSIBLE_TRUE_VALUES = ["true", "t", "yes", "y"];
   static POSSIBLE_FALSE_VALUES = ["false", "f", "no", "n"];
   static POSSIBLE_BOOLEAN_VALUES = [...this.POSSIBLE_TRUE_VALUES, ...this.POSSIBLE_FALSE_VALUES];
-  parse(argv: string[] = process.argv): OptionsResults<Options> {
+  parse(argv: string[] = ARGV): OptionsResults<Options> {
     const map = this.#optionsMap();
     const values: OptionsResults<Options> = new Array(this.#options.length) as never;
     this.#options.forEach((option, index) => {
@@ -168,12 +193,12 @@ export class OptionsParser<Options extends Option[] = []> {
         short = true;
         arg = arg.substring(1);
         if (arg.length > 1) {
-          if (this.#config.shortBolleanGroups) {
+          if (this.config.shortBolleanGroups) {
             // ("-abcd");
             argv.unshift(...arg.split("").map((o) => `-${o}`));
             continue;
           }
-          if (this.#config.longOneHyphen) {
+          if (this.config.longOneHyphen) {
             argv.unshift(`--${arg}`);
             continue;
           }
@@ -184,17 +209,17 @@ export class OptionsParser<Options extends Option[] = []> {
         arg = arg.substring(2);
       }
       let ignore = false;
-      if (this.#config.ignorable && arg.startsWith("/") && arg.length > 1) {
+      if (this.config.ignorable && arg.startsWith("/") && arg.length > 1) {
         // ("--/arg");
         arg = arg.substring(1);
         ignore = true;
       }
-      if (this.#config.booleanNo && arg.startsWith("no-") && arg.length > 3) {
+      if (this.config.booleanNo && arg.startsWith("no-") && arg.length > 3) {
         // ("--no-arg");
         arg = arg.substring(3);
         value = false;
       }
-      if (this.#config.oneArgValue) {
+      if (this.config.oneArgValue) {
         // ("--arg=value");
         const index = arg.indexOf("=");
         if (index > 0) {
@@ -207,7 +232,7 @@ export class OptionsParser<Options extends Option[] = []> {
       if (byName === undefined || byName.short !== short) throw new InvalidOptionError(this, `${short ? "-" : "--"}${name}`);
       if (byName.option.type === "boolean") {
         if (value === undefined) value = true;
-        else if (this.#config.booleanValues) {
+        else if (this.config.booleanValues) {
           value = value.toString().toLowerCase();
           if (OptionsParser.POSSIBLE_TRUE_VALUES.includes(value)) value = true;
           else if (OptionsParser.POSSIBLE_FALSE_VALUES.includes(value)) value = true;
@@ -227,6 +252,8 @@ export class OptionsParser<Options extends Option[] = []> {
         if (!byName.option.values.includes(value)) throw new InvalidOptionError(this, byName);
       } else if (byName.option.type === "help") {
         if (value !== undefined) throw new InvalidOptionError(this, byName);
+        byName.option.handler(this, values);
+        throw new OptionParserBreak(this, byName, "help called");
       }
       if (!ignore) values[byName.index] = value as never;
     }
@@ -240,7 +267,7 @@ export class OptionsParser<Options extends Option[] = []> {
     if (option.type === "string") values = ["value"];
     else if (option.type === "enum") values = option.values.map(String);
     else if (option.type === "boolean") {
-      if (this.#config.booleanValues) values = OptionsParser.POSSIBLE_BOOLEAN_VALUES;
+      if (this.config.booleanValues) values = OptionsParser.POSSIBLE_BOOLEAN_VALUES;
     }
     return `${prefix}${name}${values?.length ? ` <${values.join("|")}>` : ""}`;
   }
@@ -254,13 +281,13 @@ export class OptionsParser<Options extends Option[] = []> {
     } else {
       columns = process.stdout.columns;
     }
-    if (style?.maxColumns) {
-      columns = Math.min(columns, style.maxColumns);
+    if (style?.maxColumns !== 0) {
+      columns = Math.min(columns, style?.maxColumns ?? 120);
     }
     return columns;
   }
   help(style?: OptionParserUsageStyle): string {
-    const indent = style?.indent ?? "    ";
+    const indent = style?.indent ?? "";
     const columns = OptionsParser.columns(style);
     const formatted = style?.formatted ?? true;
     const namesLiness = this.#options.map((option) =>
@@ -314,30 +341,54 @@ export class InvalidOptionError extends UsageError {
   }
 }
 
+export class OptionParserBreak extends createErrorClass("OptionParserBreak") {
+  constructor(
+    readonly parser: OptionsParser<Option[]>,
+    readonly desc?: string | OptionItem,
+    message?: string,
+  ) {
+    super(message ?? InvalidOptionError.message(parser, desc));
+  }
+}
+
 export type CommandsParserUsageStyle = OptionParserUsageStyle & {
-  headers?: { general?: string; commands?: string };
+  headers?: { options?: string; commands?: string };
 };
 export type CommandsParserCommandUsageStyle = CommandsParserUsageStyle & {
   nameWidth?: number;
 };
 
-type CommandsResults<GeneralOptions extends Option[], Commands extends Record<string, Option[]>> = {
-  [Command in keyof Commands]: [...OptionsResults<GeneralOptions>, Command, ...OptionsResults<Commands[Command]>];
+type CommandResults<_Options extends Option[] | { general: Option[]; commands: any }> = _Options extends Option[]
+  ? OptionsResults<_Options>
+  : _Options extends { general: any; commands: any }
+    ? CommandsResults<_Options["general"], _Options["commands"]>
+    : never;
+type CommandsResults<GeneralOptions extends Option[], Commands extends Record<string, Option[] | { general: Option[]; commands: any }>> = {
+  [Command in keyof Commands]: [...OptionsResults<GeneralOptions>, Command, ...CommandResults<Commands[Command]>];
 }[keyof Commands];
 
 type CommandItem = {
   name: string;
   description?: string;
-  options: OptionsParser<Option[]>;
+  parser: OptionsParser<Option[]> | CommandsParser<Option[], any>;
 };
 
-export class CommandsParser<GeneralOptions extends Option[] = [], Commands extends Record<string, Option[]> = {}> {
+export class CommandsParser<
+  GeneralOptions extends Option[] = [],
+  Commands extends Record<string, Option[] | { general: Option[]; commands: any }> = {},
+> {
   #general: OptionsParser<GeneralOptions>;
   get generalOptions() {
     return this.#general.options;
   }
   constructor(general: OptionsParser<GeneralOptions> = new OptionsParser()) {
     this.#general = general;
+    general.options.forEach((option) => {
+      if (option.type === "help") {
+        const orig = option.handler;
+        option.handler = (_, results) => orig(this, results);
+      }
+    });
   }
 
   #default: Extract<keyof Commands, string> | undefined;
@@ -349,24 +400,58 @@ export class CommandsParser<GeneralOptions extends Option[] = [], Commands exten
     return this;
   }
 
+  mergeConfig(parser: OptionsParser<Option[]>) {
+    this.#general.mergeConfig(parser);
+    this.#commands.values().forEach((command) => command.parser.mergeConfig(this.#general));
+  }
+
   #commands = new Map<string, CommandItem>();
   get commandsOptions(): Commands {
-    return Object.fromEntries(this.#commands.entries().map(([command, { options }]) => [command, options.options])) as never;
+    return Object.fromEntries(
+      this.#commands
+        .entries()
+        .map(([command, { parser }]) => [
+          command,
+          parser instanceof CommandsParser ? [parser.generalOptions, parser.commandsOptions] : parser.options,
+        ]),
+    ) as never;
   }
   addCommand<Name extends string>(name: Name, description?: string) {
     return curryHelper(
-      <Options extends Option[] = []>(options?: OptionsParser<Options>): CommandsParser<GeneralOptions, Commands & { [name in Name]: Options }> => {
-        this.#commands.set(name, { name, description, options: options ?? new OptionsParser() });
+      <Options extends Option[] = []>(parser?: OptionsParser<Options>): CommandsParser<GeneralOptions, Commands & { [name in Name]: Options }> => {
+        parser?.mergeConfig(this.#general);
+        parser?.options.forEach((option) => {
+          if (option.type === "help") {
+            const orig = option.handler;
+            option.handler = (_, results) => orig({ help: (style) => this.helpCommand(name, style) }, results);
+          }
+        });
+        this.#commands.set(name, { name, description, parser: parser ?? new OptionsParser() });
         return this as never;
       },
     );
   }
-  addHelp(description?: string): CommandsParser<GeneralOptions, Commands & { help: [] }> {
-    this.#commands.set("help", { name: "help", description, options: new OptionsParser() });
+  addSubCommands<Name extends string>(name: Name, description?: string) {
+    return curryHelper(
+      <SubGeneralOptions extends Option[], SubCommands extends Record<string, Option[] | { general: Option[]; commands: any }>>(
+        parser: CommandsParser<SubGeneralOptions, SubCommands>,
+      ): CommandsParser<GeneralOptions, Commands & { [name in Name]: { general: SubGeneralOptions; commands: SubCommands } }> => {
+        parser.mergeConfig(this.#general);
+        this.#commands.set(name, { name, description, parser });
+        return this as never;
+      },
+    );
+  }
+  addHelp(description?: string): CommandsParser<GeneralOptions, Commands & { help: { general: []; commands: { [Command in keyof Commands]: [] } } }> {
+    let parser = new CommandsParser();
+    this.#commands.forEach((item) => {
+      parser = parser.addCommand(item.name, "Print help message for this command")();
+    });
+    this.#commands.set("help", { name: "help", description: description ?? "Print commands this message", parser });
     return this as never;
   }
 
-  parse(argv: string[] = process.argv): CommandsResults<GeneralOptions, Commands> {
+  parse(argv: string[] = ARGV): CommandsResults<GeneralOptions, Commands> {
     try {
       const generalOptions = this.#general.parse(argv);
       const command = argv.shift() ?? this.#default;
@@ -374,9 +459,13 @@ export class CommandsParser<GeneralOptions extends Option[] = [], Commands exten
       const byName = this.#commands.get(command);
       if (!byName) throw new InvalidCommandError(this, command);
       try {
-        const commandOptions = byName.options.parse(argv);
+        const commandOptions = byName.parser.parse(argv);
         return [...generalOptions, command, ...commandOptions] as never;
       } catch (error) {
+        if (error instanceof InvalidCommandError) throw new InvalidCommandNestedError(this, command, error);
+        if (error instanceof InvalidCommandGeneralOptionError) throw new InvalidCommandNestedError(this, command, error);
+        if (error instanceof InvalidCommandOptionError) throw new InvalidCommandNestedError(this, command, error);
+        if (error instanceof InvalidCommandNestedError) throw new InvalidCommandNestedError(this, command, error);
         if (error instanceof InvalidOptionError) throw new InvalidCommandOptionError(this, command, error);
         throw error;
       }
@@ -387,12 +476,12 @@ export class CommandsParser<GeneralOptions extends Option[] = [], Commands exten
   }
 
   helpGeneral(style?: CommandsParserUsageStyle) {
-    const indent = style?.indent ?? "  ";
+    const indent = style?.indent ?? "";
     const optionsStyle: OptionParserUsageStyle = { ...style, indent: `${indent}  ` };
-    const header = style?.headers?.general ?? "GENERAL OPTIONS";
+    const header = style?.headers?.options ?? "GENERAL OPTIONS";
     const formatted = style?.formatted ?? true;
     let general = this.#general.help(optionsStyle);
-    if (general) general = `${`${header}:`.consoleFormat("bold", !formatted)}\n${general}`;
+    if (general && header) general = `${indent}${`${header}:`.consoleFormat("bold", !formatted)}\n${general}`;
     return general;
   }
   helpCommand(name: string, style?: CommandsParserCommandUsageStyle) {
@@ -405,7 +494,7 @@ export class CommandsParser<GeneralOptions extends Option[] = [], Commands exten
     const descriptionWidth = columns - indent.length - nameWidth - 1;
     const item = this.#commands.get(name);
     if (!item) return "";
-    const nameLines = item.name.consoleFormat("bold", !formatted).wrap(nameWidth);
+    const nameLines = item.name.wrap(nameWidth);
     const descriptionLines = doRun(() => {
       let description = item.description ?? "";
       if (this.#default === item.name) description += `\n${"[default]".consoleFormat("bold", !formatted)}`;
@@ -415,37 +504,45 @@ export class CommandsParser<GeneralOptions extends Option[] = [], Commands exten
     str += Array.from({ length: Math.max(nameLines.length, descriptionLines.length) }, (_, i) => {
       const nameLine = (nameLines[i] ?? "").padEnd(nameWidth, " ");
       const descriptionLine = (descriptionLines[i] ?? "").padEnd(descriptionWidth, " ");
-      return `${indent}${nameLine} ${descriptionLine}\n`;
+      return `${indent}${nameLine.consoleFormat("bold", !formatted)} ${descriptionLine}\n`;
     }).join("");
-    str += item.options.help({ ...style, indent: `${indent}  ` });
+    // TODO: print command usage
+    str += item.parser.help({
+      ...style,
+      indent: `${indent}  `,
+      headers: {
+        options: `${item.name.toUpperCase()} ${style?.headers?.options ?? "OPTIONS"}`,
+        commands: `${item.name.toUpperCase()} ${style?.headers?.commands ?? "SUBCOMMANDS"}`,
+      },
+    });
     return str;
   }
   helpCommands(style?: CommandsParserUsageStyle) {
-    const indent = style?.indent ?? "  ";
+    const indent = style?.indent ?? "";
     const columns = OptionsParser.columns(style);
-    const header = style?.headers?.general ?? "COMMANDS";
+    const header = style?.headers?.commands ?? "COMMANDS";
     const formatted = style?.formatted ?? true;
     const namesWidth = Math.clamp(
       10,
       Math.max(...this.#commands.values().map((command) => command.name.length)),
       Math.trunc((columns - indent.length) / 4),
     );
-    const commandsStyle: CommandsParserCommandUsageStyle = { ...style, indent, columns, nameWidth: namesWidth };
+    const commandsStyle: CommandsParserCommandUsageStyle = { ...style, indent: `${indent}  `, columns, nameWidth: namesWidth };
     let commands = this.#commands.keys().reduce((str, command) => {
       str += this.helpCommand(command, commandsStyle) + "\n";
       return str;
     }, "");
-    if (commands) commands = `${`${header}:`.consoleFormat("bold", !formatted)}\n${commands}`;
+    if (commands && header) commands = `${indent}${`${header}:`.consoleFormat("bold", !formatted)}\n${commands}`;
     return commands;
   }
   help(style?: CommandsParserUsageStyle) {
-    return [this.helpGeneral(style), this.helpCommands(style)].filter(Boolean).join("\n\n");
+    return [this.helpGeneral(style), this.helpCommands(style)].filter(Boolean).join("");
   }
 }
 
 export class InvalidCommandGeneralOptionError extends UsageError {
   constructor(
-    readonly parser: CommandsParser<Option[], any>,
+    readonly parser: CommandsParser<any, any>,
     readonly optionError: InvalidOptionError,
   ) {
     super(optionError.message);
@@ -458,13 +555,13 @@ export class InvalidCommandGeneralOptionError extends UsageError {
 
 export class InvalidCommandError extends UsageError {
   constructor(
-    readonly parser: CommandsParser<Option[], any>,
+    readonly parser: CommandsParser<any, any>,
     readonly desc?: string,
     message?: string,
   ) {
     super(message ?? InvalidCommandError.message(parser, desc));
   }
-  static message(parser: CommandsParser<Option[], any>, desc?: string) {
+  static message(parser: CommandsParser<any, any>, desc?: string) {
     if (typeof desc === "string") return `invalid command: ${desc}`;
     let commands = Object.keys(parser.commandsOptions).join(" | ");
     if (parser.getFefault()) commands = `[${commands}]`;
@@ -479,7 +576,7 @@ export class InvalidCommandError extends UsageError {
 
 export class InvalidCommandOptionError extends UsageError {
   constructor(
-    readonly parser: CommandsParser<Option[], any>,
+    readonly parser: CommandsParser<any, any>,
     readonly desc: string,
     readonly optionError: InvalidOptionError,
   ) {
@@ -487,6 +584,21 @@ export class InvalidCommandOptionError extends UsageError {
   }
 
   help(style?: CommandsParserUsageStyle) {
+    return this.parser.helpCommand(this.desc, style);
+  }
+}
+
+export class InvalidCommandNestedError extends UsageError {
+  constructor(
+    readonly parser: CommandsParser<any, any>,
+    readonly desc: string,
+    readonly cause: UsageError,
+  ) {
+    super(`${InvalidCommandError.message(parser, desc)}: ${cause.message}`);
+  }
+
+  help(style?: CommandsParserUsageStyle) {
+    // TODO: print only specific help
     return this.parser.helpCommand(this.desc, style);
   }
 }

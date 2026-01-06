@@ -4,7 +4,7 @@ import { hasTypedField, is, isObject } from "@anion155/shared/is";
 import { Maybe, MaybePromise } from "@anion155/shared/maybe";
 import { escapes } from "@anion155/shared/misc";
 import { readFile } from "fs/promises";
-import { UsageError } from "./argv";
+import { OptionParserBreak, UsageError } from "./argv";
 import { cdRoot } from "./cd-root";
 import { ScriptLogger } from "./logger";
 
@@ -27,7 +27,8 @@ export function main<Result extends void | Promise<void>>(main: (stack: Disposab
     (error) => {
       if (error instanceof UsageError) {
         console.error(error.message.consoleFormat("red"));
-        console.error(error.help({ maxColumns: 120 }));
+        console.error(error.help());
+      } else if (error instanceof OptionParserBreak) {
       } else {
         const message = is(error, Error) || (isObject(error) && hasTypedField(error, "message", "string")) ? error.message.consoleFormat("red") : "";
         console.error("Failed:".consoleFormat("red"), message, "\n", error);
