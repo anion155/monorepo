@@ -80,6 +80,22 @@ describe("decorators", () => {
       expect(Object.getOwnPropertyDescriptor(a, "enumerable")?.enumerable).toBe(true);
       expect(Object.getOwnPropertyDescriptor(a, "nonenumerable")?.enumerable).toBe(false);
     });
+
+    it("cached.reset() should reset cache", () => {
+      class AnotherTest {}
+      class Test {
+        @cached
+        get field() {
+          return new AnotherTest();
+        }
+      }
+      const a = new Test();
+      const first = a.field;
+      expect(a.field).toBe(first);
+      cached.reset(a, "field");
+      expect(a.field).not.toBe(first);
+      expect(a.field).toBeInstanceOf(AnotherTest);
+    });
   });
 
   describe("bound()", () => {

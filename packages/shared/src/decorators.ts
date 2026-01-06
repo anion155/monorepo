@@ -38,6 +38,30 @@ export function cached(target: unknown, context: ClassGetterDecoratorContext | C
     };
   }
 }
+/**
+ * Reset cache created by {@link cached}.
+ *
+ * @example
+ *  class Test {
+ *    @cached
+ *    get another() {
+ *      // expensive operation with constant
+ *      return new AnotherClass(this);
+ *    }
+ *  }
+ *  const test = new Test();
+ *  test.another; // first instance
+ *  test.another; // smae first instance
+ *  cached.reset(test, 'another');
+ *  test.another; // second instance
+ */
+cached.reset = function reset<Target extends object>(target: Target, prop: keyof Target) {
+  const desc = Object.getOwnPropertyDescriptor(target, prop);
+  if (!desc) return;
+  if (desc.writable) return;
+  if (!("value" in desc)) return;
+  delete target[prop];
+};
 
 /**
  * Bounds method to instance.
