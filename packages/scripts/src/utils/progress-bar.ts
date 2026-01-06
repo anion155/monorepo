@@ -3,7 +3,7 @@ import { DeveloperError } from "@anion155/shared/errors";
 import { hasField, is } from "@anion155/shared/is";
 import { Loop } from "@anion155/shared/loop";
 import { escapes } from "@anion155/shared/misc";
-import { anionmationLoader } from "./anionmation-loader";
+import { animationLoader } from "./animation-loader";
 import { directPrint } from "./direct-print";
 
 export type ProgressBarEdgeRender = (progress: number) => string | { toString(): string; readonly length: number };
@@ -71,7 +71,7 @@ export class ProgressBar<Steps> {
     } else if (config?.head) {
       this.#head = config?.head;
     } else {
-      const loader = anionmationLoader();
+      const loader = animationLoader();
       this.#head = () => `${loader.next().value}[`;
     }
 

@@ -1,4 +1,4 @@
-export function* anionmationLoader() {
+export function* animationLoader() {
   const loader = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"];
   let step = 0;
   while (true) {
