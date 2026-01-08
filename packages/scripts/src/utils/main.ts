@@ -4,7 +4,7 @@ import { hasTypedField, is, isObject } from "@anion155/shared/is";
 import { Maybe, MaybePromise } from "@anion155/shared/maybe";
 import { escapes } from "@anion155/shared/misc";
 import { readFile } from "fs/promises";
-import { OptionParserBreak, UsageError } from "./argv";
+import { CommandParserBreak, OptionParserBreak, UsageError } from "./argv";
 import { cdRoot } from "./cd-root";
 import { ScriptLogger } from "./logger";
 
@@ -25,15 +25,20 @@ export function main<Result extends void | Promise<void>>(main: (stack: Disposab
   return Maybe.try(() => main(stack)).then(
     () => dispose(),
     (error) => {
+      let result = 1;
       if (error instanceof UsageError) {
         console.error(error.message.consoleFormat("red"));
         console.error(error.help());
       } else if (error instanceof OptionParserBreak) {
+        result = 0;
+      } else if (error instanceof CommandParserBreak) {
+        result = 0;
       } else {
         const message = is(error, Error) || (isObject(error) && hasTypedField(error, "message", "string")) ? error.message.consoleFormat("red") : "";
         console.error("Failed:".consoleFormat("red"), message, "\n", error);
       }
       dispose();
+      process.exit(result);
     },
   ) as never;
 }

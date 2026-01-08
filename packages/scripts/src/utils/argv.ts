@@ -1,5 +1,5 @@
 import { doRun } from "@anion155/shared/do";
-import { createErrorClass } from "@anion155/shared/errors";
+import { createErrorClass, DeveloperError } from "@anion155/shared/errors";
 import { Curried, curryHelper } from "@anion155/shared/functional";
 
 export const ARGV = process.argv.slice();
@@ -75,7 +75,7 @@ const POSSIBLE_FALSE_VALUES = ["false", "f", "no", "n"];
 const POSSIBLE_BOOLEAN_VALUES = [...POSSIBLE_TRUE_VALUES, ...POSSIBLE_FALSE_VALUES];
 
 export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Results> {
-  constructor(config?: Partial<OptionsParserConfig>) {
+  constructor(config?: Partial<OptionsParserConfig>, style?: OptionParserHelpStyle) {
     super();
     this.#config = Object.freeze({
       short: config?.short ?? true,
@@ -86,18 +86,30 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
       shortBolleanGroups: config?.shortBolleanGroups ?? true,
       longOneHyphen: config?.longOneHyphen ?? false,
     });
+    this.#style = style;
   }
 
   clone(): this {
     const cloned = new OptionsParser<Results>();
     cloned.#config = this.#config;
+    cloned.#style = this.#style && { ...this.#style };
     cloned.#options = this.#options.slice();
+    cloned.#helpHandler = this.#helpHandler;
     return cloned as never;
   }
 
   #config: OptionsParserConfig;
 
+  #style: OptionParserHelpStyle | undefined;
+  modifyStyle(modify: (current: OptionParserHelpStyle | undefined) => OptionParserHelpStyle | undefined) {
+    this.#style = modify(this.#style);
+    return this;
+  }
+
   #options: Option[] = [];
+  resultsSize() {
+    return this.#options.length;
+  }
   addOption(option: Option): this {
     this.#options.push(option);
     return this as never;
@@ -136,18 +148,17 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     };
   }
 
-  #helpHandler?: () => void;
+  #helpHandler?: (help: string) => void;
+  setHelpHandler(handler: (help: string) => void) {
+    this.#helpHandler = handler;
+    return this;
+  }
   addHelp(description: string = "Print this message", style?: OptionParserHelpStyle) {
     return this.addBreak(() => {
-      if (this.#helpHandler) {
-        this.#helpHandler();
-      } else {
-        console.log(this.help(style));
-      }
+      const help = this.help(style);
+      const handler = this.#helpHandler ?? console.log;
+      handler(help);
     })("help", { description });
-  }
-  setHelpHandler(handler: () => void) {
-    this.#helpHandler = handler;
   }
 
   parse(argv: string[] = ARGV): Results {
@@ -270,7 +281,7 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
   }
 
   help(style?: OptionParserHelpStyle) {
-    const { indent, width, formatted } = normalizeParserStyles(style);
+    const { indent, width, formatted } = normalizeParserStyles(this.#style && style ? { ...this.#style, ...style } : this.#style || style);
     const namesLiness = this.#options.map((option) =>
       option.names.map((name) => (typeof name === "string" || !name.short ? `--${name}` : `-${name}`)).join(",\n"),
     );
@@ -300,8 +311,8 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     }, "");
   }
 }
-export function optionsParser(config?: Partial<OptionsParserConfig>) {
-  return new OptionsParser(config);
+export function optionsParser(config?: Partial<OptionsParserConfig>, style?: OptionParserHelpStyle) {
+  return new OptionsParser(config, style);
 }
 
 export abstract class UsageError extends createErrorClass("UsageError") {
@@ -325,27 +336,49 @@ export class InvalidOptionError extends UsageError {
 export class OptionParserBreak extends createErrorClass("OptionParserBreak", "break option invoked") {}
 
 export type CommandsParserHelpStyle = ArgvParserHelpStyle & {
+  printHelpSubcommands?: boolean;
   optionsHeader?: string;
   commandsHeader?: string;
 };
 
-type CommandsParserResults<OptionsResults extends unknown[], Commands extends Record<string, ArgvParser<unknown[]>>> =
-  | { [Command in keyof Commands]: [...OptionsResults, Command, ...ReturnType<Commands[Command]["parse"]>] }[keyof Commands]
+type CommandResults<OptionsResults extends unknown[], Command extends PropertyKey, Parser extends ArgvParser<unknown[]>> = [
+  ...OptionsResults,
+  Command,
+  ...ReturnType<Parser["parse"]>,
+];
+declare const handled: unique symbol;
+type handled = typeof handled;
+type CommandResultsHandled<
+  OptionsResults extends unknown[],
+  Command extends PropertyKey,
+  Parser extends ArgvParser<unknown[]> & { [handled]?: true },
+> = Parser extends { [handled]: true } ? never : CommandResults<OptionsResults, Command, Parser>;
+type CommandsParserResults<OptionsResults extends unknown[], Commands extends Record<string, ArgvParser<unknown[]> & { [handled]?: true }>> =
+  | { [Command in keyof Commands]: CommandResultsHandled<OptionsResults, Command, Commands[Command]> }[keyof Commands]
   | [...OptionsResults, undefined];
 
-export class CommandsParser<OptionsResults extends unknown[] = [], Commands extends Record<string, ArgvParser<unknown[]>> = {}> extends ArgvParser<
-  CommandsParserResults<OptionsResults, Commands>
-> {
-  constructor(options?: OptionsParser<OptionsResults>) {
+export class CommandsParser<
+  OptionsResults extends unknown[] = [],
+  Commands extends Record<string, ArgvParser<unknown[]> & { [handled]?: true }> = {},
+> extends ArgvParser<CommandsParserResults<OptionsResults, Commands>> {
+  constructor(options?: OptionsParser<OptionsResults>, style?: CommandsParserHelpStyle) {
     super();
     this.#options = options ?? (noopParser as never);
+    this.#style = style;
   }
 
   clone() {
     const cloned = new CommandsParser<OptionsResults, Commands>();
+    cloned.#style = cloned.#style && { ...cloned.#style };
     cloned.#options = this.#options.clone();
     cloned.#commands = new Map(this.#commands.entries().map(([command, { parser, ...rest }]) => [command, { ...rest, parser: parser.clone() }]));
     return cloned as never;
+  }
+
+  #style: CommandsParserHelpStyle | undefined;
+  modifyStyle(modify: (current: CommandsParserHelpStyle | undefined) => CommandsParserHelpStyle | undefined) {
+    this.#style = modify(this.#style);
+    return this;
   }
 
   #options: OptionsParser<OptionsResults>;
@@ -356,7 +389,7 @@ export class CommandsParser<OptionsResults extends unknown[] = [], Commands exte
     return this as never;
   }
 
-  #commands = new Map<keyof Commands, { parser: ArgvParser<unknown[]>; description?: string }>();
+  #commands = new Map<keyof Commands, { parser: ArgvParser<unknown[]>; description?: string; handler?: (results: OptionsResults) => void }>();
   modifyCommand<Command extends keyof Commands>(command: Command) {
     return <Parser extends Commands[Command]>(
       modifier: (current: Commands[Command]) => Parser,
@@ -382,13 +415,31 @@ export class CommandsParser<OptionsResults extends unknown[] = [], Commands exte
       return this as never;
     });
   }
+  handleCommand<Command extends keyof Commands>(
+    command: Command,
+    handler: (results: OptionsResults) => void,
+  ): CommandsParser<OptionsResults, Omit<Commands, Command> & { [command in Command]: Commands[Command] & { [handled]: true } }> {
+    this.#commands.get(command as never)!.handler = handler;
+    return this as never;
+  }
   addHelp(
     description: string = "Print commands help",
-  ): CommandsParser<OptionsResults, Commands & { help: CommandsParser<[], { [Command in keyof Commands]: NoopParser }> }> {
+  ): CommandsParser<OptionsResults, Commands & { help: CommandsParser<[], { [Command in keyof Commands]: NoopParser }> & { [handled]: true } }> {
     const parser = this.#commands.entries().reduce<CommandsParser>((parser, [command, {}]) => {
       return parser.addCommand(command as never, `Print help message for '${String(command)}' command`)();
     }, new CommandsParser());
-    this.#commands.set("help", { parser, description });
+    const commandIndex = this.#options.resultsSize();
+    this.#commands.set("help", {
+      parser,
+      description,
+      handler: (results) => {
+        if (results[commandIndex] !== "help") throw new DeveloperError("options setup messed up, command should be always on same place in results");
+        const command = results[commandIndex + 1];
+        if (command === undefined) console.log(this.help());
+        else if (!this.#commands.has(command as never)) throw new UnknownCommandError(this, command as never);
+        else console.log(this.helpCommand(command as never));
+      },
+    });
     return this as never;
   }
 
@@ -401,7 +452,12 @@ export class CommandsParser<OptionsResults extends unknown[] = [], Commands exte
       if (!stored) throw new UnknownCommandError(this, command);
       try {
         const commandOptions = stored.parser.parse(argv);
-        return [...options, command, ...commandOptions] as never;
+        const results = [...options, command, ...commandOptions] as never;
+        if (stored.handler) {
+          stored.handler(results);
+          throw new CommandParserBreak();
+        }
+        return results;
       } catch (error) {
         if (error instanceof UnknownCommandError) throw new CommandNestedError(this, command, error);
         if (error instanceof GeneralOptionsError) throw new CommandNestedError(this, command, error);
@@ -416,7 +472,11 @@ export class CommandsParser<OptionsResults extends unknown[] = [], Commands exte
     }
   }
 
+  #getStyle(style: CommandsParserHelpStyle | undefined) {
+    return this.#style && style ? { ...this.#style, ...style } : this.#style || style;
+  }
   helpOptions(style?: CommandsParserHelpStyle) {
+    style = this.#getStyle(style);
     const { indent, width, formatted } = normalizeParserStyles(style);
     const header = style?.optionsHeader ?? "GENERAL OPTIONS";
     let optionsHelp = this.#options.help({ indent: indent + "  ", width, formatted });
@@ -425,7 +485,9 @@ export class CommandsParser<OptionsResults extends unknown[] = [], Commands exte
   }
   helpCommand(command: keyof Commands, style?: CommandsParserHelpStyle, namesWidth?: number) {
     command = String(command);
+    style = this.#getStyle(style);
     const { indent, width, formatted } = normalizeParserStyles(style);
+    const printHelpSubcommands = style?.printHelpSubcommands ?? false;
     if (namesWidth === undefined) {
       namesWidth = Math.max(10, Math.trunc((width - indent.length) / 4));
     }
@@ -441,16 +503,20 @@ export class CommandsParser<OptionsResults extends unknown[] = [], Commands exte
       return `${indent}${nameLine.consoleFormat("bold", !formatted)} ${descriptionLine}\n`;
     }).join("");
     // TODO: print command usage
-    str += stored.parser.help({
-      indent,
-      width,
-      formatted,
-      optionsHeader: `${command.toUpperCase()} ${style?.optionsHeader ?? "OPTIONS"}`,
-      commandsHeader: `${command.toUpperCase()} ${style?.commandsHeader ?? "SUBCOMMANDS"}`,
-    } as CommandsParserHelpStyle | OptionParserHelpStyle);
+    if (command === "help" && !printHelpSubcommands) {
+    } else {
+      str += stored.parser.help({
+        indent: indent + "  ",
+        width,
+        formatted,
+        optionsHeader: `${command.toUpperCase()} ${style?.optionsHeader ?? "OPTIONS"}`,
+        commandsHeader: `${command.toUpperCase()} ${style?.commandsHeader ?? "SUBCOMMANDS"}`,
+      } as CommandsParserHelpStyle | OptionParserHelpStyle);
+    }
     return str;
   }
   helpCommands(style?: CommandsParserHelpStyle) {
+    style = this.#getStyle(style);
     const { indent, width, formatted } = normalizeParserStyles(style);
     const header = style?.commandsHeader ?? "COMMANDS";
     const namesWidth = Math.clamp(
@@ -470,8 +536,8 @@ export class CommandsParser<OptionsResults extends unknown[] = [], Commands exte
     return [this.helpOptions(style), this.helpCommands(style)].filter(Boolean).join("");
   }
 }
-export function commandsParser<OptionsResults extends unknown[] = []>(options?: OptionsParser<OptionsResults>) {
-  return new CommandsParser(options);
+export function commandsParser<OptionsResults extends unknown[] = []>(options?: OptionsParser<OptionsResults>, style?: CommandsParserHelpStyle) {
+  return new CommandsParser(options, style);
 }
 
 export class UnknownCommandError extends UsageError {
@@ -510,6 +576,8 @@ export class CommandNestedError extends UsageError {
   }
 
   help(style?: CommandsParserHelpStyle) {
-    return this.parser.helpCommand(this.command, style);
+    return this.parser.helpCommand(this.command, { printHelpSubcommands: true, ...style });
   }
 }
+
+export class CommandParserBreak extends createErrorClass("CommandParserBreak", "command handled") {}
