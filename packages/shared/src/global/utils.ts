@@ -10,6 +10,13 @@ declare global {
   /** Create intersected type. */
   type IntersectHelper<T, U> = T extends Callable<never, unknown> ? T & U : U extends Callable<never, unknown> ? T & U : Omit<T & U, never>;
 
+  /** Union helper type, omits keys from every type in the union. */
+  type UnionHelpers_Omit<T, K extends keyof T | (PropertyKey & {})> = T extends unknown ? Omit<T, K> : never;
+  /** Union helper type, intersect {@link U} with every type in the union. */
+  type UnionHelpers_Intersect<T, U> = T extends unknown ? IntersectHelper<T, U> : never;
+  /** Union helper type, apply {@link Required} to every type in the union. */
+  type UnionHelpers_Required<T> = T extends unknown ? Required<T> : never;
+
   /** Make all properties in T mutable */
   type Mutable<T> = {
     -readonly [P in keyof T]: T[P];

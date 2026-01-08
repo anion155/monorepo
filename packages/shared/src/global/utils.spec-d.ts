@@ -30,6 +30,30 @@ type IntersectHelperCases = [
   Expect<Equal<IntersectHelper<{ b: string }, { (a: number): string }>, { (a: number): string } & { b: string }>>,
 ];
 
+type UnionHelpers_OmitCases = [
+  /* eslint-disable @typescript-eslint/no-empty-object-type */
+  // should not romeve keys from all types in union
+  ExpectNot<Equal<Omit<{ a: number } | { b: string }, "b">, { a: number } | {}>>,
+  // should romeve keys from all types in union
+  Expect<Equal<UnionHelpers_Omit<{ a: number } | { b: string }, "b">, { a: number } | {}>>,
+  /* eslint-enable @typescript-eslint/no-empty-object-type */
+];
+
+type UnionHelpers_IntersectCases = [
+  // should not romeve add from all types in union
+  // Expect<Equal<({ a: number } | { b: string }) & { c: Date }, ({ a: number } & { c: Date }) | ({ b: string } & { c: Date })>>,
+  // Expect<Equal<IntersectHelper<{ a: number } | { b: string }, { c: Date }>, ({ a: number; c: Date }) | ({ b: string; c: Date })>>,
+  // should intersect typesc with second from all types in union
+  Expect<Equal<UnionHelpers_Intersect<{ a: number } | { b: string }, { c: Date }>, { a: number; c: Date } | { b: string; c: Date }>>,
+];
+
+type UnionHelpers_RequiredCases = [
+  // should not romeve add from all types in union
+  // Expect<Equal<Required<{ a?: number } | { b?: string }>, { a: number } | { b: string }>>,
+  // should make all fields required of all types in union
+  Expect<Equal<UnionHelpers_Required<{ a?: number } | { b?: string }>, { a: number } | { b: string }>>,
+];
+
 type OmitHelperCases = [
   // should autosuggest key names
   Expect<Equal<OmitHelper<{ a: number; b: string }, "a">, { b: string }>>,
