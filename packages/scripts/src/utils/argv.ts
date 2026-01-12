@@ -1,5 +1,5 @@
 import { doRun } from "@anion155/shared/do";
-import { createErrorClass, DeveloperError } from "@anion155/shared/errors";
+import { createErrorClass, DeveloperError, TODO } from "@anion155/shared/errors";
 
 export const ARGV = process.argv.slice();
 export const __interpretator = ARGV.shift();
@@ -46,33 +46,54 @@ class NoopParser extends ArgvParser<[]> {
 }
 export const noopParser = new NoopParser();
 
-type OptionName = { name: string; short?: boolean };
-type OptionNames = Array<string | OptionName>;
-type BaseOption<Type extends string, T = string> = { type: Type; default?: T; names: OptionNames; description?: string; required?: boolean | string };
-
-type StringOption = BaseOption<"string">;
-type BooleanOption = BaseOption<"boolean", boolean>;
-type EnumOption<Values extends unknown[]> = BaseOption<"enum", Values[number]> & { values: Values };
-type BreakOption<Results> = Omit<BaseOption<"break">, "default"> & { handler: (results: Partial<Results>) => void };
-
-type Option = StringOption | BooleanOption | EnumOption<unknown[]> | BreakOption<any>;
-type OptionParams<_Option extends Option> = Omit<PartialSome<_Option, "names">, "type">;
-type OptionParamsD<_Option extends Option> = RequiredSome<OptionParams<_Option>, Extract<"default", keyof OptionParams<_Option>>>;
+type OptionUsage = `-${string}` | `--${string}` | `-`;
+type OptionValueParser<T = string, R extends unknown[] = unknown[]> = (
+  value: string,
+  results: Partial<R>,
+  parser: OptionsParser<R>,
+  usage: OptionUsage,
+) => T;
+type OptionName<T = string> = { usage: OptionUsage; value?: T };
+type Option<T = string, R extends unknown[] = unknown[]> = {
+  usage: OptionUsage;
+  value?: T;
+  default?: T;
+  aliases?: OptionName<T>[];
+  parser?:
+    | OptionValueParser<T, R>
+    | { type: "enum"; values: T[] }
+    | { type: "break"; handler: OptionValueParser<void, R> }
+    | { type: "help"; style?: OptionParserHelpStyle };
+  description?: string;
+  required?: boolean | string;
+};
+type LastResult<Results extends any[]> = Results extends [...any[], infer Value] ? Value | OptionValueParser<Value, Results> : never;
+type LastDefault<Results extends any[]> = Results extends [...any[], infer Value] ? Exclude<Value, undefined> : never;
+type LastWithDefault<Results extends any[]> = Results extends [...infer Rest, infer Value]
+  ? OptionsParser<[...Rest, Exclude<Value, undefined>]>
+  : never;
 
 export type OptionsParserConfig = {
-  "short:-a"?: boolean;
   "oneArgValue:--arg=value"?: boolean;
-  "booleanValues:--arg=y|n"?: boolean;
+  "flagValues:--arg=y|n"?: boolean;
   "booleanNo:--no-arg"?: boolean;
   "ignorable:--/arg"?: boolean;
 } & (
   | {
-      "shortBolleanGroups:-abcd"?: true;
-      "longOneHyphen:-arg"?: never;
+      "short:-a"?: "disabled";
     }
   | {
-      "shortBolleanGroups:-abcd": false;
-      "longOneHyphen:-arg"?: boolean;
+      "short:-a": "group:-abcd";
+    }
+  | {
+      "short:-a": "sameAsLong:-arg";
+      "defaultShort:-arg"?: boolean;
+      "autoShort:-arg"?: boolean;
+    }
+  | {
+      "short:-a": "value:-a<value>";
+      "defaultShort:-arg"?: boolean;
+      "autoShort:-arg"?: boolean;
     }
 );
 export type OptionParserHelpStyle = ArgvParserHelpStyle & {
@@ -81,45 +102,34 @@ export type OptionParserHelpStyle = ArgvParserHelpStyle & {
 
 const POSSIBLE_TRUE_VALUES = ["true", "t", "yes", "y"];
 const POSSIBLE_FALSE_VALUES = ["false", "f", "no", "n"];
-const POSSIBLE_BOOLEAN_VALUES = [...POSSIBLE_TRUE_VALUES, ...POSSIBLE_FALSE_VALUES];
-
-function parseOptionNameArg(name: string, names?: OptionNames): OptionNames {
-  return [name[0] !== "-" ? name : { name, short: name[1] !== "-" }, ...(names ?? [])];
-}
-
-function optionUsage(option: UnionHelpers_Omit<Option, "names">, { name, short }: OptionName, booleanValues: boolean | "short") {
-  const prefix = short ? "-" : "--";
-  let values: string[] | undefined;
-  if (option.type === "string") values = ["value"];
-  else if (option.type === "enum") values = option.values.map(String);
-  else if (option.type === "boolean") {
-    if (booleanValues === "short") values = ["boolean"];
-    else if (booleanValues) values = POSSIBLE_BOOLEAN_VALUES;
-  }
-  return `${prefix}${name}${values?.length ? ` <${values.join("|")}>` : ""}`;
-}
+const parseBooleanValue: OptionValueParser<boolean> = (value, _results, parser, usage) => {
+  if (typeof value === "boolean") return value;
+  if (POSSIBLE_TRUE_VALUES.includes(value)) return true;
+  else if (POSSIBLE_FALSE_VALUES.includes(value)) return false;
+  throw new InvalidOptionError(parser, usage);
+};
 
 export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Results> {
   constructor(config?: OptionsParserConfig, style?: OptionParserHelpStyle) {
     super();
     this.#config = Object.freeze({
-      "short:-a": config?.["short:-a"] ?? true,
-      "oneArgValue:--arg=value": config?.["oneArgValue:--arg=value"] ?? true,
-      "booleanValues:--arg=y|n": config?.["booleanValues:--arg=y|n"] ?? true,
-      "booleanNo:--no-arg": config?.["booleanNo:--no-arg"] ?? true,
-      "ignorable:--/arg": config?.["ignorable:--/arg"] ?? true,
-      "shortBolleanGroups:-abcd": config?.["shortBolleanGroups:-abcd"] ?? true,
-      "longOneHyphen:-arg": config?.["longOneHyphen:-arg"] ?? false,
-    }) as never;
+      "oneArgValue:--arg=value": true,
+      "flagValues:--arg=y|n": true,
+      "booleanNo:--no-arg": true,
+      "ignorable:--/arg": true,
+      "short:-a": "disabled",
+      ...config,
+    } as UnionHelpers_Required<OptionsParserConfig>);
     this.#style = style;
   }
 
   clone(): this {
     const cloned = new OptionsParser<Results>();
     cloned.#config = this.#config;
-    cloned.#style = this.#style && { ...this.#style };
     cloned.#options = this.#options.slice();
-    cloned.#helpHandler = this.#helpHandler;
+    cloned.#style = this.#style && { ...this.#style };
+    cloned.#helpSource = this.#helpSource;
+    cloned.#helpSink = this.#helpSink;
     return cloned as never;
   }
 
@@ -131,197 +141,179 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     return this;
   }
 
-  #options: Option[] = [];
+  #options: Option<any, Results>[] = [];
   resultsSize() {
     return this.#options.length;
   }
-  addOption(option: Option): this {
+
+  #autoAlias(usage: OptionUsage, option: Option<any, Results>, value: unknown = option.value) {
+    const aliases = (option.aliases ??= []);
+    // if (type === "flag" && this.#config["booleanNo:--no-arg"]) {
+    //   if (usage[1] === "-") {
+    //     aliases.push({ usage: `--no-${usage.substring(2)}`, value: !value });
+    //   } else {
+    //     aliases.push({ usage: `-no-${usage.substring(1)}`, value: !value });
+    //   }
+    // }
+    if (usage[1] === "-" && this.#config["short:-a"] === "sameAsLong:-arg" && this.#config["autoShort:-arg"]) {
+      aliases.push({ usage: usage.substring(1, 3) as never });
+    }
+    return aliases;
+  }
+  option<Value>(option: Option<Value, Results>): OptionsParser<[...Results, Value | undefined]> {
+    option.aliases = this.#autoAlias(option.usage, option);
     this.#options.push(option);
     return this as never;
   }
-  alias(name: string, short?: boolean) {
-    this.#options.at(-1)!.names.push(short === undefined ? name : { name, short });
+  optionFlag(usage: OptionUsage, value?: boolean) {
+    const parser = this.#config["flagValues:--arg=y|n"] ? parseBooleanValue : undefined;
+    return this.option<boolean>({ usage, value, parser });
+  }
+  optionValue(usage: OptionUsage, value?: string): OptionsParser<[...Results, string | undefined]> {
+    return this.option<string>({ usage, value });
+  }
+  optionBreak(usage: OptionUsage, handler: OptionValueParser<void, Results>) {
+    return this.option<boolean | undefined>({ usage, parser: { type: "break", handler }, value: true as never });
+  }
+  optionEnum<Values extends string[]>(usage: OptionUsage, ...values: Values): OptionsParser<[...Results, Values[number] | undefined]> {
+    return this.option<Values[number]>({ usage, parser: { type: "enum", values } });
+  }
+
+  #helpSource: ArgvParser<any> | { (): ArgvParser<any> } | null = null;
+  setHelpSource(helpSource: ArgvParser<any> | { (): ArgvParser<any> }): OptionsParser<Results> {
+    this.#helpSource = helpSource;
+    return this;
+  }
+  #helpSink: { (help: string): void } | null = null;
+  setHelpSink(helpSink: { (help: string): void }): OptionsParser<Results> {
+    this.#helpSink = helpSink;
+    return this;
+  }
+  optionHelp(style?: OptionParserHelpStyle) {
+    return this.option<boolean | undefined>({
+      usage: "--help",
+      description: "Print this help message",
+      parser: { type: "help", style },
+      value: true as never,
+    });
+  }
+
+  alias(usage: OptionUsage, value?: LastResult<Results>) {
+    const option = this.#options.at(-1)!;
+    const aliases = (option.aliases ??= []);
+    aliases.push({ usage, value });
+    this.#autoAlias(usage, option, value);
     return this;
   }
   addDescription(description: string) {
     this.#options.at(-1)!.description = description;
     return this;
   }
-  withDefault(
-    value: Results extends [...unknown[], infer Value] ? Exclude<Value, undefined> : never,
-  ): Results extends [...infer Rest, infer Value] ? OptionsParser<[...Rest, Exclude<Value, undefined>]> : never {
+  withDefault(value: LastDefault<Results>): LastWithDefault<Results> {
     Object.assign(this.#options.at(-1)!, { default: value });
     return this as never;
   }
-  required(errorMessage?: string): Results extends [...infer Rest, infer Value] ? OptionsParser<[...Rest, Exclude<Value, undefined>]> : never {
+  required(errorMessage?: string): LastWithDefault<Results> {
     this.#options.at(-1)!.required = errorMessage ?? true;
     return this as never;
   }
 
-  addString(name: string, option: OptionParamsD<StringOption>): OptionsParser<[...Results, string]>;
-  addString(name: string, option?: OptionParams<StringOption> | string): OptionsParser<[...Results, string | undefined]>;
-  addString(name: string, option?: OptionParams<StringOption> | string) {
-    if (typeof option === "string") option = { description: option };
-    return this.addOption({ ...option, type: "string", names: parseOptionNameArg(name, option?.names) }) as never;
-  }
-
-  addBoolean(name: string, option: OptionParamsD<BooleanOption>): OptionsParser<[...Results, boolean]>;
-  addBoolean(name: string, option?: OptionParams<BooleanOption> | string): OptionsParser<[...Results, boolean | undefined]>;
-  addBoolean(name: string, option?: OptionParams<BooleanOption> | string) {
-    if (typeof option === "string") option = { description: option };
-    return this.addOption({ ...option, type: "boolean", names: parseOptionNameArg(name, option?.names) }) as never;
-  }
-
-  addEnum<Values extends string[]>(name: string, ...values: Values): OptionsParser<[...Results, Values[number] | undefined]> {
-    return this.addOption({ type: "enum", names: [name], values }) as never;
-  }
-
-  addBreak(
-    name: string,
-    handler: BreakOption<Results>["handler"],
-    option?: Omit<OptionParams<BreakOption<Results>>, "handler"> | string,
-  ): OptionsParser<[...Results, never]> {
-    if (typeof option === "string") option = { description: option };
-    return this.addOption({ ...option, type: "break", names: parseOptionNameArg(name, option?.names), handler }) as never;
-  }
-
-  #helpHandler?: (help: string) => void;
-  setHelpHandler(handler: (help: string) => void) {
-    this.#helpHandler = handler;
-    return this;
-  }
-  addHelp(description: string = "Print this message", style?: OptionParserHelpStyle) {
-    return this.addBreak(
-      "name",
-      () => {
-        const help = this.help(style);
-        const handler = this.#helpHandler ?? console.log;
-        handler(help);
-      },
-      { description },
-    );
-  }
-
-  parse(argv: string[] = ARGV): Results {
-    type OptionItem = UnionHelpers_Intersect<
-      UnionHelpers_Omit<Option, "names">,
-      {
-        short: boolean;
-        name: string;
-        index: number;
-      }
-    >;
-    const optionItemUsage = (option: OptionItem) => optionUsage(option, option, this.#config["booleanValues:--arg=y|n"]);
-    const options = this.#options.reduce<Map<string, OptionItem>>((map, option, index) => {
-      option.names.forEach((item) => {
-        const { name, short } = typeof item === "string" ? { name: item } : item;
-        if (short !== undefined) {
-          map.set(name, { ...option, index, short, name });
-        } else if (name.length === 1) {
-          map.set(name, { ...option, index, short: true, name });
-        } else {
-          map.set(name, { ...option, index, short: false, name });
-          if (this.#config["short:-a"]) {
-            if (!map.has(name[0])) map.set(name[0], { ...option, index, short: true, name });
-          }
-        }
+  parse(argv: string[] = ARGV.slice()): Results {
+    const items = this.#options.reduce<Map<string, [OptionName<any>, Option<any, Results>, index: number]>>((map, option, index) => {
+      map.set(option.usage, [option, option, index]);
+      option.aliases?.forEach(({ usage, value }) => {
+        map.set(usage, [{ usage, value: value ?? option.value }, option, index]);
       });
       return map;
     }, new Map());
-    if (!options.size) return [] as never;
+    if (!items.size) return [] as never;
     const values: Results = new Array(this.#options.length) as never;
     this.#options.forEach((option, index) => {
       if ("default" in option && option.default !== undefined) values[index] = option.default as never;
     });
+    const handleOneArgValue = (arg: string) => {
+      let usage, value;
+      if (this.#config["oneArgValue:--arg=value"]) {
+        const index = arg.indexOf("=");
+        if (index >= 0) {
+          value = arg.substring(index + 1);
+          usage = arg.substring(0, index);
+        } else {
+          usage = arg;
+        }
+      } else {
+        usage = arg;
+      }
+      return [usage, value] as const;
+    };
     while (true) {
       let arg = argv[0];
       if (!arg || arg.length < 2 || arg[0] !== "-") break;
       if (arg === "--") break;
       argv.shift();
-      let short, name, value;
+      let usage, value;
       if (arg[1] !== "-") {
-        short = true;
-        arg = arg.substring(1);
-        if (arg.length > 1) {
-          if (this.#config["shortBolleanGroups:-abcd"]) {
-            // ("-abcd");
-            argv.unshift(...arg.split("").map((o) => `-${o}`));
-            continue;
-          }
-          if (this.#config["longOneHyphen:-arg"]) {
-            argv.unshift(`--${arg}`);
-            continue;
-          }
-          throw new InvalidOptionError(this, `-${arg}`);
+        if (this.#config["short:-a"] === "disabled") {
+          throw new InvalidOptionError(this, arg);
+        } else if (this.#config["short:-a"] === "sameAsLong:-arg") {
+          [usage, value] = handleOneArgValue(arg);
+        } else if (this.#config["short:-a"] === "value:-a<value>") {
+          value = arg.substring(2);
+          usage = arg.substring(0, 2);
+        } else if (this.#config["short:-a"] === "group:-abcd") {
+          TODO("group:-abcd");
+        } else {
+          throw new DeveloperError("invalid OptionsParser configuration");
         }
+        arg = usage.substring(1);
       } else {
-        short = false;
-        arg = arg.substring(2);
+        [usage, value] = handleOneArgValue(arg);
+        arg = usage.substring(2);
+      }
+      if (value === undefined && typeof argv[0] === "string" && argv[0][0] !== "-") {
+        value = argv.shift()!;
       }
       let ignore = false;
       if (this.#config["ignorable:--/arg"] && arg.startsWith("/") && arg.length > 1) {
-        // ("--/arg");
         arg = arg.substring(1);
         ignore = true;
       }
-      if (this.#config["booleanNo:--no-arg"] && arg.startsWith("no-") && arg.length > 3) {
-        // ("--no-arg");
-        arg = arg.substring(3);
-        value = false;
+      const item = items.get(usage);
+      if (item === undefined) throw new InvalidOptionError(this, usage);
+      if (typeof item[0].value === "function") {
+        value = item[0].value(value);
+      } else if (item[0].value !== undefined) {
+        value = item[0].value;
       }
-      if (this.#config["oneArgValue:--arg=value"]) {
-        // ("--arg=value");
-        const index = arg.indexOf("=");
-        if (index > 0) {
-          name = arg.substring(0, index);
-          value = arg.substring(index + 1);
-        }
-      }
-      if (name === undefined) name = arg;
-      const option = options.get(name);
-      if (option === undefined || option.short !== short) throw new InvalidOptionError(this, `${short ? "-" : "--"}${name}`);
-      if (option.type === "boolean") {
-        if (value === undefined) value = true;
-        else if (this.#config["booleanValues:--arg=y|n"]) {
-          value = value.toString().toLowerCase();
-          if (POSSIBLE_TRUE_VALUES.includes(value)) value = true;
-          else if (POSSIBLE_FALSE_VALUES.includes(value)) value = true;
-        }
-        if (typeof value !== "boolean") throw new InvalidOptionError(this, optionItemUsage(option));
-      } else if (option.type === "string") {
-        if (value === undefined) {
-          value = argv.shift();
-          if (value !== undefined && value.startsWith("-")) throw new InvalidOptionError(this, optionItemUsage(option));
-        }
-        if (typeof value !== "string") throw new InvalidOptionError(this, optionItemUsage(option));
-      } else if (option.type === "enum") {
-        if (value === undefined) {
-          value = argv.shift();
-          if (value !== undefined && value.startsWith("-")) throw new InvalidOptionError(this, optionItemUsage(option));
-        }
-        if (!option.values.includes(value)) throw new InvalidOptionError(this, optionItemUsage(option));
-      } else if (option.type === "break") {
-        if (value !== undefined) throw new InvalidOptionError(this, optionItemUsage(option));
-        option.handler(values);
-        throw new OptionParserBreak();
-      }
-      if (!ignore) values[option.index] = value as never;
+      if (ignore) continue;
+      values[item[2]] = value as never;
     }
     this.#options.forEach((option, index) => {
-      if (option.required && values[index] === undefined) {
-        let name = option.names[0];
-        let short = false;
-        if (typeof name !== "string") {
-          short = name.short ?? name.name.length === 1;
-          name = name.name;
+      if (values[index] === undefined) return;
+      if (typeof option.parser === "function") {
+        values[index] = option.parser(values[index] as never, values, this, option.usage);
+      } else if (option.parser?.type === "enum") {
+        if (!option.parser.values.includes(values[index])) {
+          throw new InvalidOptionError(this, option.usage);
         }
+      } else if (option.parser?.type === "break") {
+        option.parser.handler(values[index] as never, values, this, option.usage);
+        throw new OptionParserBreak();
+      } else if (option.parser?.type === "help") {
+        const sink = this.#helpSink ?? console.log;
+        let source = this.#helpSource ?? this;
+        if (typeof source === "function") source = source();
+        sink(source.help(option.parser.style));
+        throw new OptionParserBreak();
+      }
+    });
+    this.#options.forEach((option, index) => {
+      if (option.required && values[index] === undefined) {
         let message = undefined;
         if (typeof option.required === "string") {
           message = option.required;
-        } else {
-          message = `${short ? "-" : "--"}${name} is required`;
         }
-        throw new RequiredOptionError(this, name, message);
+        throw new RequiredOptionError(this, option.usage, message);
       }
     });
     return values;
@@ -370,30 +362,36 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
 
   help(style?: OptionParserHelpStyle) {
     if (!this.#options.length) return "";
-    let { indent, width, formatted } = normalizeParserStyles(this.#style && style ? { ...this.#style, ...style } : this.#style || style);
+    let { indent, width, formatted } = normalizeParserStyles(this.#getStyle(style));
     let str = "";
     if (style?.optionsHeader) {
       str += `${indent}${`${style?.optionsHeader}:`.consoleFormat("bold", !formatted)}\n`;
       indent += "  ";
     }
-    const namesLiness = this.#options.map((option) =>
-      option.names.map((name) => (typeof name === "string" || !name.short ? `--${name}` : `-${name}`)).join(",\n"),
-    );
+    const printName = (name: OptionName<any>) => {
+      let str = name.usage;
+      if (typeof name.value !== "function" && name.value !== undefined) {
+        str += ` (value: ${JSON.stringify(name.value)})`;
+      }
+      return str;
+    };
+    const namesLiness = this.#options.map((option) => {
+      const lines = [] as string[];
+      lines.push(printName(option));
+      option.aliases?.forEach((name) => lines.push(printName(name)));
+      return lines.join(",\n") + "\n";
+    });
     const namesWidth = Math.clamp(10, Math.max(...namesLiness.map((line) => line.length)), Math.trunc((width - indent.length) / 3));
     const descriptionWidth = width - indent.length - namesWidth - 1;
     this.#options.forEach((option, index) => {
       const namesLines = namesLiness[index].wrap(namesWidth, true);
       const descriptionLines = doRun(() => {
         let description = option.description ?? "";
-        description += `\n${`type: ${option.type}`.consoleFormat("bold", !formatted)}`;
-        let values: string[] | undefined;
-        if (option.type === "boolean") {
-          if (this.#config["booleanValues:--arg=y|n"]) values = POSSIBLE_BOOLEAN_VALUES;
-        } else if (option.type === "enum") {
-          values = option.values.map(String);
+        if (typeof option.parser === "object" && option.parser?.type === "enum") {
+          description += `\n${`Possible values: ${option.parser.values.join(" | ")}`.consoleFormat(["bold", "fgGreen"], !formatted)}`;
         }
-        if (values) description += `\n${`Possible values: ${values.join(" | ")}`.consoleFormat(["bold", "fgGreen"], !formatted)}`;
-        if ("default" in option && option.default) description += `\n${`default: ${option.default}`.consoleFormat(["bold", "fgYellow"], !formatted)}`;
+        if (option.required) description += `\n${"required".consoleFormat(["bold", "fgYellow"], !formatted)}`;
+        if (option.default) description += `\n${`default: ${option.default}`.consoleFormat("fgYellow", !formatted)}`;
         return description;
       }).wrap(descriptionWidth);
       str += Array.from({ length: Math.max(namesLines.length, descriptionLines.length) }, (_, i) => {
@@ -415,7 +413,7 @@ export abstract class UsageError extends createErrorClass("UsageError") {
 
 export class InvalidOptionError extends UsageError {
   constructor(
-    readonly parser: OptionsParser<unknown[]>,
+    readonly parser: OptionsParser<any>,
     readonly option?: string,
     message?: string,
   ) {
@@ -429,7 +427,7 @@ export class InvalidOptionError extends UsageError {
 
 export class RequiredOptionError extends UsageError {
   constructor(
-    readonly parser: OptionsParser<unknown[]>,
+    readonly parser: OptionsParser<any>,
     readonly option?: string,
     message?: string,
   ) {
@@ -522,19 +520,6 @@ export class CommandsParser<
     };
   }
 
-  addDescription(description: string) {
-    if (!this.#lastCommand) throw new DeveloperError("should be called after addCommand()");
-    this.#commands.get(this.#lastCommand)!.description = description;
-    return this;
-  }
-  handleCommand(
-    handler: (options: OptionsResults, command: LastCommand, commandResults: ReturnType<Commands[LastCommand]["parse"]>) => void,
-  ): CommandsParser<OptionsResults, Omit<Commands, LastCommand> & { [command in LastCommand]: Commands[LastCommand] & { [handled]: true } }> {
-    if (!this.#lastCommand) throw new DeveloperError("should be called after addCommand()");
-    this.#commands.get(this.#lastCommand)!.handler = handler as never;
-    return this as never;
-  }
-
   addCommand<Command extends string>(command: Command): CommandsParser<OptionsResults, Commands & { [command in Command]: NoopParser }, Command>;
   addCommand<Command extends string, Parser extends ArgvParser<unknown[]>>(
     command: Command,
@@ -550,16 +535,30 @@ export class CommandsParser<
     const parser = this.#commands.entries().reduce<CommandsParser>((parser, [command, {}]) => {
       return parser.addCommand(command as never).addDescription(`Print help message for '${String(command)}' command`);
     }, new CommandsParser());
-    const a = this.addCommand("help", parser as never as HelpParser).addDescription(description);
-    return a.handleCommand((options, helpCommand, [command]) => {
-      if (helpCommand !== "help") throw new DeveloperError("options setup messed up, command should be always on same place in results");
-      if (command === undefined) console.log(this.help());
-      else if (!this.#commands.has(command as never)) throw new UnknownCommandError(this, command as never);
-      else console.log(this.helpCommand(command as never));
-    });
+    return this.addCommand("help", parser as never as HelpParser)
+      .addDescription(description)
+      .handleCommand(([command], options, helpCommand) => {
+        if (helpCommand !== "help") throw new DeveloperError("options setup messed up, command should be always on same place in results");
+        if (command === undefined) console.log(this.help());
+        else if (!this.#commands.has(command as never)) throw new UnknownCommandError(this, command as never);
+        else console.log(this.helpCommand(command as never));
+      });
   }
 
-  parse(argv: string[] = ARGV): CommandsParserResults<OptionsResults, Commands> {
+  addDescription(description: string) {
+    if (!this.#lastCommand) throw new DeveloperError("should be called after addCommand()");
+    this.#commands.get(this.#lastCommand)!.description = description;
+    return this;
+  }
+  handleCommand(
+    handler: (commandResults: ReturnType<Commands[LastCommand]["parse"]>, generalResults: OptionsResults, command: LastCommand) => void,
+  ): CommandsParser<OptionsResults, Omit<Commands, LastCommand> & { [command in LastCommand]: Commands[LastCommand] & { [handled]: true } }> {
+    if (!this.#lastCommand) throw new DeveloperError("should be called after addCommand()");
+    this.#commands.get(this.#lastCommand)!.handler = handler as never;
+    return this as never;
+  }
+
+  parse(argv: string[] = ARGV.slice()): CommandsParserResults<OptionsResults, Commands> {
     try {
       const options = this.#options.parse(argv);
       const command = argv.shift();
