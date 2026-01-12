@@ -501,7 +501,7 @@ export class CommandsParser<
     {
       parser: ArgvParser<unknown[]>;
       description?: string;
-      handler?: (options: OptionsResults, command: keyof Commands, commandResults: unknown[]) => void;
+      handler?: (commandResults: unknown[], options: OptionsResults, command: keyof Commands) => void;
     }
   >();
   #lastCommand: keyof Commands | undefined;
@@ -560,18 +560,18 @@ export class CommandsParser<
 
   parse(argv: string[] = ARGV.slice()): CommandsParserResults<OptionsResults, Commands> {
     try {
-      const options = this.#options.parse(argv);
+      const generalOptions = this.#options.parse(argv);
       const command = argv.shift();
-      if (!command) return [...options, undefined];
+      if (!command) return [...generalOptions, undefined];
       const stored = this.#commands.get(command as never);
       if (!stored) throw new UnknownCommandError(this, command);
       try {
         const commandOptions = stored.parser.parse(argv);
         if (stored.handler) {
-          stored.handler(options, command, commandOptions);
+          stored.handler(commandOptions, generalOptions, command);
           throw new CommandParserBreak();
         }
-        return [...options, command, ...commandOptions] as never;
+        return [...generalOptions, command, ...commandOptions] as never;
       } catch (error) {
         if (error instanceof UnknownCommandError) throw new CommandNestedError(this, command, error);
         if (error instanceof GeneralOptionsError) throw new CommandNestedError(this, command, error);
