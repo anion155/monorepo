@@ -24,9 +24,10 @@ declare global {
 }
 defineMethod(String.prototype, "wrap", function wrap(width: number, breakWords = false) {
   const re = new RegExp(`.{1,${width}}` + (!breakWords ? "([\\s\u200B]+|$)|[^\\s\u200B]+?([\\s\u200B]+|$)" : ""), "g");
-  const match = this.match(re);
-  if (!match) return [];
-  return match.map((line) => line.trim());
+  return this.split(/\r\n|\n/g).flatMap((hardLine) => {
+    const match = hardLine.match(re) ?? [hardLine];
+    return match.map((line) => line.trim());
+  });
 });
 
 declare global {

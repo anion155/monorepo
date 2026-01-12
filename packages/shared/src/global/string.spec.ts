@@ -36,6 +36,23 @@ describe("String extensions", () => {
         "itation anim elit eu.",
       ]);
     });
+
+    it("should handle text with new lines", () => {
+      expect("test".wrap(10)).toStrictEqual(["test"]);
+      const longText = "Excepteur in culpa\naliqua pariatur magna officia esse amet\r\nminim reprehenderit laboris do ipsum est.";
+      expect(longText.wrap(40)).toStrictEqual([
+        "Excepteur in culpa",
+        "aliqua pariatur magna officia esse amet",
+        "minim reprehenderit laboris do ipsum",
+        "est.",
+      ]);
+      expect(longText.wrap(40, true)).toStrictEqual([
+        "Excepteur in culpa",
+        "aliqua pariatur magna officia esse amet",
+        "minim reprehenderit laboris do ipsum est",
+        ".",
+      ]);
+    });
   });
 
   describe("this.consoleFormat()", () => {
