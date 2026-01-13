@@ -122,11 +122,12 @@ export type OptionsParserConfig = {
     }
 );
 export type OptionParserUsageStyle = ArgvParserUsageStyle & {
-  optionsName?: string;
+  optionsUsage?: string;
 };
-export type OptionParserHelpStyle = ArgvParserHelpStyle & {
-  optionsHeader?: string;
-};
+export type OptionParserHelpStyle = ArgvParserHelpStyle &
+  OptionParserUsageStyle & {
+    optionsHeader?: string;
+  };
 export type OptionParserStyle = OptionParserUsageStyle & OptionParserHelpStyle;
 
 const POSSIBLE_TRUE_VALUES = ["true", "t", "yes", "y", "1"];
@@ -145,9 +146,10 @@ Object.assign(parseBooleanValue, { type: "enum", values: [...POSSIBLE_TRUE_VALUE
 
 const optionUsage = (option: Option<any, any>, name: OptionName<any>) => {
   let str = name.usage;
-  if (name.consumes ?? true) {
+  const consumes = name.consumes ?? option.consumes ?? true;
+  if (consumes) {
     let values = doRun(() => {
-      let values = name.consumes !== "optional" ? ["value"] : [];
+      let values = consumes !== "optional" ? ["value"] : [];
       if (option.parser !== undefined && "type" in option.parser) {
         if (option.parser.type === "enum") values = option.parser.usage ?? option.parser.values;
       }
@@ -155,7 +157,7 @@ const optionUsage = (option: Option<any, any>, name: OptionName<any>) => {
     });
     if (values) {
       values = `=<${values.length > 20 ? "value" : values}>`;
-      if (option.default !== undefined || name.consumes === "optional") values = `[${values}]`;
+      if (option.default !== undefined || consumes === "optional") values = `[${values}]`;
       str += values;
     }
   }
@@ -274,13 +276,16 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
   }
 
   parse(argv: string[] = ARGV.slice()): Results {
-    const items = this.#options.reduce<Map<string, [OptionName<any>, Option<any, Results>, index: number]>>((map, option, index) => {
-      map.set(option.usage, [option, option, index]);
-      option.aliases?.forEach(({ usage, value }) => {
-        map.set(usage, [{ usage, value: value ?? option.value }, option, index]);
-      });
-      return map;
-    }, new Map());
+    const items = this.#options.reduce<Map<string, [RequiredSome<OptionName<any>, "consumes">, Option<any, Results>, index: number]>>(
+      (map, option, index) => {
+        map.set(option.usage, [{ usage: option.usage, value: option.value, consumes: option.consumes ?? true }, option, index]);
+        option.aliases?.forEach(({ usage, value, consumes }) => {
+          map.set(usage, [{ usage, value: value ?? option.value, consumes: consumes ?? option.consumes ?? true }, option, index]);
+        });
+        return map;
+      },
+      new Map(),
+    );
     if (!items.size) return [] as never;
     const values: Results = new Array(this.#options.length) as never;
     this.#options.forEach((option, index) => {
@@ -333,10 +338,9 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
       const item = items.get(usage);
       if (item === undefined) throw new InvalidOptionError(this, usage);
       if (value === undefined) {
-        const consumes = item[0].consumes ?? true;
-        if (consumes && typeof argv[0] === "string" && argv[0][0] !== "-") value = argv.shift()!;
+        if (item[0].consumes && typeof argv[0] === "string" && argv[0][0] !== "-") value = argv.shift()!;
         if (value === undefined) {
-          if (consumes === false || consumes === "optional") value = "";
+          if (item[0].consumes === false || item[0].consumes === "optional") value = "";
           else throw new InvalidOptionError(this, usage);
         }
       }
@@ -360,7 +364,6 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
         option.parser.handler(values[index] as never, values, this, option.usage);
         throw new OptionParserBreak();
       } else if (option.parser?.type === "help") {
-        console.log("GG", option.parser);
         const sink = this.#helpSink ?? console.log;
         let source = this.#helpSource ?? this;
         if (typeof source === "function") source = source();
@@ -385,7 +388,7 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
   }
 
   usage(style?: OptionParserUsageStyle) {
-    const { optionsName = "options" } = { ...this.#getStyle(style) };
+    const { optionsUsage = "options" } = { ...this.#getStyle(style) };
     const parts = [] as string[];
     parts.push(this.usageHeader(style));
     const groups = this.#options.reduce<{ required: Option<any, Results>[]; options: Option<any, Results>[] }>(
@@ -403,10 +406,8 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
         parts.push(usages.join("|"));
       });
     }
-    if (groups.options.length) {
-      parts.push(`[${optionsName}]`);
-    }
-    return parts.join(" ");
+    if (groups.options.length) parts.push(`[${optionsUsage}]`);
+    return parts.filter(Boolean).join(" ");
   }
 
   help(style?: OptionParserHelpStyle) {
@@ -414,7 +415,7 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     style = this.#getStyle(style);
     let { indent, width, formatted } = normalizeParserHelpStyles(style);
     let str = "";
-    if (style?.usage ?? true) str += this.usage({ formatted }) + "\n\n";
+    if (style?.usage ?? true) str += this.usage({ ...style, formatted }) + "\n\n";
     if (style?.optionsHeader) {
       str += `${indent}${`${style?.optionsHeader}:`.consoleFormat("bold", !formatted)}\n`;
       indent += "  ";
@@ -495,12 +496,16 @@ export class OptionParserBreak extends createErrorClass("OptionParserBreak", "br
 
 export type CommandsParserUsageStyle = ArgvParserUsageStyle & {
   commandName?: string;
+  optionsUsage?: string;
+  commandUsage?: string;
+  commandOptionsUsage?: string;
 };
-export type CommandsParserHelpStyle = ArgvParserHelpStyle & {
-  printHelpSubcommands?: boolean;
-  optionsHeader?: string;
-  commandsHeader?: string;
-};
+export type CommandsParserHelpStyle = ArgvParserHelpStyle &
+  CommandsParserUsageStyle & {
+    printHelpSubcommands?: boolean;
+    optionsHeader?: string;
+    commandsHeader?: string;
+  };
 export type CommandsParserStyle = CommandsParserUsageStyle & CommandsParserHelpStyle;
 
 type CommandResults<OptionsResults extends unknown[], Command extends PropertyKey, Parser extends ArgvParser<unknown[]>> = [
@@ -647,79 +652,100 @@ export class CommandsParser<
   }
 
   usage(style?: CommandsParserUsageStyle) {
-    const { formatted = true, scriptName, commandName } = { ...this.#getStyle(style) };
+    const {
+      formatted = true,
+      scriptName,
+      commandName,
+      optionsUsage = "general options",
+      commandUsage = "command",
+      commandOptionsUsage = "command options",
+    } = { ...this.#getStyle(style) };
     const parts = [] as string[];
     parts.push(this.usageHeader(style));
-    parts.push(this.#options.usage({ scriptName, usageHeader: false, formatted, optionsName: "general options" }));
+    parts.push(this.#options.usage({ scriptName, usageHeader: false, formatted, optionsUsage }));
     const command = commandName !== undefined ? this.#commands.get(commandName) : undefined;
     if (commandName && command) {
       parts.push(commandName);
-      parts.push(command.parser.usage({ scriptName, usageHeader: false, formatted }));
+      parts.push(
+        command.parser.usage({
+          scriptName,
+          usageHeader: false,
+          formatted,
+          optionsUsage: `${commandName} ${style?.optionsUsage ?? "command options"}`,
+          commandUsage: `${commandName} ${style?.commandUsage ?? "subcommand"}`,
+          commandOptionsUsage: `${commandName} ${style?.commandOptionsUsage ?? "subcommand options"}`,
+        } as CommandsParserUsageStyle | OptionParserUsageStyle),
+      );
     } else {
       const commands = this.commands();
-      if (commands.length > 5 + (commands.includes("help") ? 1 : 0)) {
-        parts.push(commands.join("|"));
+      const str = commands.join("|");
+      if (str.length < 30 && commands.length <= 5 + (commands.includes("help") ? 1 : 0)) {
+        parts.push(str);
       } else {
-        parts.push("<command>");
+        parts.push(`<${commandUsage}>`);
       }
-      parts.push("[command options]");
+      parts.push(`[${commandOptionsUsage}]`);
     }
-    return parts.join(" ");
+    return parts.filter(Boolean).join(" ");
   }
 
   helpOptions(style?: CommandsParserHelpStyle) {
     style = this.#getStyle(style);
-    return this.#options.help({ ...style, optionsHeader: style?.optionsHeader ?? "GENERAL OPTIONS", usage: false });
+    return this.#options.help({ ...style, optionsHeader: style?.optionsHeader ?? "GENERAL OPTIONS" });
   }
   helpCommand(command: keyof Commands, style?: CommandsParserHelpStyle, namesWidth?: number) {
     command = String(command);
+    const stored = this.#commands.get(command);
+    if (!stored) return "";
     style = this.#getStyle(style);
     const { indent, width, formatted } = normalizeParserHelpStyles(style);
-    const printHelpSubcommands = style?.printHelpSubcommands ?? false;
+    const parts = [] as string[];
+    if (style?.usage ?? true) parts.push(this.usage({ ...style, commandName: command }) + "\n\n");
     if (namesWidth === undefined) {
       namesWidth = Math.clamp(10, command.length, Math.trunc((width - indent.length) / 4));
     }
-    const stored = this.#commands.get(command);
-    if (!stored) return "";
     const nameLines = command.wrap(namesWidth);
     const descriptionWidth = width - indent.length - namesWidth - 1;
     const descriptionLines = (stored.description ?? "").wrap(descriptionWidth);
-    let str = "";
-    str += Array.from({ length: Math.max(nameLines.length, descriptionLines.length) }, (_, i) => {
-      const nameLine = (nameLines[i] ?? "").padEnd(namesWidth, " ");
-      const descriptionLine = (descriptionLines[i] ?? "").padEnd(descriptionWidth, " ");
-      return `${indent}${nameLine.consoleFormat("bold", !formatted)} ${descriptionLine}\n`;
-    }).join("");
-    // TODO: print command usage
-    if (command === "help" && !printHelpSubcommands) {
-    } else {
-      str += stored.parser.help({
-        indent: indent + "  ",
-        width,
-        formatted,
-        optionsHeader: `${command.toUpperCase()} ${style?.optionsHeader ?? "OPTIONS"}`,
-        commandsHeader: `${command.toUpperCase()} ${style?.commandsHeader ?? "SUBCOMMANDS"}`,
-        usage: false,
-      } as CommandsParserHelpStyle | OptionParserHelpStyle);
+    for (let index = 0, length = Math.max(nameLines.length, descriptionLines.length); index < length; index += 1) {
+      const nameLine = (nameLines[index] ?? "").padEnd(namesWidth, " ");
+      const descriptionLine = (descriptionLines[index] ?? "").padEnd(descriptionWidth, " ");
+      parts.push(`${indent}${nameLine.consoleFormat("bold", !formatted)} ${descriptionLine}\n`);
     }
-    return str;
+    // TODO: print command usage
+    if (command === "help" && !(style?.printHelpSubcommands ?? false)) {
+    } else {
+      parts.push(
+        stored.parser.help({
+          indent: indent + "  ",
+          width,
+          formatted,
+          optionsHeader: `${command.toUpperCase()} ${style?.optionsHeader ?? "OPTIONS"}`,
+          commandsHeader: `${command.toUpperCase()} ${style?.commandsHeader ?? "SUBCOMMANDS"}`,
+          usage: false,
+        } as CommandsParserStyle | OptionParserStyle),
+      );
+    }
+    return parts.filter(Boolean).join("");
   }
   helpCommands(style?: CommandsParserHelpStyle) {
+    if (!this.#commands.size) return "";
     style = this.#getStyle(style);
     const { indent, width, formatted } = normalizeParserHelpStyles(style);
+    const parts = [] as string[];
+    if (style?.usage ?? true) parts.push(this.usage({ ...style, commandName: undefined }) + "\n\n");
     const header = style?.commandsHeader ?? "COMMANDS";
+    if (header) parts.push(`${indent}${`${header}:`.consoleFormat("bold", !formatted)}\n`);
     const namesWidth = Math.clamp(
       10,
       Math.max(...this.#commands.keys().map((command) => String(command).length)),
       Math.trunc((width - indent.length) / 4),
     );
-    const commandsStyle: CommandsParserHelpStyle = { indent: indent + "  ", width, formatted };
-    let commands = this.#commands.keys().reduce<string>((str, command) => {
-      str += this.helpCommand(command, commandsStyle, namesWidth);
-      return str;
-    }, "");
-    if (commands && header) commands = `${indent}${`${header}:`.consoleFormat("bold", !formatted)}\n${commands}`;
-    return commands;
+    const commandsStyle: CommandsParserHelpStyle = { indent: indent + "  ", width, formatted, usage: false };
+    this.#commands.forEach((_, command) => {
+      parts.push(this.helpCommand(command, commandsStyle, namesWidth));
+    });
+    return parts.filter(Boolean).join("");
   }
   help(style?: CommandsParserHelpStyle) {
     const parts = [] as string[];
