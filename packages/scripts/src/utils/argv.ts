@@ -1,17 +1,29 @@
 import { doRun } from "@anion155/shared/do";
 import { createErrorClass, DeveloperError, TODO } from "@anion155/shared/errors";
+import path from "node:path";
 
-export const ARGV = process.argv.slice();
-export const __interpretator = ARGV.shift();
-export const __scriptName = ARGV.shift();
+const { ARGV, __interpretator, __scriptName } = doRun(() => {
+  const ARGV = process.argv.slice();
+  const __interpretator = ARGV.shift();
+  const __argv0 = ARGV.shift();
+  const __scriptName = __argv0?.replace(new RegExp(`^.*${path.sep}`), "").replace(/\.[^/.]+$/, "");
+  return { ARGV: Object.freeze(ARGV), __interpretator, __scriptName };
+});
+export { __interpretator, __scriptName, ARGV };
 
+export type ArgvParserUsageStyle = {
+  scriptName?: string;
+  usageHeader?: boolean | string;
+  formatted?: boolean;
+};
 export type ArgvParserHelpStyle = {
+  usage?: boolean;
   indent?: string;
   width?: number | `${number}%`;
   maxWidth?: number;
   formatted?: boolean;
 };
-const normalizeParserStyles = (style: ArgvParserHelpStyle | undefined) => {
+const normalizeParserHelpStyles = (style: ArgvParserHelpStyle | undefined) => {
   const indent = style?.indent ?? "";
   let width;
   if (typeof style?.width === "string") {
@@ -30,6 +42,18 @@ const normalizeParserStyles = (style: ArgvParserHelpStyle | undefined) => {
 export abstract class ArgvParser<Results extends unknown[] = []> {
   abstract clone(): this;
   abstract parse(argv?: string[]): Results;
+  usageHeader(style?: ArgvParserUsageStyle) {
+    const parts = [] as string[];
+    const { scriptName, usageHeader = true, formatted = true } = style ?? {};
+    if (usageHeader) {
+      parts.push("Usage:".consoleFormat("bold", !formatted));
+      parts.push(scriptName ?? __scriptName ?? "<me>");
+    } else if (typeof usageHeader === "string") {
+      parts.push(usageHeader);
+    }
+    return parts.join(" ");
+  }
+  abstract usage(style?: ArgvParserUsageStyle): string;
   abstract help(style?: ArgvParserHelpStyle): string;
 }
 
@@ -39,6 +63,9 @@ class NoopParser extends ArgvParser<[]> {
   }
   parse(argv?: string[]): [] {
     return [];
+  }
+  usage(style?: ArgvParserHelpStyle): string {
+    return "";
   }
   help(style?: ArgvParserHelpStyle): string {
     return "";
@@ -53,15 +80,13 @@ type OptionValueParser<T = string, R extends unknown[] = unknown[]> = (
   parser: OptionsParser<R>,
   usage: OptionUsage,
 ) => T;
-type OptionName<T = string> = { usage: OptionUsage; value?: T };
-type Option<T = string, R extends unknown[] = unknown[]> = {
-  usage: OptionUsage;
-  value?: T;
+type OptionName<T = string> = { usage: OptionUsage; value?: T; consumes?: boolean | "optional" };
+type Option<T = string, R extends unknown[] = unknown[]> = OptionName<T> & {
   default?: T;
   aliases?: OptionName<T>[];
   parser?:
     | OptionValueParser<T, R>
-    | { type: "enum"; values: T[] }
+    | { type: "enum"; values: T[]; usage?: T[] }
     | { type: "break"; handler: OptionValueParser<void, R> }
     | { type: "help"; style?: OptionParserHelpStyle };
   description?: string;
@@ -96,21 +121,49 @@ export type OptionsParserConfig = {
       "autoShort:-arg"?: boolean;
     }
 );
+export type OptionParserUsageStyle = ArgvParserUsageStyle & {
+  optionsName?: string;
+};
 export type OptionParserHelpStyle = ArgvParserHelpStyle & {
   optionsHeader?: string;
 };
+export type OptionParserStyle = OptionParserUsageStyle & OptionParserHelpStyle;
 
-const POSSIBLE_TRUE_VALUES = ["true", "t", "yes", "y"];
-const POSSIBLE_FALSE_VALUES = ["false", "f", "no", "n"];
+const POSSIBLE_TRUE_VALUES = ["true", "t", "yes", "y", "1"];
+const POSSIBLE_FALSE_VALUES = ["false", "f", "no", "n", "0"];
+const parseBoolean: OptionValueParser<boolean> = (value, _results, parser, usage) => {
+  if (typeof value === "boolean") return value;
+  throw new InvalidOptionError(parser, usage);
+};
 const parseBooleanValue: OptionValueParser<boolean> = (value, _results, parser, usage) => {
   if (typeof value === "boolean") return value;
-  if (POSSIBLE_TRUE_VALUES.includes(value)) return true;
+  if (value === "" || POSSIBLE_TRUE_VALUES.includes(value)) return true;
   else if (POSSIBLE_FALSE_VALUES.includes(value)) return false;
   throw new InvalidOptionError(parser, usage);
 };
+Object.assign(parseBooleanValue, { type: "enum", values: [...POSSIBLE_TRUE_VALUES, ...POSSIBLE_FALSE_VALUES], usage: ["y", "n"] });
+
+const optionUsage = (option: Option<any, any>, name: OptionName<any>) => {
+  let str = name.usage;
+  if (name.consumes ?? true) {
+    let values = doRun(() => {
+      let values = name.consumes !== "optional" ? ["value"] : [];
+      if (option.parser !== undefined && "type" in option.parser) {
+        if (option.parser.type === "enum") values = option.parser.usage ?? option.parser.values;
+      }
+      return values.join("|");
+    });
+    if (values) {
+      values = `=<${values.length > 20 ? "value" : values}>`;
+      if (option.default !== undefined || name.consumes === "optional") values = `[${values}]`;
+      str += values;
+    }
+  }
+  return str;
+};
 
 export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Results> {
-  constructor(config?: OptionsParserConfig, style?: OptionParserHelpStyle) {
+  constructor(config?: OptionsParserConfig, style?: OptionParserStyle) {
     super();
     this.#config = Object.freeze({
       "oneArgValue:--arg=value": true,
@@ -135,8 +188,8 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
 
   #config: UnionHelpers_Required<OptionsParserConfig>;
 
-  #style: OptionParserHelpStyle | undefined;
-  modifyStyle(modify: (current: OptionParserHelpStyle | undefined) => OptionParserHelpStyle | undefined) {
+  #style: OptionParserStyle | undefined;
+  modifyStyle(modify: (current: OptionParserStyle | undefined) => OptionParserStyle | undefined) {
     this.#style = modify(this.#style);
     return this;
   }
@@ -146,34 +199,35 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     return this.#options.length;
   }
 
-  #autoAlias(usage: OptionUsage, option: Option<any, Results>, value: unknown = option.value) {
+  #autoAlias(name: OptionName<any>, option: Option<any, Results>, value: unknown = option.value) {
     const aliases = (option.aliases ??= []);
-    // if (type === "flag" && this.#config["booleanNo:--no-arg"]) {
-    //   if (usage[1] === "-") {
-    //     aliases.push({ usage: `--no-${usage.substring(2)}`, value: !value });
-    //   } else {
-    //     aliases.push({ usage: `-no-${usage.substring(1)}`, value: !value });
-    //   }
-    // }
-    if (usage[1] === "-" && this.#config["short:-a"] === "sameAsLong:-arg" && this.#config["autoShort:-arg"]) {
-      aliases.push({ usage: usage.substring(1, 3) as never });
+    if (name.usage[1] === "-" && this.#config["short:-a"] === "sameAsLong:-arg" && this.#config["autoShort:-arg"]) {
+      aliases.push({ usage: name.usage.substring(1, 3) as never, value, consumes: name.consumes });
+    }
+    if (
+      (typeof value === "boolean" || (value === undefined && (option.parser === parseBoolean || option.parser === parseBooleanValue))) &&
+      this.#config["booleanNo:--no-arg"]
+    ) {
+      const noUsage = (name.usage[1] === "-" ? `--no-${name.usage.substring(2)}` : `-no-${name.usage.substring(1)}`) satisfies OptionUsage;
+      aliases.push({ usage: noUsage, value: !(value ?? true), consumes: false });
     }
     return aliases;
   }
   option<Value>(option: Option<Value, Results>): OptionsParser<[...Results, Value | undefined]> {
-    option.aliases = this.#autoAlias(option.usage, option);
+    option.aliases = this.#autoAlias(option, option);
     this.#options.push(option);
     return this as never;
   }
   optionFlag(usage: OptionUsage, value?: boolean) {
-    const parser = this.#config["flagValues:--arg=y|n"] ? parseBooleanValue : undefined;
-    return this.option<boolean>({ usage, value, parser });
+    const hasValues = this.#config["flagValues:--arg=y|n"];
+    const parser = hasValues ? parseBooleanValue : parseBoolean;
+    return this.option<boolean>({ usage, value, consumes: hasValues ? "optional" : false, parser });
   }
   optionValue(usage: OptionUsage, value?: string): OptionsParser<[...Results, string | undefined]> {
     return this.option<string>({ usage, value });
   }
   optionBreak(usage: OptionUsage, handler: OptionValueParser<void, Results>) {
-    return this.option<boolean | undefined>({ usage, parser: { type: "break", handler }, value: true as never });
+    return this.option<boolean | undefined>({ usage, parser: { type: "break", handler }, consumes: false });
   }
   optionEnum<Values extends string[]>(usage: OptionUsage, ...values: Values): OptionsParser<[...Results, Values[number] | undefined]> {
     return this.option<Values[number]>({ usage, parser: { type: "enum", values } });
@@ -194,15 +248,16 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
       usage: "--help",
       description: "Print this help message",
       parser: { type: "help", style },
-      value: true as never,
+      consumes: false,
     });
   }
 
   alias(usage: OptionUsage, value?: LastResult<Results>) {
     const option = this.#options.at(-1)!;
     const aliases = (option.aliases ??= []);
-    aliases.push({ usage, value });
-    this.#autoAlias(usage, option, value);
+    const alias: OptionName<LastResult<Results>> = { usage, value, consumes: option.consumes };
+    aliases.push(alias);
+    this.#autoAlias(alias, option, value);
     return this;
   }
   addDescription(description: string) {
@@ -270,9 +325,6 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
         [usage, value] = handleOneArgValue(arg);
         arg = usage.substring(2);
       }
-      if (value === undefined && typeof argv[0] === "string" && argv[0][0] !== "-") {
-        value = argv.shift()!;
-      }
       let ignore = false;
       if (this.#config["ignorable:--/arg"] && arg.startsWith("/") && arg.length > 1) {
         arg = arg.substring(1);
@@ -280,6 +332,14 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
       }
       const item = items.get(usage);
       if (item === undefined) throw new InvalidOptionError(this, usage);
+      if (value === undefined) {
+        const consumes = item[0].consumes ?? true;
+        if (consumes && typeof argv[0] === "string" && argv[0][0] !== "-") value = argv.shift()!;
+        if (value === undefined) {
+          if (consumes === false || consumes === "optional") value = "";
+          else throw new InvalidOptionError(this, usage);
+        }
+      }
       if (typeof item[0].value === "function") {
         value = item[0].value(value);
       } else if (item[0].value !== undefined) {
@@ -300,6 +360,7 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
         option.parser.handler(values[index] as never, values, this, option.usage);
         throw new OptionParserBreak();
       } else if (option.parser?.type === "help") {
+        console.log("GG", option.parser);
         const sink = this.#helpSink ?? console.log;
         let source = this.#helpSource ?? this;
         if (typeof source === "function") source = source();
@@ -319,66 +380,56 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     return values;
   }
 
-  #getStyle(style?: OptionParserHelpStyle) {
-    return this.#style && style ? { ...this.#style, ...style } : this.#style || style;
+  #getStyle<S extends OptionParserHelpStyle | OptionParserUsageStyle>(style?: S): S | undefined {
+    return this.#style && style ? { ...this.#style, ...style } : ((this.#style || style) as S);
   }
 
-  // usage(name?: string, style?: OptionParserHelpStyle) {
-  //   const { formatted } = normalizeParserStyles(this.#getStyle(style));
-  //   let options = "[options]";
-  //   const requires = this.#options.filter((option) => option.required);
-  //   if (requires.length) {
-  //     const booleanValues = this.#config["booleanValues:--arg=y|n"] && "short";
-  //     options += requires
-  //       .map((option) => {
-  //         let values: string[] | undefined;
-  //         if (option.type === "string") values = ["value"];
-  //         else if (option.type === "enum") values = option.values.map(String);
-  //         else if (option.type === "boolean") {
-  //           if (this.#config["booleanValues:--arg=y|n"]) values = POSSIBLE_BOOLEAN_VALUES;
-  //         }
-  //         const usages = option.names.reduce((acc, name) => {
-  //           if (typeof name === "string") {
-  //             if (name.length > 1) {
-  //               acc.push(optionUsage(option, { name, short: false }, booleanValues));
-  //             } else {
-  //               acc.push(optionUsage(option, { name, short: true }, booleanValues));
-  //             }
-  //           } else {
-  //             acc.push(optionUsage(option, name, booleanValues));
-  //           }
-  //           return acc;
-  //         }, [] as string[]);
-  //         // if (option.type === "boolean" && this.#config["booleanNo:--no-arg"]) {
-  //         //   usages.forEach(usage => usage[1] === '-' ? `--no-${usage.substring(2)}` : `-no-${usage.substring(1)}`);
-  //         // }
-  //         // return `${prefix}${option.name}${values?.length ? ` <${values.join("|")}>` : ""}`;
-  //         return usages;
-  //       })
-  //       .join(" ");
-  //   }
-  //   return `${"Usage:".consoleFormat("bold", !formatted)} ${name ?? __scriptName} [options]`;
-  // }
+  usage(style?: OptionParserUsageStyle) {
+    const { optionsName = "options" } = { ...this.#getStyle(style) };
+    const parts = [] as string[];
+    parts.push(this.usageHeader(style));
+    const groups = this.#options.reduce<{ required: Option<any, Results>[]; options: Option<any, Results>[] }>(
+      (groups, option) => {
+        if (option.required) groups.required.push(option);
+        else groups.options.push(option);
+        return groups;
+      },
+      { required: [], options: [] },
+    );
+    if (groups.required.length) {
+      groups.required.forEach((option) => {
+        const usages = [optionUsage(option, option)];
+        option.aliases?.forEach((alias) => usages.push(optionUsage(option, alias)));
+        parts.push(usages.join("|"));
+      });
+    }
+    if (groups.options.length) {
+      parts.push(`[${optionsName}]`);
+    }
+    return parts.join(" ");
+  }
 
   help(style?: OptionParserHelpStyle) {
     if (!this.#options.length) return "";
-    let { indent, width, formatted } = normalizeParserStyles(this.#getStyle(style));
+    style = this.#getStyle(style);
+    let { indent, width, formatted } = normalizeParserHelpStyles(style);
     let str = "";
+    if (style?.usage ?? true) str += this.usage({ formatted }) + "\n\n";
     if (style?.optionsHeader) {
       str += `${indent}${`${style?.optionsHeader}:`.consoleFormat("bold", !formatted)}\n`;
       indent += "  ";
     }
-    const printName = (name: OptionName<any>) => {
-      let str = name.usage;
-      if (typeof name.value !== "function" && name.value !== undefined) {
-        str += ` (value: ${JSON.stringify(name.value)})`;
-      }
-      return str;
-    };
     const namesLiness = this.#options.map((option) => {
       const lines = [] as string[];
-      lines.push(printName(option));
-      option.aliases?.forEach((name) => lines.push(printName(name)));
+      const usageWithValue = (option: Option<any, any>, name: OptionName<any>) => {
+        let str = optionUsage(option, name);
+        if (typeof name.value !== "function" && name.value !== undefined) {
+          str += ` (value: ${JSON.stringify(name.value)})`;
+        }
+        return str;
+      };
+      lines.push(usageWithValue(option, option));
+      option.aliases?.forEach((name) => lines.push(usageWithValue(option, name)));
       return lines.join(",\n") + "\n";
     });
     const namesWidth = Math.clamp(10, Math.max(...namesLiness.map((line) => line.length)), Math.trunc((width - indent.length) / 3));
@@ -387,11 +438,12 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
       const namesLines = namesLiness[index].wrap(namesWidth, true);
       const descriptionLines = doRun(() => {
         let description = option.description ?? "";
-        if (typeof option.parser === "object" && option.parser?.type === "enum") {
-          description += `\n${`Possible values: ${option.parser.values.join(" | ")}`.consoleFormat(["bold", "fgGreen"], !formatted)}`;
+        if (option.parser !== undefined && "type" in option.parser && option.parser.type === "enum") {
+          const values = option.parser.values.join(" | ");
+          description += `\n${`values: ${values}`.consoleFormat(["bold", "fgCyan"], !formatted)}`;
         }
         if (option.required) description += `\n${"required".consoleFormat(["bold", "fgYellow"], !formatted)}`;
-        if (option.default) description += `\n${`default: ${option.default}`.consoleFormat("fgYellow", !formatted)}`;
+        if (option.default) description += `\n${`default: ${option.default}`.consoleFormat(["bold", "fgYellow"], !formatted)}`;
         return description;
       }).wrap(descriptionWidth);
       str += Array.from({ length: Math.max(namesLines.length, descriptionLines.length) }, (_, i) => {
@@ -441,11 +493,15 @@ export class RequiredOptionError extends UsageError {
 
 export class OptionParserBreak extends createErrorClass("OptionParserBreak", "break option invoked") {}
 
+export type CommandsParserUsageStyle = ArgvParserUsageStyle & {
+  commandName?: string;
+};
 export type CommandsParserHelpStyle = ArgvParserHelpStyle & {
   printHelpSubcommands?: boolean;
   optionsHeader?: string;
   commandsHeader?: string;
 };
+export type CommandsParserStyle = CommandsParserUsageStyle & CommandsParserHelpStyle;
 
 type CommandResults<OptionsResults extends unknown[], Command extends PropertyKey, Parser extends ArgvParser<unknown[]>> = [
   ...OptionsResults,
@@ -468,7 +524,7 @@ export class CommandsParser<
   Commands extends Record<string, ArgvParser<unknown[]> & { [handled]?: true }> = {},
   LastCommand extends string = never,
 > extends ArgvParser<CommandsParserResults<OptionsResults, Commands>> {
-  constructor(options?: OptionsParser<OptionsResults>, style?: CommandsParserHelpStyle) {
+  constructor(options?: OptionsParser<OptionsResults>, style?: CommandsParserStyle) {
     super();
     this.#options = options ?? (noopParser as never);
     this.#style = style;
@@ -482,8 +538,8 @@ export class CommandsParser<
     return cloned as never;
   }
 
-  #style: CommandsParserHelpStyle | undefined;
-  modifyStyle(modify: (current: CommandsParserHelpStyle | undefined) => CommandsParserHelpStyle | undefined) {
+  #style: CommandsParserStyle | undefined;
+  modifyStyle(modify: (current: CommandsParserStyle | undefined) => CommandsParserStyle | undefined) {
     this.#style = modify(this.#style);
     return this;
   }
@@ -586,17 +642,39 @@ export class CommandsParser<
     }
   }
 
-  #getStyle(style: CommandsParserHelpStyle | undefined) {
-    return this.#style && style ? { ...this.#style, ...style } : this.#style || style;
+  #getStyle<S extends CommandsParserHelpStyle | CommandsParserUsageStyle>(style?: S): S | undefined {
+    return this.#style && style ? { ...this.#style, ...style } : ((this.#style || style) as S);
   }
+
+  usage(style?: CommandsParserUsageStyle) {
+    const { formatted = true, scriptName, commandName } = { ...this.#getStyle(style) };
+    const parts = [] as string[];
+    parts.push(this.usageHeader(style));
+    parts.push(this.#options.usage({ scriptName, usageHeader: false, formatted, optionsName: "general options" }));
+    const command = commandName !== undefined ? this.#commands.get(commandName) : undefined;
+    if (commandName && command) {
+      parts.push(commandName);
+      parts.push(command.parser.usage({ scriptName, usageHeader: false, formatted }));
+    } else {
+      const commands = this.commands();
+      if (commands.length > 5 + (commands.includes("help") ? 1 : 0)) {
+        parts.push(commands.join("|"));
+      } else {
+        parts.push("<command>");
+      }
+      parts.push("[command options]");
+    }
+    return parts.join(" ");
+  }
+
   helpOptions(style?: CommandsParserHelpStyle) {
     style = this.#getStyle(style);
-    return this.#options.help({ ...style, optionsHeader: style?.optionsHeader ?? "GENERAL OPTIONS" });
+    return this.#options.help({ ...style, optionsHeader: style?.optionsHeader ?? "GENERAL OPTIONS", usage: false });
   }
   helpCommand(command: keyof Commands, style?: CommandsParserHelpStyle, namesWidth?: number) {
     command = String(command);
     style = this.#getStyle(style);
-    const { indent, width, formatted } = normalizeParserStyles(style);
+    const { indent, width, formatted } = normalizeParserHelpStyles(style);
     const printHelpSubcommands = style?.printHelpSubcommands ?? false;
     if (namesWidth === undefined) {
       namesWidth = Math.clamp(10, command.length, Math.trunc((width - indent.length) / 4));
@@ -621,13 +699,14 @@ export class CommandsParser<
         formatted,
         optionsHeader: `${command.toUpperCase()} ${style?.optionsHeader ?? "OPTIONS"}`,
         commandsHeader: `${command.toUpperCase()} ${style?.commandsHeader ?? "SUBCOMMANDS"}`,
+        usage: false,
       } as CommandsParserHelpStyle | OptionParserHelpStyle);
     }
     return str;
   }
   helpCommands(style?: CommandsParserHelpStyle) {
     style = this.#getStyle(style);
-    const { indent, width, formatted } = normalizeParserStyles(style);
+    const { indent, width, formatted } = normalizeParserHelpStyles(style);
     const header = style?.commandsHeader ?? "COMMANDS";
     const namesWidth = Math.clamp(
       10,
@@ -643,7 +722,11 @@ export class CommandsParser<
     return commands;
   }
   help(style?: CommandsParserHelpStyle) {
-    return [this.helpOptions(style), this.helpCommands(style)].filter(Boolean).join("");
+    const parts = [] as string[];
+    if (style?.usage ?? true) parts.push(this.usage(style) + "\n\n");
+    parts.push(this.helpOptions({ ...style, usage: false }));
+    parts.push(this.helpCommands({ ...style, usage: false }));
+    return parts.filter(Boolean).join("");
   }
 }
 export function commandsParser<OptionsResults extends unknown[] = []>(options?: OptionsParser<OptionsResults>, style?: CommandsParserHelpStyle) {

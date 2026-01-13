@@ -4,7 +4,7 @@ import { hasTypedField, is, isObject } from "@anion155/shared/is";
 import { Maybe, MaybePromise } from "@anion155/shared/maybe";
 import { escapes } from "@anion155/shared/misc";
 import { readFile } from "fs/promises";
-import { CommandParserBreak, OptionParserBreak, UsageError } from "./argv";
+import { ARGV, CommandParserBreak, OptionParserBreak, UsageError } from "./argv";
 import { cdRoot } from "./cd-root";
 import { ScriptLogger } from "./logger";
 
@@ -13,7 +13,7 @@ export function fatal(message: string, code = 1): never {
   process.exit(code);
 }
 
-export function main<Result extends void | Promise<void>>(main: (stack: DisposableStack) => Result): MaybePromise<Result> {
+export function main<Result extends void | Promise<void>>(main: (argv: string[], stack: DisposableStack) => Result): MaybePromise<Result> {
   const stack = new DisposableStack();
   const dispose = () => stack.dispose();
   process.addListener("exit", dispose);
@@ -22,7 +22,7 @@ export function main<Result extends void | Promise<void>>(main: (stack: Disposab
     process.removeListener("exit", dispose);
     process.removeListener("SIGINT", dispose);
   });
-  return Maybe.try(() => main(stack)).then(
+  return Maybe.try(() => main(ARGV.slice(), stack)).then(
     () => dispose(),
     (error) => {
       let result = 1;
