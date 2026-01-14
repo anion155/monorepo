@@ -262,7 +262,7 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     this.#autoAlias(alias, option, value);
     return this;
   }
-  addDescription(description: string) {
+  describe(description: string) {
     this.#options.at(-1)!.description = description;
     return this;
   }
@@ -581,24 +581,24 @@ export class CommandsParser<
     };
   }
 
-  addCommand<Command extends string>(command: Command): CommandsParser<OptionsResults, Commands & { [command in Command]: NoopParser }, Command>;
-  addCommand<Command extends string, Parser extends ArgvParser<unknown[]>>(
+  command<Command extends string>(command: Command): CommandsParser<OptionsResults, Commands & { [command in Command]: NoopParser }, Command>;
+  command<Command extends string, Parser extends ArgvParser<unknown[]>>(
     command: Command,
     parser: Parser,
   ): CommandsParser<OptionsResults, Commands & { [command in Command]: Parser }, Command>;
-  addCommand(command: string, parser: ArgvParser<unknown[]> = noopParser) {
+  command(command: string, parser: ArgvParser<unknown[]> = noopParser) {
     this.#commands.set(command, { parser });
     this.#lastCommand = command;
     return this as never;
   }
-  addHelp(description: string = "Print commands help") {
+  commandsHelp(description: string = "Print commands help") {
     type HelpParser = CommandsParser<[], { [Command in keyof Commands]: NoopParser }>;
     const parser = this.#commands.entries().reduce<CommandsParser>((parser, [command, {}]) => {
-      return parser.addCommand(command as never).addDescription(`Print help message for '${String(command)}' command`);
+      return parser.command(command as never).describe(`Print help message for '${String(command)}' command`);
     }, new CommandsParser());
-    return this.addCommand("help", parser as never as HelpParser)
-      .addDescription(description)
-      .handleCommand(([command], options, helpCommand) => {
+    return this.command("help", parser as never as HelpParser)
+      .describe(description)
+      .handle(([command], options, helpCommand) => {
         if (helpCommand !== "help") throw new DeveloperError("options setup messed up, command should be always on same place in results");
         if (command === undefined) console.log(this.help());
         else if (!this.#commands.has(command as never)) throw new UnknownCommandError(this, command as never);
@@ -606,12 +606,12 @@ export class CommandsParser<
       });
   }
 
-  addDescription(description: string) {
+  describe(description: string) {
     if (!this.#lastCommand) throw new DeveloperError("should be called after addCommand()");
     this.#commands.get(this.#lastCommand)!.description = description;
     return this;
   }
-  handleCommand(
+  handle(
     handler: (commandResults: ReturnType<Commands[LastCommand]["parse"]>, generalResults: OptionsResults, command: LastCommand) => void,
   ): CommandsParser<OptionsResults, Omit<Commands, LastCommand> & { [command in LastCommand]: Commands[LastCommand] & { [handled]: true } }> {
     if (!this.#lastCommand) throw new DeveloperError("should be called after addCommand()");
