@@ -4,6 +4,7 @@ import { hasTypedField, is, isObject } from "@anion155/shared/is";
 import { Maybe, MaybePromise } from "@anion155/shared/maybe";
 import { escapes } from "@anion155/shared/misc";
 import { readFile } from "fs/promises";
+import { cd } from "zx";
 import { ARGV, CommandParserBreak, OptionParserBreak, UsageError } from "./argv";
 import { cdRoot } from "./cd-root";
 import { ScriptLogger } from "./logger";
@@ -50,4 +51,10 @@ export async function scriptHeader<PKG extends PackageJson>(logger: ScriptLogger
   if (logger.header) process.stdout.write(escapes.cursor.moveUp(1) + escapes.erase.clearLine);
   logger.header?.(`${name} ${`[${pkg.name}]`.consoleFormat("white")}`);
   return pkg;
+}
+
+export function doCwd<Result>(cwd: string, fn: () => Result): Result {
+  const prev = process.cwd();
+  cd(cwd);
+  return Maybe.try(fn).finally(() => cd(prev)) as never;
 }

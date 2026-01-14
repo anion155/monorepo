@@ -32,12 +32,12 @@ const chExt = (filepath: string, ext: `.${string}`) => {
   return filepath.replace(/\.[\w\d-_]+$/, ext);
 };
 
-await main(async (stack) => {
+await main(async () => {
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
   const sourcePkg = await scriptHeader<PackageJsonExt>(logger, "Building package");
 
   const runScript = scriptRunner(sourcePkg, logger);
-  const pb = new ProgressBar({
+  using pb = new ProgressBar({
     steps:
       4 +
       (runScript.has(...scripts.pre) ? 1 : 0) +
@@ -45,7 +45,6 @@ await main(async (stack) => {
       (runScript.has(...scripts.tsc) ? 1 : 3) +
       (runScript.has(...scripts.post) ? 1 : 0),
   });
-  stack.append(pb);
 
   if (await runScript(...scripts.pre)) pb.step();
 
@@ -180,9 +179,9 @@ await main(async (stack) => {
       if (!srcPath.startsWith("./src/")) continue;
       resultPkg.exports[submodule] = {
         types: srcPath,
+        typescript: srcPath,
         import: chExt(srcPath.replace("./src", "./lib/esm"), ".js"),
         require: chExt(srcPath.replace("./src", "./lib/cjs"), ".js"),
-        typescript: srcPath,
         default: srcPath,
       };
     }

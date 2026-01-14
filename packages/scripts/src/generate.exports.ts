@@ -37,11 +37,10 @@ declare global {
   }
 }
 
-await main(async (stack) => {
+await main(async () => {
   const pkg = await scriptHeader<PackageJsonExt>(logger, "Generating exports");
 
-  const pb = new ProgressBar({ steps: 2 });
-  stack.append(pb);
+  using pb = new ProgressBar({ steps: 2 });
 
   const exports: Record<string, string | PackageJsonConditionalExport> = {};
   if (pkg["+exports"]) {
