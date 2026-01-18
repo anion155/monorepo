@@ -6,12 +6,10 @@ import { Glob, glob } from "@anion155/shared/misc";
 import { readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { $, cd } from "zx";
-import { ScriptLogger } from "./utils/logger";
 import { main, scriptHeader } from "./utils/main";
 import { ProgressBar } from "./utils/progress-bar";
 import { scriptRunner } from "./utils/script-runner";
 
-const logger = new ScriptLogger("builder");
 const scripts = {
   pre: ["builder:pre", "BUILDER_PRE"],
   ready: ["builder:ready", "BUILDER_READY"],
@@ -30,7 +28,7 @@ const chExt = (filepath: string, ext: `.${string}`) => {
   return filepath.replace(/\.[\w\d-_]+$/, ext);
 };
 
-await main(async () => {
+await main(async (_, { logger }) => {
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
   const sourcePkg = await scriptHeader<PackageJsonExt>(logger, "Building package");
 

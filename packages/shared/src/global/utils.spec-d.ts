@@ -54,6 +54,18 @@ type UnionHelpers_RequiredCases = [
   Expect<Equal<UnionHelpers_Required<{ a?: number } | { b?: string }>, { a: number } | { b: string }>>,
 ];
 
+type UnionHelpers_ReadonlyCases = [
+  // should not romeve add from all types in union
+  Expect<Equal<Readonly<{ a: number } | { b: string; readonly c: number }>, { readonly a: number } | { readonly b: string; readonly c: number }>>,
+  // should make all fields required of all types in union
+  Expect<
+    Equal<
+      UnionHelpers_Readonly<{ a: number } | { b: string; readonly c: number }>,
+      { readonly a: number } | { readonly b: string; readonly c: number }
+    >
+  >,
+];
+
 type OmitHelperCases = [
   // should autosuggest key names
   Expect<Equal<OmitHelper<{ a: number; b: string }, "a">, { b: string }>>,

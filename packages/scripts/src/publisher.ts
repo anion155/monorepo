@@ -6,16 +6,19 @@ import { cdRoot } from "./utils/cd-root";
 import { addLoggerOptions } from "./utils/logger";
 import { doCwd, main } from "./utils/main";
 
-await main(async (argv) => {
+await main(async (argv, { logger }) => {
   await cdRoot();
-  const [dryRun, version] = commandsParser(
+  const [dryRun, loggerLevel, , version] = commandsParser(
     optionsParser().optionFlag("--dry-run").alias("-d").describe("Do not publish package").map(addLoggerOptions).optionHelp(),
   )
     .command("patch")
+    .describe("Increase patch (0.0.x) version number")
     .command("minor")
+    .describe("Increase patch (0.x.0) version number")
     .command("major")
-    .command("undefined")
+    .describe("Increase patch (x.0.0) version number")
     .parse(argv);
+  logger.level = loggerLevel;
   await $`pnpm run lint`;
   await $`pnpm run test`;
   await $`generate.exports`;

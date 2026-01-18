@@ -8,14 +8,25 @@ import { readFile } from "node:fs/promises";
 import { cd } from "zx";
 import { ARGV, CommandParserBreak, OptionParserBreak, UsageError } from "./argv";
 import { cdRoot } from "./cd-root";
-import { ScriptLogger } from "./logger";
+import { LoggerSink, ScriptLogger } from "./logger";
 
 export function fatal(message: string, code = 1): never {
   console.error(message.consoleFormat("red"));
   process.exit(code);
 }
 
-export function main<Result extends void | Promise<void>>(main: (argv: string[], stack: DisposableStack) => Result): MaybePromise<Result> {
+type MainContext<_LoggerSink extends LoggerSink> = {
+  stack: DisposableStack;
+  logger: _LoggerSink extends ScriptLogger ? _LoggerSink : ScriptLogger;
+};
+type Main<Result extends void | Promise<void>, _LoggerSink extends LoggerSink> = (argv: string[], context: MainContext<_LoggerSink>) => Result;
+export function main<Result extends void | Promise<void>, _LoggerSink extends LoggerSink>(
+  ...params: [main: Main<Result, _LoggerSink>] | [logger: _LoggerSink, main: Main<Result, _LoggerSink>]
+): MaybePromise<Result> {
+  let logger: ScriptLogger | _LoggerSink | undefined;
+  let main: Main<Result, _LoggerSink>;
+  [logger, main] = params.length === 2 ? params : [undefined, params[0]];
+  if (!(logger instanceof ScriptLogger)) logger = new ScriptLogger(undefined, { sink: logger });
   const stack = new DisposableStack();
   const dispose = () => stack.dispose();
   process.addListener("exit", dispose);
@@ -24,7 +35,7 @@ export function main<Result extends void | Promise<void>>(main: (argv: string[],
     process.removeListener("exit", dispose);
     process.removeListener("SIGINT", dispose);
   });
-  return Maybe.try(() => main(ARGV.slice(), stack)).then(
+  return Maybe.try(() => main(ARGV.slice(), { stack, logger: logger as never })).then(
     () => dispose(),
     (error) => {
       let result = 1;

@@ -1,8 +1,11 @@
-import { hasField, hasTypedField, isObject } from "@anion155/shared/is";
+import "./polyfils";
+
+import { hasField, isObject } from "@anion155/shared/is";
 import { applyConsoleFormat, ConsoleFormats } from "@anion155/shared/misc";
-import type { OptionsParser } from "./argv";
+import { __scriptName, type OptionsParser } from "./argv";
 
 export enum LogLevels {
+  silent = -1,
   error = 0,
   warn = 1,
   info = 2,
@@ -11,9 +14,17 @@ export enum LogLevels {
 }
 // type LoggerColor = ConsoleFormatForegroundColors | ConsoleFormat4bForegroundColorNames | ConsoleFormat4bNodeCompatColorNames;
 export type LogLevelNames = keyof Omit<typeof LogLevels, never>;
-export type LoggerSink = { [Level in LogLevelNames]: (message: string, ...rest: unknown[]) => void };
+export type LoggerSink = { [Level in LogLevelNames]?: (message: string, ...rest: unknown[]) => void };
 export type LoggerStyles = { [Level in LogLevelNames]?: ConsoleFormats | { message: ConsoleFormats; header?: ConsoleFormats } };
-export class Logger {
+
+export type LoggerOptions = {
+  level?: LogLevels;
+  parent?: Logger;
+  sink?: LoggerSink;
+  styles?: LoggerStyles;
+};
+
+export class Logger implements LoggerSink {
   #name: string;
   get name() {
     return this.#name;
@@ -76,10 +87,7 @@ export class Logger {
     debug: "fgGray",
   };
 
-  constructor(
-    name: string,
-    { level, parent, sink = console, styles }: { level?: LogLevels; parent?: Logger; sink?: LoggerSink; styles?: LoggerStyles } = {},
-  ) {
+  constructor(name: string, { level, parent, sink = console, styles }: LoggerOptions = {}) {
     this.#name = name;
     this.#level = level;
     this.#parent = parent;
@@ -106,7 +114,8 @@ export class Logger {
     if (nestedLevel !== undefined && level > nestedLevel) return undefined;
     const sink = this.sink;
     if (!sink) return undefined;
-    if (!hasTypedField(sink, levelName, "function")) return undefined;
+    const method = sink[levelName];
+    if (typeof method !== "function") return undefined;
     return (message, ...rest) => {
       let { message: messageFormats, header: headerFormats } =
         isObject(formats) && hasField(formats, "message") ? formats : { message: formats, header: formats };
@@ -120,7 +129,7 @@ export class Logger {
         const space = messageFormats !== undefined ? applyConsoleFormat(messageFormats, " ") : " ";
         message = applyConsoleFormat(headerFormats, `[${names.join("][")}]`) + space + message;
       }
-      sink[levelName](message, ...rest);
+      method.call(sink, message, ...rest);
     };
   }
   get error() {
@@ -141,6 +150,10 @@ export class Logger {
 }
 
 export class ScriptLogger extends Logger {
+  constructor(name: string = __scriptName, options?: LoggerOptions) {
+    super(name, options);
+  }
+
   get header() {
     return this.get(LogLevels.info, { formats: ["green", "bold"] });
   }
@@ -149,11 +162,12 @@ export class ScriptLogger extends Logger {
   }
 }
 
-export function addLoggerOptions<T extends unknown[]>(parser: OptionsParser<T>) {
-  return parser
-    .optionEnum("--verbose", "error", "warn", "info", "log", "debug")
+export function addLoggerOptions<T extends unknown[]>(parser: OptionsParser<T>, silentAlias = true) {
+  const parser_1 = parser
+    .optionEnum("--verbose", "silent", "error", "warn", "info", "log", "debug")
     .value("debug" as never)
-    .alias("-v")
     .describe("Setup log level")
     .withDefault("warn" as never);
+  if (silentAlias) parser_1.alias("--silent", "silent" as never).consumes("--silent", false);
+  return parser_1;
 }

@@ -16,6 +16,8 @@ declare global {
   type UnionHelpers_Intersect<T, U> = T extends unknown ? IntersectHelper<T, U> : never;
   /** Union helper type, apply {@link Required} to every type in the union. */
   type UnionHelpers_Required<T> = T extends unknown ? Required<T> : never;
+  /** Union helper type, apply {@link Readonly} to every type in the union. */
+  type UnionHelpers_Readonly<T> = T extends unknown ? Readonly<T> : never;
 
   /** Make all properties in T mutable */
   type Mutable<T> = {

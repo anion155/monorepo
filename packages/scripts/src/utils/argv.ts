@@ -1,12 +1,14 @@
+import "./polyfils";
+
 import { doRun } from "@anion155/shared/do";
 import { createErrorClass, DeveloperError, TODO } from "@anion155/shared/errors";
 import path from "node:path";
 
 const { ARGV, __interpretator, __scriptName } = doRun(() => {
   const ARGV = process.argv.slice();
-  const __interpretator = ARGV.shift();
-  const __argv0 = ARGV.shift();
-  const __scriptName = __argv0?.replace(new RegExp(`^.*${path.sep}`), "").replace(/\.[^/.]+$/, "");
+  const __interpretator = ARGV.shift()!;
+  const __argv0 = ARGV.shift()!;
+  const __scriptName = __argv0.replace(new RegExp(`^.*${path.sep}`), "").replace(/\.[^/.]+$/, "");
   return { ARGV: Object.freeze(ARGV), __interpretator, __scriptName };
 });
 export { __interpretator, __scriptName, ARGV };
@@ -117,6 +119,7 @@ export type OptionsParserConfig = {
       "autoShort:-arg"?: boolean;
     }
 );
+export type OptionsParserReadonlyConfig = UnionHelpers_Readonly<UnionHelpers_Required<OptionsParserConfig>>;
 export type OptionParserUsageStyle = ArgvParserUsageStyle & {
   optionsUsage?: string;
 };
@@ -173,7 +176,7 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
       "ignorable:--/arg": true,
       "short:-a": "disabled",
       ...config,
-    } as UnionHelpers_Required<OptionsParserConfig>);
+    } as OptionsParserReadonlyConfig);
     this.#style = style;
   }
 
@@ -187,7 +190,10 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     return cloned as never;
   }
 
-  #config: UnionHelpers_Required<OptionsParserConfig>;
+  #config: OptionsParserReadonlyConfig;
+  get config() {
+    return this.#config;
+  }
 
   #style: OptionParserStyle | undefined;
   modifyStyle(modify: (current: OptionParserStyle | undefined) => OptionParserStyle | undefined) {
@@ -371,6 +377,8 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
           if (item[0].consumes === false || item[0].consumes === "optional") value = item[0].value;
           else throw new InvalidOptionError(this, usage);
         }
+      } else if (item[0].consumes === false) {
+        throw new InvalidOptionError(this, usage);
       }
       if (ignore) continue;
       values[item[2]] = value as never;
@@ -556,6 +564,7 @@ export class CommandsParser<
   constructor(options?: OptionsParser<OptionsResults>, style?: CommandsParserStyle) {
     super();
     this.#options = options ?? (noopParser as never);
+    options?.setHelpSource(this);
     this.#style = style;
   }
 
