@@ -1,5 +1,6 @@
 import { hasField, hasTypedField, isObject } from "@anion155/shared/is";
 import { applyConsoleFormat, ConsoleFormats } from "@anion155/shared/misc";
+import type { OptionsParser } from "./argv";
 
 export enum LogLevels {
   error = 0,
@@ -22,8 +23,9 @@ export class Logger {
   get level() {
     return this.#level;
   }
-  set level(next: LogLevels | undefined) {
-    this.#level = next;
+  set level(next: LogLevels | LogLevelNames | undefined) {
+    if (typeof next === "string") this.#level = LogLevels[next];
+    else this.#level = next;
   }
   getNestedLevel() {
     let level = this.#level;
@@ -145,4 +147,13 @@ export class ScriptLogger extends Logger {
   get success() {
     return this.get(LogLevels.info, { formats: "green" });
   }
+}
+
+export function addLoggerOptions<T extends unknown[]>(parser: OptionsParser<T>) {
+  return parser
+    .optionEnum("--verbose", "error", "warn", "info", "log", "debug")
+    .value("debug" as never)
+    .alias("-v")
+    .describe("Setup log level")
+    .withDefault("warn" as never);
 }

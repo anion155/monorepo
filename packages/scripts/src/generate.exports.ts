@@ -1,7 +1,5 @@
 #!/usr/bin/env jiti
 
-import "./utils/polyfils";
-
 import { globs } from "@anion155/shared/misc/glob";
 import { readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";

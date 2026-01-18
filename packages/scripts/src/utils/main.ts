@@ -1,9 +1,10 @@
+import "./polyfils";
 import "./shell";
 
 import { hasTypedField, is, isObject } from "@anion155/shared/is";
 import { Maybe, MaybePromise } from "@anion155/shared/maybe";
 import { escapes } from "@anion155/shared/misc";
-import { readFile } from "fs/promises";
+import { readFile } from "node:fs/promises";
 import { cd } from "zx";
 import { ARGV, CommandParserBreak, OptionParserBreak, UsageError } from "./argv";
 import { cdRoot } from "./cd-root";

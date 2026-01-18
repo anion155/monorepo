@@ -1,7 +1,5 @@
 #!/usr/bin/env jiti
 
-import "./utils/polyfils";
-
 import { TODO } from "@anion155/shared/errors";
 import { isTruthy } from "@anion155/shared/is";
 import { Glob, glob } from "@anion155/shared/misc";

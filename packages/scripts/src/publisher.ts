@@ -1,15 +1,16 @@
 #!/usr/bin/env jiti
 
-import "./utils/polyfils";
-
 import { $ } from "zx";
 import { commandsParser, optionsParser } from "./utils/argv";
 import { cdRoot } from "./utils/cd-root";
+import { addLoggerOptions } from "./utils/logger";
 import { doCwd, main } from "./utils/main";
 
 await main(async (argv) => {
   await cdRoot();
-  const [dryRun, version] = commandsParser(optionsParser().optionFlag("--dry-run").alias("-d").describe("Do not publish package"))
+  const [dryRun, version] = commandsParser(
+    optionsParser().optionFlag("--dry-run").alias("-d").describe("Do not publish package").map(addLoggerOptions).optionHelp(),
+  )
     .command("patch")
     .command("minor")
     .command("major")

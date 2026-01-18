@@ -75,12 +75,13 @@ export const noopParser = new NoopParser();
 
 type OptionUsage = `-${string}` | `--${string}` | `-`;
 type OptionValueParser<T = string, R extends unknown[] = unknown[]> = (
-  value: string,
+  value: string | undefined,
   results: Partial<R>,
   parser: OptionsParser<R>,
   usage: OptionUsage,
 ) => T;
-type OptionName<T = string> = { usage: OptionUsage; value?: T; consumes?: boolean | "optional" };
+type OptionConsumes = boolean | "optional";
+type OptionName<T = string> = { usage: OptionUsage; value?: T; consumes?: OptionConsumes };
 type Option<T = string, R extends unknown[] = unknown[]> = OptionName<T> & {
   default?: T;
   aliases?: OptionName<T>[];
@@ -92,11 +93,6 @@ type Option<T = string, R extends unknown[] = unknown[]> = OptionName<T> & {
   description?: string;
   required?: boolean | string;
 };
-type LastResult<Results extends any[]> = Results extends [...any[], infer Value] ? Value | OptionValueParser<Value, Results> : never;
-type LastDefault<Results extends any[]> = Results extends [...any[], infer Value] ? Exclude<Value, undefined> : never;
-type LastWithDefault<Results extends any[]> = Results extends [...infer Rest, infer Value]
-  ? OptionsParser<[...Rest, Exclude<Value, undefined>]>
-  : never;
 
 export type OptionsParserConfig = {
   "oneArgValue:--arg=value"?: boolean;
@@ -138,7 +134,7 @@ const parseBoolean: OptionValueParser<boolean> = (value, _results, parser, usage
 };
 const parseBooleanValue: OptionValueParser<boolean> = (value, _results, parser, usage) => {
   if (typeof value === "boolean") return value;
-  if (value === "" || POSSIBLE_TRUE_VALUES.includes(value)) return true;
+  if (value === undefined || value === "" || POSSIBLE_TRUE_VALUES.includes(value)) return true;
   else if (POSSIBLE_FALSE_VALUES.includes(value)) return false;
   throw new InvalidOptionError(parser, usage);
 };
@@ -165,6 +161,9 @@ const optionUsage = (option: Option<any, any>, name: OptionName<any>) => {
 };
 
 export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Results> {
+  declare __start: Results extends [...infer Start, unknown] ? Start : never;
+  declare __last: Results extends [...any[], infer Value] ? Value : never;
+
   constructor(config?: OptionsParserConfig, style?: OptionParserStyle) {
     super();
     this.#config = Object.freeze({
@@ -226,7 +225,7 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     return this.option<boolean>({ usage, value, consumes: hasValues ? "optional" : false, parser });
   }
   optionValue(usage: OptionUsage, value?: string): OptionsParser<[...Results, string | undefined]> {
-    return this.option<string>({ usage, value });
+    return this.option<string>({ usage, value, consumes: true });
   }
   optionBreak(usage: OptionUsage, handler: OptionValueParser<void, Results>) {
     return this.option<boolean | undefined>({ usage, parser: { type: "break", handler }, consumes: false });
@@ -254,25 +253,54 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
     });
   }
 
-  alias(usage: OptionUsage, value?: LastResult<Results>) {
+  alias(usage: OptionUsage, value?: this["__last"]) {
     const option = this.#options.at(-1)!;
     const aliases = (option.aliases ??= []);
-    const alias: OptionName<LastResult<Results>> = { usage, value, consumes: option.consumes };
+    const alias: OptionName<this["__last"]> = { usage, value, consumes: option.consumes };
     aliases.push(alias);
     this.#autoAlias(alias, option, value);
     return this;
+  }
+  #modifyAlias<V>(...params: [value: V] | [alias: OptionUsage, value: V]) {
+    return (modifier: (name: OptionName<any>, value: V) => void) => {
+      const option = this.#options.at(-1)!;
+      if (params.length === 2) {
+        const alias = option.aliases?.find((alias) => alias.usage === params[0]);
+        if (!alias) throw new DeveloperError("alias not found");
+        modifier(alias, params[1]);
+      } else {
+        modifier(option, params[0]);
+      }
+      return this;
+    };
+  }
+  value(...params: [value: this["__last"]] | [alias: OptionUsage, value: this["__last"]]) {
+    return this.#modifyAlias(...params)((name, value) => {
+      name.value = value;
+    });
+  }
+  consumes(...params: [consumes: OptionConsumes] | [alias: OptionUsage, consumes: OptionConsumes]) {
+    return this.#modifyAlias(...params)((name, consumes) => {
+      name.consumes = consumes;
+    });
   }
   describe(description: string) {
     this.#options.at(-1)!.description = description;
     return this;
   }
-  withDefault(value: LastDefault<Results>): LastWithDefault<Results> {
-    Object.assign(this.#options.at(-1)!, { default: value });
+  withDefault(value: Exclude<this["__last"], undefined>): OptionsParser<[...this["__start"], Exclude<this["__last"], undefined>]> {
+    const option = this.#options.at(-1)!;
+    option.default = value;
+    if (option.consumes ?? true) option.consumes = "optional";
     return this as never;
   }
-  required(errorMessage?: string): LastWithDefault<Results> {
+  required(errorMessage?: string): OptionsParser<[...this["__start"], Exclude<this["__last"], undefined>]> {
     this.#options.at(-1)!.required = errorMessage ?? true;
     return this as never;
+  }
+
+  map<U extends unknown[]>(project: (current: OptionsParser<Results>) => OptionsParser<U>): OptionsParser<U> {
+    return project(this);
   }
 
   parse(argv: string[] = ARGV.slice()): Results {
@@ -336,41 +364,32 @@ export class OptionsParser<Results extends unknown[] = []> extends ArgvParser<Re
         ignore = true;
       }
       const item = items.get(usage);
-      if (item === undefined) throw new InvalidOptionError(this, usage);
+      if (item === undefined) throw new UnknownOptionError(this, usage);
       if (value === undefined) {
         if (item[0].consumes && typeof argv[0] === "string" && argv[0][0] !== "-") value = argv.shift()!;
         if (value === undefined) {
-          if (item[0].consumes === false || item[0].consumes === "optional") value = "";
+          if (item[0].consumes === false || item[0].consumes === "optional") value = item[0].value;
           else throw new InvalidOptionError(this, usage);
         }
       }
-      if (typeof item[0].value === "function") {
-        value = item[0].value(value);
-      } else if (item[0].value !== undefined) {
-        value = item[0].value;
-      }
       if (ignore) continue;
       values[item[2]] = value as never;
-    }
-    this.#options.forEach((option, index) => {
-      if (values[index] === undefined) return;
-      if (typeof option.parser === "function") {
-        values[index] = option.parser(values[index] as never, values, this, option.usage);
-      } else if (option.parser?.type === "enum") {
-        if (!option.parser.values.includes(values[index])) {
-          throw new InvalidOptionError(this, option.usage);
-        }
-      } else if (option.parser?.type === "break") {
-        option.parser.handler(values[index] as never, values, this, option.usage);
+      if (typeof item[1].parser === "function") {
+        values[item[2]] = item[1].parser(values[item[2]] as never, values, this, item[1].usage);
+      } else if (item[1].parser?.type === "enum") {
+        if (values[item[2]] === undefined) throw new InvalidOptionError(this, item[1].usage);
+        if (!item[1].parser.values.includes(values[item[2]])) throw new InvalidOptionError(this, item[1].usage);
+      } else if (item[1].parser?.type === "break") {
+        item[1].parser.handler(values[item[2]] as never, values, this, item[1].usage);
         throw new OptionParserBreak();
-      } else if (option.parser?.type === "help") {
+      } else if (item[1].parser?.type === "help") {
         const sink = this.#helpSink ?? console.log;
         let source = this.#helpSource ?? this;
         if (typeof source === "function") source = source();
-        sink(source.help(option.parser.style));
+        sink(source.help(item[1].parser.style));
         throw new OptionParserBreak();
       }
-    });
+    }
     this.#options.forEach((option, index) => {
       if (option.required && values[index] === undefined) {
         let message = undefined;
@@ -475,6 +494,11 @@ export class InvalidOptionError extends UsageError {
 
   help(style?: OptionParserHelpStyle): string {
     return this.parser.help(style);
+  }
+}
+export class UnknownOptionError extends InvalidOptionError {
+  constructor(parser: OptionsParser<any>, option?: string, message?: string) {
+    super(parser, option, message ?? (option ? `unknown option: ${option}` : "unknown option"));
   }
 }
 
@@ -617,6 +641,16 @@ export class CommandsParser<
     if (!this.#lastCommand) throw new DeveloperError("should be called after addCommand()");
     this.#commands.get(this.#lastCommand)!.handler = handler as never;
     return this as never;
+  }
+
+  map<
+    UOptionsResults extends unknown[] = [],
+    UCommands extends Record<string, ArgvParser<unknown[]> & { [handled]?: true }> = {},
+    ULastCommand extends string = never,
+  >(
+    project: (current: CommandsParser<OptionsResults, Commands, LastCommand>) => CommandsParser<UOptionsResults, UCommands, ULastCommand>,
+  ): CommandsParser<UOptionsResults, UCommands, ULastCommand> {
+    return project(this);
   }
 
   parse(argv: string[] = ARGV.slice()): CommandsParserResults<OptionsResults, Commands> {
