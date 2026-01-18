@@ -1,10 +1,20 @@
+import "./polyfils";
+
 import { doRun } from "@anion155/shared/do";
 import { DeveloperError } from "@anion155/shared/errors";
 import { hasField, is } from "@anion155/shared/is";
 import { Loop } from "@anion155/shared/loop";
 import { escapes } from "@anion155/shared/misc";
-import { animationLoader } from "./animation-loader";
-import { directPrint } from "./direct-print";
+
+const directPrint = (message: string) => process.stdout.write(message);
+
+function* animationLoader() {
+  const loader = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"];
+  let step = 0;
+  while (true) {
+    yield loader[step++ % loader.length];
+  }
+}
 
 export type ProgressBarEdgeRender = (progress: number) => string | { toString(): string; readonly length: number };
 export type ProgressBarBarsRender = (completeBars: number, emptyBars: number, actualCompleteBars: number, barsNumber: number) => string;

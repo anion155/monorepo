@@ -1,3 +1,5 @@
+import "./polyfils";
+
 import { hasTypedField } from "@anion155/shared/is";
 import { assignFields } from "@anion155/shared/object";
 import { $ } from "zx";

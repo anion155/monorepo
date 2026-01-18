@@ -1,3 +1,5 @@
+import "./polyfils";
+
 import { stat } from "node:fs/promises";
 import { cd } from "zx";
 
