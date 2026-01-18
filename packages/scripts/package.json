@@ -17,11 +17,11 @@
     "./src/*.ts"
   ],
   "scripts": {
-    "build:script": "esbuild --bundle --platform=node --target=node22 --format=esm --conditions=typescript",
-    "build:builder": "pnpm run build:script src/builder.ts --outfile=dist/builder.js",
-    "build:generate.exports": "pnpm run build:script src/generate.exports.ts --outfile=dist/generate.exports.js",
-    "build:typescript.config": "pnpm run build:script src/typescript.config.ts --outfile=dist/typescript.config.js",
-    "build:publisher": "pnpm run build:script src/publisher.ts --outfile=dist/publisher.js",
+    "build:script": "rolldown --platform=node",
+    "build:builder": "pnpm run build:script src/builder.ts --file dist/builder.js",
+    "build:generate.exports": "pnpm run build:script src/generate.exports.ts --file dist/generate.exports.js",
+    "build:typescript.config": "pnpm run build:script src/typescript.config.ts --file dist/typescript.config.js",
+    "build:publisher": "pnpm run build:script src/publisher.ts --file dist/publisher.js",
     "build": "mkdir -p dist && cp package.dist.json dist/package.json && pnpm run build:builder && pnpm run build:generate.exports && pnpm run build:typescript.config && pnpm run build:publisher",
     "generate.exports": "pnpm run build:generate.exports && ./dist/generate.exports.js",
     "postinstall": "pnpm run build",
@@ -34,9 +34,9 @@
   },
   "devDependencies": {
     "@anion155/configs": "workspace:*",
-    "@anion155/shared": "workspace:*",
     "@anion155/proposal-explicit-resource-management": "workspace:*",
-    "esbuild": "^0.27.2",
-    "prettier": "^3.6.2"
+    "@anion155/shared": "workspace:*",
+    "prettier": "^3.6.2",
+    "rolldown": "1.0.0-beta.60"
   }
 }
