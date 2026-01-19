@@ -192,7 +192,7 @@ describe("Iterator helpers proposal", () => {
   });
 
   it("reduce should map returned resulted value", () => {
-    expect(["Eiusmod", "consectetur", "nisi", "sint", "dolor"].values().reduce((acc, v) => `${acc} ${v}`)).toBe(
+    expect(["Eiusmod", "consectetur", "nisi", "sint", "dolor"].values().reduce<string>((acc, v) => `${acc} ${v}`)).toBe(
       "Eiusmod consectetur nisi sint dolor",
     );
   });
