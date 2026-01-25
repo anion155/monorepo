@@ -1,5 +1,6 @@
 import "./polyfils";
 
+import { cached } from "@anion155/shared/decorators";
 import { hasField, isObject } from "@anion155/shared/is";
 import { applyConsoleFormat, ConsoleFormats } from "@anion155/shared/misc";
 import { __scriptName, type OptionsParser } from "./argv";
@@ -85,6 +86,7 @@ export class Logger implements LoggerSink {
     info: undefined,
     log: "fgGray",
     debug: "fgGray",
+    silent: "fgGray",
   };
 
   constructor(name: string, { level, parent, sink = console, styles }: LoggerOptions = {}) {
@@ -146,6 +148,27 @@ export class Logger implements LoggerSink {
   }
   get debug() {
     return this.get(LogLevels.debug);
+  }
+  @cached
+  get plain(): LoggerSink {
+    const self = this;
+    return {
+      get error() {
+        return self.get(LogLevels.error, { formats: [] });
+      },
+      get warn() {
+        return self.get(LogLevels.warn, { formats: [] });
+      },
+      get info() {
+        return self.get(LogLevels.info, { formats: [] });
+      },
+      get log() {
+        return self.get(LogLevels.log, { formats: [] });
+      },
+      get debug() {
+        return self.get(LogLevels.debug, { formats: [] });
+      },
+    };
   }
 }
 

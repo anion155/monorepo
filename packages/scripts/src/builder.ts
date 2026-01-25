@@ -6,9 +6,8 @@ import { Glob, glob } from "@anion155/shared/misc";
 import { readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { $, cd } from "zx";
-import { main, scriptHeader } from "./utils/main";
+import { main, scriptHeader, scriptRunner } from "./utils/main";
 import { ProgressBar } from "./utils/progress-bar";
-import { scriptRunner } from "./utils/script-runner";
 
 const scripts = {
   pre: ["builder:pre", "BUILDER_PRE"],
@@ -30,9 +29,9 @@ const chExt = (filepath: string, ext: `.${string}`) => {
 
 await main(async (_, { logger }) => {
   process.env.PATH = `${process.env.PATH}:./node_modules/.bin/`;
-  const sourcePkg = await scriptHeader<PackageJsonExt>(logger, "Building package");
+  const sourcePkg = await scriptHeader<PackageJsonExt>("Building package");
 
-  const runScript = scriptRunner(sourcePkg, logger);
+  const runScript = scriptRunner(sourcePkg);
   using pb = new ProgressBar({
     steps:
       4 +

@@ -3,12 +3,9 @@
 import { globs } from "@anion155/shared/misc/glob";
 import { readdir, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { ScriptLogger } from "./utils/logger";
 import { main, scriptHeader } from "./utils/main";
 import { PackageJsonConditionalExport } from "./utils/package.json";
 import { ProgressBar } from "./utils/progress-bar";
-
-const logger = new ScriptLogger("generate.exports");
 
 const SUPPORTED_EXTENSIONS = [".js", ".jsx", ".d.ts", ".ts", ".d.tsx", ".tsx"];
 const UNSUPPORTED_EXTENSIONS = SUPPORTED_EXTENSIONS.map((ext) => `.spec${ext}`).concat(...SUPPORTED_EXTENSIONS.map((ext) => `.spec-d${ext}`));
@@ -35,11 +32,10 @@ declare global {
   }
 }
 
-await main(async () => {
-  const pkg = await scriptHeader<PackageJsonExt>(logger, "Generating exports");
-
+await main(async (_, { logger }) => {
   using pb = new ProgressBar({ steps: 2 });
 
+  const pkg = await scriptHeader<PackageJsonExt>("Generating exports");
   const exports: Record<string, string | PackageJsonConditionalExport> = {};
   if (pkg["+exports"]) {
     for (const [name, module] of Object.entries(pkg["+exports"])) {

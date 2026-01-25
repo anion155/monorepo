@@ -2,12 +2,11 @@
 
 import { $ } from "zx";
 import { commandsParser, optionsParser } from "./utils/argv";
-import { cdRoot } from "./utils/cd-root";
 import { addLoggerOptions } from "./utils/logger";
-import { doCwd, main } from "./utils/main";
+import { cdNpmRoot, doInCwd, main } from "./utils/main";
 
 await main(async (argv, { logger }) => {
-  await cdRoot();
+  await cdNpmRoot();
   const [dryRun, loggerLevel, , version] = commandsParser(
     optionsParser().optionFlag("--dry-run").alias("-d").describe("Do not publish package").map(addLoggerOptions).optionHelp(),
   )
@@ -24,7 +23,7 @@ await main(async (argv, { logger }) => {
   await $`generate.exports`;
   if (version !== undefined) await $`pnpm version ${version}`;
   await $`builder`;
-  await doCwd("dist", async () => {
+  await doInCwd("dist", async () => {
     await $`pnpm pack --out package.tgz`;
     if (!dryRun) await $`pnpm publish package.tgz --dry-run --access public ${process.argv}`;
   });
