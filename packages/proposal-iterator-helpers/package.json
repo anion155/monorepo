@@ -1,6 +1,6 @@
 {
   "name": "@anion155/proposal-iterator-helpers",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Polyfills implementing the Iterator Helpers proposal for ECMAScript.",
   "keywords": [
     "iterator",
@@ -33,7 +33,7 @@
     "!src/types.ts"
   ],
   "scripts": {
-    "lint": "eslint src && tsc --project ./tsconfig.build.json",
+    "lint": "linter",
     "test": "jest src",
     "builder:ready": "rm dist/src/base.ts && cp ../polyfill-base/index.ts dist/src/base.ts"
   },

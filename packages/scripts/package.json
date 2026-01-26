@@ -22,7 +22,8 @@
     "build:generate.exports": "pnpm run build:script src/generate.exports.ts --outfile=dist/generate.exports.js",
     "build:typescript.config": "pnpm run build:script src/typescript.config.ts --outfile=dist/typescript.config.js",
     "build:publisher": "pnpm run build:script src/publisher.ts --outfile=dist/publisher.js",
-    "build": "mkdir -p dist && cp package.dist.json dist/package.json && pnpm run build:builder && pnpm run build:generate.exports && pnpm run build:typescript.config && pnpm run build:publisher",
+    "build:linter": "pnpm run build:script src/linter.ts --outfile=dist/linter.js",
+    "build": "mkdir -p dist && cp package.dist.json dist/package.json && pnpm run build:builder && pnpm run build:generate.exports && pnpm run build:typescript.config && pnpm run build:publisher && pnpm run build:linter",
     "generate.exports": "pnpm run build:generate.exports && ./dist/generate.exports.js",
     "postinstall": "pnpm run build",
     "lint": "eslint src && tsc --noEmit"

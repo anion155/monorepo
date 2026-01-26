@@ -7,7 +7,8 @@
     "typescript.config": "./typescript.config.js",
     "generate.exports": "./generate.exports.js",
     "builder": "./builder.js",
-    "publisher": "./publisher.js"
+    "publisher": "./publisher.js",
+    "linter": "./linter.js"
   },
   "engines": {
     "node": ">=24"
