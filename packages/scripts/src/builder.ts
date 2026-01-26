@@ -34,10 +34,9 @@ await main(async (_, { logger }) => {
   const runScript = scriptRunner(sourcePkg);
   using pb = new ProgressBar({
     steps:
-      4 +
+      6 + //
       (runScript.has(...scripts.pre) ? 1 : 0) +
       (runScript.has(...scripts.ready) ? 1 : 0) +
-      (runScript.has(...scripts.tsc) ? 1 : 3) +
       (runScript.has(...scripts.post) ? 1 : 0),
   });
 
@@ -120,6 +119,7 @@ await main(async (_, { logger }) => {
     }
   };
   await traverseDir(".");
+  pb.step();
 
   logger.info?.("build package.json");
   const resultPkg: PackageJson = {

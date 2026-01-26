@@ -8,7 +8,7 @@ import { escapes } from "@anion155/shared/misc";
 
 const directPrint = (message: string) => process.stdout.write(message);
 
-function* animationLoader() {
+function* animationLoader(): Generator<string, never> {
   const loader = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"];
   let step = 0;
   while (true) {
@@ -26,14 +26,13 @@ export type ProgressBarConfig<Steps> = {
   inclusive?: boolean;
   width?: number | `${number}%`;
   fps?: number;
-  frameStep?: number;
 };
 
 export class ProgressBar<Steps> {
   #progress: number = 0;
-  #pending: number | undefined;
+  #pending: [progress: number, step: number] | undefined;
   get progress() {
-    return this.#pending ?? this.#progress;
+    return this.#pending?.[0] ?? this.#progress;
   }
   #steps: number | undefined;
   get steps() {
@@ -62,10 +61,6 @@ export class ProgressBar<Steps> {
   get fps() {
     return this.#fps;
   }
-  #frameStep: number;
-  get frameStep() {
-    return this.#frameStep;
-  }
   #loop: Loop<void>;
 
   constructor(config?: ProgressBarConfig<Steps>) {
@@ -82,7 +77,7 @@ export class ProgressBar<Steps> {
       this.#head = config?.head;
     } else {
       const loader = animationLoader();
-      this.#head = () => `${loader.next().value}[`;
+      this.#head = () => `${loader.next().value} [`;
     }
 
     let bars = config?.bars;
@@ -117,15 +112,14 @@ export class ProgressBar<Steps> {
     this.#width = config?.width;
     process.stdout.on("resize", this.#init);
     this.#init();
-    this.#fps = config?.fps ?? 5;
-    this.#frameStep = config?.frameStep ?? 1 / this.#fps;
+    this.#fps = config?.fps ?? 20;
     this.#loop = new Loop(1000 / this.#fps, this.#print);
   }
 
   changeSteps<NewSteps extends number>(next: NewSteps): ProgressBar<NewSteps> {
     if (!this.#steps) throw new DeveloperError("amount of steps is not specified");
     if (next <= 0 || !Number.isInteger(next)) throw new DeveloperError("specified invalid amount of steps");
-    if (this.#pending !== undefined) this.#pending = (this.#pending * this.#steps) / next;
+    if (this.#pending !== undefined) this.#pending = [(this.#pending[0] * this.#steps) / next, this.#pending[1]];
     this.#progress = (this.#progress * this.#steps) / next;
     this.#steps = next;
     this.#print();
@@ -153,18 +147,17 @@ export class ProgressBar<Steps> {
     buffer += escapes.cursor.restore;
     directPrint(buffer);
   };
-  #animate = () => {
+  #animate() {
     if (!this.#pending) return;
-    const diff = this.#pending - this.#progress;
-    this.#progress = Math.min(this.#progress + this.#frameStep * diff, this.#pending);
-    if (this.#progress === this.#pending) {
+    this.#progress = Math.min(this.#progress + this.#pending[1], this.#pending[0]);
+    if (this.#progress === this.#pending[0]) {
       this.#pending = undefined;
       return;
     }
-  };
+  }
   #print = () => {
-    const { rows, columns } = process.stdout;
     this.#animate();
+    const { rows, columns } = process.stdout;
     const progress = this.#progress;
     const head = this.#head(progress);
     const tail = this.#tail(progress);
@@ -190,12 +183,14 @@ export class ProgressBar<Steps> {
   step(...[next, animate = true]: unknown extends Steps ? [next: number, animate?: boolean] : [next?: number, animate?: boolean]) {
     if (next === undefined) {
       if (!this.#steps) throw new DeveloperError("amount of steps is not specified");
-      next = this.progress + 1 / this.#steps;
+      const step = 1 / this.#steps;
+      next = this.progress + step;
+      if (1 - next < step / 2) next = 1;
     }
     next = Math.clamp(0, next, 1);
     if (animate && next > this.#progress) {
-      if (this.#pending !== undefined) this.#progress = this.#pending;
-      this.#pending = next;
+      if (this.#pending !== undefined) this.#progress = this.#pending[0];
+      this.#pending = [next, (next - this.#progress) / this.#fps];
     } else this.#progress = next;
     this.#print();
   }
