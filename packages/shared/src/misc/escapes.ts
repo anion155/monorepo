@@ -1,3 +1,5 @@
+import { appendProperty } from "../object";
+
 /** Terminal bell */
 const BEL = "\u0007" as const;
 /** Backspace */
@@ -19,12 +21,15 @@ const DEL = "\u007f" as const;
 
 /** Control Sequence Introducer: sequence starting with ESC [ or CSI (\x9B). */
 const CSI = <Command extends string>(command: Command) => `${ESC}[${command}` as const;
+appendProperty(CSI, "value", { value: CSI(""), writable: false, enumerable: false, configurable: true });
 
 /** Device Control String: sequence starting with ESC P or DCS (\x90). */
 const DCS = <Command extends string>(command: Command) => `${ESC}P${command}` as const;
+appendProperty(DCS, "value", { value: DCS(""), writable: false, enumerable: false, configurable: true });
 
 /** Operating System Command: sequence starting with ESC ] or OSC (\x9D). */
 const OSC = <Command extends string>(command: Command) => `${ESC}]${command}` as const;
+appendProperty(OSC, "value", { value: OSC(""), writable: false, enumerable: false, configurable: true });
 
 const ConsoleCursor = {
   /** moves cursor to home position ({@link line}, {@link column}) */

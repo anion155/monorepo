@@ -2,8 +2,6 @@ import "./string";
 
 import { describe, expect, it } from "@jest/globals";
 
-import { applyConsoleFormat } from "../misc";
-
 describe("String extensions", () => {
   describe("this.overflow()", () => {
     it("should return overflowed text", () => {
@@ -57,7 +55,8 @@ describe("String extensions", () => {
 
   describe("this.consoleFormat()", () => {
     it("should format string same way applyConsoleFormat() does", () => {
-      expect("test".consoleFormat("bold")).toBe(applyConsoleFormat("bold", "test"));
+      process.stdout.isTTY = true;
+      expect("test".consoleFormat("bold").replaceAll("\u001b", "ESC")).toBe("ESC[1mtestESC[22m");
     });
   });
 });
